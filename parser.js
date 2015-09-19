@@ -9,7 +9,19 @@
  */
 //grants DEV access to the bot: the bot itself should be kept on here so it can moderate itself; leave sparkychild here in case you need help.
 var devList = [toId(config.nick), 'sparkychild'];
- 
+
+//check data files
+function checkData (){
+	var files = ['addcom', 'autores', 'bannedrooms', 'botlog', 'commandban', 'emotecounter', 'emotemoderation', 'entries', 'ignorewcmsg', 'mail', 'mailbl', 'maillog', 'quotes', 'ranks', 'repeatperms', 'trivia', 'wcmsg'];
+	for(var i = 0; i < files.length; i++){
+		if(!fs.existsSync('data/' + files[i] + '.txt')){
+			fs.writeFileSync('data/' + files[i] + '.txt', '');
+		}
+	}
+}
+checkData();
+
+//battle component 
 var Battle = require('./battle/battle.js').battleParser;
 global.Battles = {};
 

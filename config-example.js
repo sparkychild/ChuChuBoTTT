@@ -7,20 +7,8 @@ exports.url = 'play.pokemonshowdown.com';
 
 // The nick and password to log in with
 // If no password is required, leave pass empty
-var nick = ''
-exports.nick = nick;
-exports.pass = '';
-
-// The rooms that should be joined.
-//autojoin code
-try {
-	var rooms = JSON.parse(fs.readFileSync('data/newrooms/' + nick + '_' + serverid + '.json'));
-	exports.rooms = rooms;
-
-}
-catch (e) {
-	exports.rooms = [];
-}
+var nick = exports.nick = 'Pelican Bot'
+exports.pass = 'Hapinasu33';
 
 // Any private rooms that should be joined.
 // Private rooms will be moderated differently (since /warn doesn't work in them).

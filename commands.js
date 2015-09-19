@@ -186,7 +186,7 @@ exports.commands = {
 	git: function(arg, by, room){
 		if(!this.hasRank('&#~')) room = ',' + by
 		return this.say(by, room, 'https://github.com/sparkychild/ChuChu-BoTTT', true);
-	}
+	},
 	c: 'custom',
 	custom: function(arg, by, room) {
 		if (config.excepts.indexOf(toId(by)) === -1 && !this.rankFrom(by, '~')) return false;

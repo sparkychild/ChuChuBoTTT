@@ -165,6 +165,14 @@ if (config.url) {
 				if (config.server.indexOf('rhcloud') > -1) {
 					config.port = 8000;
 				}
+				// The rooms that should be joined.
+				//autojoin code
+				try {
+					var rooms = config.rooms = JSON.parse(fs.readFileSync('data/newrooms/' + nick + '_' + serverid + '.json'));
+				}
+				catch (e) {
+					config.rooms = [];
+				}
 			}
 			else {
 				console.log('ERROR: failed to get data!');
