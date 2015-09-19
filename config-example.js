@@ -7,8 +7,8 @@ exports.url = 'play.pokemonshowdown.com';
 
 // The nick and password to log in with
 // If no password is required, leave pass empty
-var nick = exports.nick = 'Pelican Bot'
-exports.pass = 'Hapinasu33';
+var nick = exports.nick = ''
+exports.pass = '';
 
 // Any private rooms that should be joined.
 // Private rooms will be moderated differently (since /warn doesn't work in them).
