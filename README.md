@@ -11,6 +11,8 @@ Guide
 Special features of this bot is the Translation API that allows it to function in many languages.  It also includes many games and features that boTTT didn't have.   This bot is somewhat similar to a Showdown server, in the sense that it has it's own 'bot' moderating it (ResourceMonitor) and a hierarchy of ranks of users to control the bot's activity.
 All commands can be disabled, to prevent spam or for development purposes.
 
+The bot is also capable in battling in several metagames.
+
 A pastebin guide to the bot's features can be found [here][6]
   
   [6]: http://pastebin.com/zT0eFG8a
