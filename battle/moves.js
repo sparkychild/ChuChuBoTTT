@@ -6085,7 +6085,7 @@ exports.BattleMovedex = {
 	"grassknot": {
 		num: 447,
 		accuracy: 100,
-		basePower: 0,
+		basePower: 80,
 		basePowerCallback: function(pokemon, target) {
 			var targetWeight = target.getWeight();
 			if (targetWeight >= 200) {
@@ -6601,7 +6601,7 @@ exports.BattleMovedex = {
 	"gyroball": {
 		num: 360,
 		accuracy: 100,
-		basePower: 0,
+		basePower: 80,
 		basePowerCallback: function(pokemon, target) {
 			var power = (Math.floor(25 * target.getStat('spe') / pokemon.getStat('spe')) || 1);
 			if (power > 150) power = 150;
@@ -8995,7 +8995,7 @@ exports.BattleMovedex = {
 	"lowkick": {
 		num: 67,
 		accuracy: 100,
-		basePower: 0,
+		basePower: 80,
 		basePowerCallback: function(pokemon, target) {
 			var targetWeight = target.getWeight();
 			if (targetWeight >= 200) {
