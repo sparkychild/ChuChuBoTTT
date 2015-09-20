@@ -1076,8 +1076,9 @@ exports.commands = {
         if (!this.hasRank(by, '#&~') || !arg) return false;
         var arg = arg.split(',');
         if (arg.length !== 2) return false;
-        if (!TEAMS[toId(arg[1])] && ['battlefactory', 'randombattle', 'challengecup1v1', 'monotyperandombattle'].indexOf(tier) === -1) return false;
+        if (toId(arg[0]) === toId(config.nick)) return false;
         var tier = toId(arg[1]);
+        if (!TEAMS[toId(arg[1])] && ['battlefactory', 'randombattle', 'challengecup1v1', 'monotyperandombattle'].indexOf(tier) === -1) return false;
         if (TEAMS[tier]) {
             var selectTeam = TEAMS[tier][~~(TEAMS[tier].length * Math.random())]
             send('|/useteam ' + selectTeam);
