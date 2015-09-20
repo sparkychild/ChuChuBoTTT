@@ -16,7 +16,7 @@ function selectMove(room, text) {
     }
     Battles[room].decision = text;
     send(room + '|' + text);
-    debug('[selection] ' + text);
+    debug('[selection|' + room + '] ' + text);
 }
 //fuck javascript for changing my pokemon data
 function isolate(data) {
@@ -146,6 +146,9 @@ function bestMove(moves, user, target, room, extras) {
     var bestMove = {};
     for (var num = 0; num < moves.length; num++) {
         var move = moves[num];
+        if (move === 'recharge') {
+            return 1;
+        }
         var score = Movedex[move].basePower;
         if (isImmune(move, target)) {
             score = 0;
@@ -1049,7 +1052,7 @@ exports.battleParser = {
     },
     accept: function(user, tier) {
         if (!user || !tier) return;
-        if ((!TEAMS[tier] && ['battlefactory', 'randombattle', 'challengecup1v1', 'monotyperandombattle'].indexOf(tier) === -1) || Object.keys(Battles).length >= MAXBATTLES || Parse.isBanned(user)) {
+        if ((!TEAMS[tier] && ['battlefactory', 'randombattle', 'challengecup1v1', 'monotyperandombattle', 'hackmonscup'].indexOf(tier) === -1) || Object.keys(Battles).length >= MAXBATTLES || Parse.isBanned(user)) {
             return send('|/reject ' + user);
         }
         if (TEAMS[tier]) {
@@ -1078,7 +1081,7 @@ exports.commands = {
         if (arg.length !== 2) return false;
         if (toId(arg[0]) === toId(config.nick)) return false;
         var tier = toId(arg[1]);
-        if (!TEAMS[toId(arg[1])] && ['battlefactory', 'randombattle', 'challengecup1v1', 'monotyperandombattle'].indexOf(tier) === -1) return false;
+        if (!TEAMS[toId(arg[1])] && ['battlefactory', 'randombattle', 'challengecup1v1', 'monotyperandombattle', 'hackmonscup'].indexOf(tier) === -1) return false;
         if (TEAMS[tier]) {
             var selectTeam = TEAMS[tier][~~(TEAMS[tier].length * Math.random())]
             send('|/useteam ' + selectTeam);
