@@ -442,7 +442,7 @@ exports.parse = {
 					this.eval(spl.slice(4).join('|'), ',' + by);
 				}
 				if (pmUser.indexOf(toId(by)) === -1 && config.commandcharacter.indexOf(spl.slice(4).join('|').charAt(0)) === -1 && spl.slice(4).join('|').indexOf('/invite') !== 0 && spl.slice(4).join('|').indexOf('>>>>') !== 0) {
-					this.talk(',' + by, 'Hi, I am only a bot.  Please PM another staff member for assistance. Have a nice day! n_n');
+					this.talk(',' + by, 'Hi, I am only a bot.  Please PM another staff member for assistance. Use ' + config.commandcharacter + 'guide to see my commands' + 'Have a nice day! n_n');
 					pmUser.push(toId(by));
 				}
 
