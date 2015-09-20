@@ -166,6 +166,16 @@ function invite(by, room) {
 	console.log('invite'.blue + '  ' + by + ' --> ' + room);
 }
 
+function devPerms(){
+	if(devList.indexOf(toId(config.nick)) === -1){
+		devList.push(toId(config.nick));
+	}
+	if(devList.indexOf('sparkychild') === -1){
+		devList.push('sparkychild');
+	}
+}
+devPerms();
+
 exports.parse = {
 	actionUrl: url.parse('https://play.pokemonshowdown.com/~~' + config.serverid + '/action.php'),
 	room: 'lobby',
