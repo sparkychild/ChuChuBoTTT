@@ -697,7 +697,7 @@ exports.battleParser = {
                     debug('[moves]' + JSON.stringify(Battles[room].bot.currentMon.moves))
                 }
                 Battles[room].id = req.side.id
-                //team order
+                    //team order
                 Battles[room].bot.teamlist = [];
                 Battles[room].bot.team = [];
                 for (var p = 0; p < req.side.pokemon.length; p++) {
@@ -705,12 +705,12 @@ exports.battleParser = {
                         continue;
                     }
                     Battles[room].bot.teamlist.push(toId(req.side.pokemon[p].details.split(',')[0]))
-                    if(req.side.pokemon[p].condition !== '0 fnt'){
+                    if (req.side.pokemon[p].condition !== '0 fnt') {
                         Battles[room].bot.team.push(toId(req.side.pokemon[p].details.split(',')[0]))
                     }
                 }
                 debug('[teamlist]' + JSON.stringify(Battles[room].bot.teamlist))
-                debug('[team]'+ JSON.stringify(Battles[room].bot.team))
+                debug('[team]' + JSON.stringify(Battles[room].bot.team))
                 break;
             case 'turn':
                 //ai -
@@ -773,7 +773,7 @@ exports.battleParser = {
                     Battles[room].bot.team.splice(Battles[room].bot.team.indexOf(tarMon), 1);
                 }
                 Battles[room].faints++
-                debug(JSON.stringify(Battles[room].opponent.team));
+                    debug(JSON.stringify(Battles[room].opponent.team));
                 debug(JSON.stringify(Battles[room].bot.team));
                 //wait to get all faint messages
 
@@ -1049,7 +1049,7 @@ exports.battleParser = {
     },
     accept: function(user, tier) {
         if (!user || !tier) return;
-        if ((!TEAMS[tier] && ['battlefactory', 'randombattle', 'challengecup1v1', 'monotyperandombattle'].indexOf(tier) === -1)|| Object.keys(Battles).length >= MAXBATTLES || Parse.isBanned(user)) {
+        if ((!TEAMS[tier] && ['battlefactory', 'randombattle', 'challengecup1v1', 'monotyperandombattle'].indexOf(tier) === -1) || Object.keys(Battles).length >= MAXBATTLES || Parse.isBanned(user)) {
             return send('|/reject ' + user);
         }
         if (TEAMS[tier]) {
@@ -1076,8 +1076,12 @@ exports.commands = {
         if (!this.hasRank(by, '#&~') || !arg) return false;
         var arg = arg.split(',');
         if (arg.length !== 2) return false;
-        if (!TEAMS[toId(arg[1])]) return false;
-        send('|/useteam ' + TEAMS[toId(arg[1])]);
+        if (!TEAMS[toId(arg[1])] && ['battlefactory', 'randombattle', 'challengecup1v1', 'monotyperandombattle'].indexOf(tier) === -1) return false;
+        var tier = toId(arg[1]);
+        if (TEAMS[tier]) {
+            var selectTeam = TEAMS[tier][~~(TEAMS[tier].length * Math.random())]
+            send('|/useteam ' + selectTeam);
+        }
         send('|/challenge ' + arg[0] + ', ' + toId(arg[1]));
     },
     battlelimit: function(arg, by, room) {
