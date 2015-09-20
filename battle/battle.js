@@ -532,13 +532,14 @@ function choose(room) {
     var TypeChart = isolate(TYPECHART);
     //if weak and cant hit SE;
     //add feature to check mega
-    if(Pokedex[Battles[room].opponent.currentMon.species + 'mega']){
+    if (Pokedex[Battles[room].opponent.currentMon.species + 'mega']) {
         //identify weakness
-        var megaWeakness =  weakness(Battles[room].bot.currentMon.species, Battles[room].opponent.currentMon.species + 'mega') > 1
-    } else {
+        var megaWeakness = weakness(Battles[room].bot.currentMon.species, Battles[room].opponent.currentMon.species + 'mega') > 1
+    }
+    else {
         megaWeakness = false;
     }
-    
+
     if ((weakness(Battles[room].bot.currentMon.species, Battles[room].opponent.currentMon.species) > 1 || megaWeakness) && bestMove(Battles[room].bot.currentMon.moves, Battles[room].bot.currentMon.species, Battles[room].opponent.currentMon.species, room, true) < 160) {
         //choose to switch
         debug('{choose: unfavourable}')
@@ -662,6 +663,7 @@ exports.battleParser = {
                         id: '',
                         faints: 0,
                         decision: '',
+                        tier: room.split('-')[1]
                     }
                 }
                 //request|JSON|
@@ -679,6 +681,10 @@ exports.battleParser = {
                     Battles[room].bot.currentMon.mega = req.side.pokemon[0].canMegaEvo;
                     Battles[room].bot.currentMon.hp = req.side.pokemon[0].condition.split(' ')[0].split('/')[0] / req.side.pokemon[0].condition.split(' ')[0].split('/')[1];
                     //declare moves i guess....
+                    //for cc1v1
+                    if (Battles[room].tier.indexOf('1v1') > -1) {
+                        Battles[room].bot.team = [Battles[room].bot.currentMon.species];
+                    }
                     for (var i in tarMoves) {
                         if (!tarMoves[i]) {
                             continue;
@@ -691,9 +697,20 @@ exports.battleParser = {
                     debug('[moves]' + JSON.stringify(Battles[room].bot.currentMon.moves))
                 }
                 Battles[room].id = req.side.id
-                    //team order
-                Battles[room].bot.teamlist = [toId(req.side.pokemon[0].details.split(',')[0]), toId(req.side.pokemon[1].details.split(',')[0]), toId(req.side.pokemon[2].details.split(',')[0]), toId(req.side.pokemon[3].details.split(',')[0]), toId(req.side.pokemon[4].details.split(',')[0]), toId(req.side.pokemon[5].details.split(',')[0])];
-                debug('[team]' + JSON.stringify(Battles[room].bot.teamlist))
+                //team order
+                Battles[room].bot.teamlist = [];
+                Battles[room].bot.team = [];
+                for (var p = 0; p < req.side.pokemon.length; p++) {
+                    if (!req.side.pokemon[p]) {
+                        continue;
+                    }
+                    Battles[room].bot.teamlist.push(toId(req.side.pokemon[p].details.split(',')[0]))
+                    if(req.side.pokemon[p].condition !== '0 fnt'){
+                        Battles[room].bot.team.push(toId(req.side.pokemon[p].details.split(',')[0]))
+                    }
+                }
+                debug('[teamlist]' + JSON.stringify(Battles[room].bot.teamlist))
+                debug('[team]'+ JSON.stringify(Battles[room].bot.team))
                 break;
             case 'turn':
                 //ai -
@@ -713,6 +730,10 @@ exports.battleParser = {
                         species: tarMon,
                         taunt: false,
                         torment: false,
+                    }
+                    if (Battles[room].opponent.team.indexOf(tarMon) === -1 && ['cc1v1', 'randombattle'].indexOf(Battles[room].tier) > -1) {
+                        debug('{newmon}' + tarMon);
+                        Battles[room].opponent.team.push(tarMon);
                     }
                 }
                 else {
@@ -740,30 +761,19 @@ exports.battleParser = {
                 //|poke|player|Pokemon
                 var player = info[0];
                 var tarPoke = toId(info[1].split(',')[0]);
-                if (player === Battles[room].id) {
-                    var target = 'bot'
-                }
-                else {
-                    target = 'opponent'
-                }
-                Battles[room][target].team.push(tarPoke);
-                if (target === 'bot') {
-                    Battles[room].bot.teamlist.push(tarPoke);
-                }
+                if (player === Battles[room].id) return;
+                Battles[room].opponent.team.push(tarPoke);
                 break;
             case 'faint':
                 //|faint|POKEMON
                 var player = info[0].substr(0, 2);
                 var tarMon = Battles[room].nicknames[info[0]];
                 //remove from team's standing mons
-                if (player === Battles[room].id) {
+                if (player !== Battles[room].id) {
                     Battles[room].bot.team.splice(Battles[room].bot.team.indexOf(tarMon), 1);
                 }
-                else {
-                    Battles[room].opponent.team.splice(Battles[room].opponent.team.indexOf(tarMon), 1);
-                }
                 Battles[room].faints++
-                    debug(JSON.stringify(Battles[room].opponent.team));
+                debug(JSON.stringify(Battles[room].opponent.team));
                 debug(JSON.stringify(Battles[room].bot.team));
                 //wait to get all faint messages
 
@@ -1039,11 +1049,13 @@ exports.battleParser = {
     },
     accept: function(user, tier) {
         if (!user || !tier) return;
-        if (!TEAMS[tier] || Object.keys(Battles).length >= MAXBATTLES || Parse.isBanned(user)) {
+        if ((!TEAMS[tier] && ['battlefactory', 'randombattle', 'challengecup1v1', 'monotyperandombattle'].indexOf(tier) === -1)|| Object.keys(Battles).length >= MAXBATTLES || Parse.isBanned(user)) {
             return send('|/reject ' + user);
         }
-        var selectTeam = TEAMS[tier][~~(TEAMS[tier].length * Math.random())]
-        send('|/useteam ' + selectTeam);
+        if (TEAMS[tier]) {
+            var selectTeam = TEAMS[tier][~~(TEAMS[tier].length * Math.random())]
+            send('|/useteam ' + selectTeam);
+        }
         send('|/accept ' + user);
     },
 };
