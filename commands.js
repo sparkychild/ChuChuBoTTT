@@ -183,8 +183,8 @@ exports.commands = {
 			error('failed to reload: ' + sys.inspect(e));
 		}
 	},
-	git: function(arg, by, room){
-		if(!this.hasRank('&#~')) room = ',' + by
+	git: function(arg, by, room) {
+		if (!this.hasRank('&#~')) room = ',' + by
 		return this.say(by, room, 'https://github.com/sparkychild/ChuChu-BoTTT', true);
 	},
 	c: 'custom',
@@ -646,40 +646,16 @@ exports.commands = {
 			return this.say(by, room, 'You can\'t kick someone that is of a higher rank!')
 		}
 		if (botsRank <= targetRank) return false;
-
-		switch (victim) {
-			case 'sparkychild':
-				this.say(by, room, 'Access denied :^)');
-				break;
-			case 'oasisbot':
-				this.say(by, room, 'Access denied :^)');
-				break;
-			case 'charliechan':
-				this.say(by, room, 'Access denied :^)');
-				break;
-			case 'trickster':
-				this.say(by, room, 'Access denied :^)');
-				break;
-			case 'nineage':
-				this.say(by, room, 'Access denied :^)');
-				break;
-			case 'fender':
-				this.say(by, room, 'Access denied :^)');
-				break;
-			case 'rhythms':
-				this.say(by, room, 'I would if i could');
-				break;
-			default:
-				this.say(by, room, '/rb ' + victim + ',♥ ^_^ ♥');
-				this.say(config.nick, room, '/roomunban ' + victim);
-				this.say(config.nick, room, '/modnote ' + victim + ' was rk\'d by ' + by);
-				break;
+		if(this.rankFrom(by, '+')){
+			return this.say(by, room, 'Access denied :^)');
 		}
-
+		this.say(by, room, '/rb ' + victim + ',♥ ^_^ ♥');
+		this.say(config.nick, room, '/roomunban ' + victim);
+		this.say(config.nick, room, '/modnote ' + victim + ' was rk\'d by ' + by);
 	},
 	marry: 'pair',
 	pair: function(arg, by, room, con) {
-		if (!this.canUse('pair', room, by)) return false;
+		if (!this.canUse('pair', room, by) || !arg) return false;
 		var user = toId(by);
 		var pairing = toId(arg);
 
@@ -702,48 +678,6 @@ exports.commands = {
 		user = toBase(user, 10);
 		pairing = toBase(pairing, 10);
 		var match = (user + pairing) % 101;
-		if (toId(by) === 'sparkychild' && toId(arg) === 'trickster') {
-			match = 100;
-		}
-		else if (toId(by) === 'trickster' && toId(arg) === 'sparkychild') {
-			match = 100;
-		}
-		else if (toId(by) === 'sparkychild' && toId(arg) === 'eyan') {
-			match = 100;
-		}
-		else if (toId(by) === 'eyan' && toId(arg) === 'sparkychild') {
-			match = 100;
-		}
-		else if (toId(by) === 'macle' && toId(arg) === 'frog') {
-			match = 100;
-		}
-		else if (toId(by) === 'macle' && toId(arg) === 'frogs') {
-			match = 100;
-		}
-		else if (toId(by) === 'macle' && toId(arg) === 'sven') {
-			match = 100;
-		}
-		else if (toId(by) !== 'trickster' && toId(arg) === 'sparkychild') {
-			match = Math.round(match / 10);
-		}
-		else if (toId(by) !== 'sparkychild' && toId(arg) === 'trickster') {
-			match = Math.round(match / 10);
-		}
-		else if (toId(by) === 'aerow' && toId(arg) === 'sparktrain') {
-			match = 99;
-		}
-		else if (toId(by) === 'aerow' && toId(arg) === 'dcae') {
-			match = 96;
-		}
-		else if (toId(by) === 'aerow' && toId(arg) === 'nineage') {
-			match = 100;
-		}
-		else if (toId(by) === 'nineage' && toId(arg) === 'aerow') {
-			match = 100;
-		}
-		else if (toId(arg) === '') {
-			return false;
-		}
 
 		this.say(by, room, by + ' and ' + arg + ' are ' + match + '% compatible!!!!');
 	},
@@ -1087,7 +1021,7 @@ exports.commands = {
 		triviaPoints[room] = [];
 		triviaA[room] = '';
 		game('trivia', room);
-		this.say(by, room, 'Hosting a game of trivia\. First to 10 points wins!  use \+ta or \+triviaanswer to submit your answer\.');
+		this.say(by, room, 'Hosting a game of trivia\. First to 10 points wins!  use ' + config.commandcharacter[0] + 'ta or ' + config.commandcharacter[0] + 'triviaanswer to submit your answer\.');
 		triviaTimer[room] = setInterval(function() {
 			if (triviaA[room]) {
 				this.say(config.nick, room, 'The correct answer is: ' + triviaA[room]);
@@ -1254,7 +1188,7 @@ exports.commands = {
 			this.say(by, room, 'A game of Hangman is already in progress. Please wait for it to end before starting another.');
 			return false;
 		}
-		this.say(by, room, 'Hosting a game of Hangman! Use ' + config.commandcharacter + 'g to guess letter or word. It will be Pokémon related.')
+		this.say(by, room, 'Hosting a game of Hangman! Use ' + config.commandcharacter[0] + 'g to guess letter or word. It will be Pokémon related.')
 		game('hangman', room);
 		hangmanON[room] = true;
 		hangmanChances[room] = 0;
@@ -1377,7 +1311,7 @@ exports.commands = {
 		anagramON[room] = true;
 		anagramA[room] = '';
 		anagramPoints[room] = [];
-		this.say(by, room, 'Hosting a game of anagrams. Use +guess to submit your answer.');
+		this.say(by, room, 'Hosting a game of anagrams. Use ' + config.commandcharacter[0] + 'guess to submit your answer.');
 		game('anagrams', room)
 		anagramInterval[room] = setInterval(function() {
 			if (anagramA[room]) {
@@ -1448,14 +1382,14 @@ exports.commands = {
 		var splarg = arg.split('::');
 		var tarRanks = 'n+★%@#&~';
 		if (!splarg[0] || !splarg[1] || !splarg[2]) {
-			this.say(by, room, 'The correct format is +addcom __command__::__rank__::__output__');
+			this.say(by, room, 'The correct format is ' + config.commandcharacter[0] + 'addcom __command__::__rank__::__output__');
 			return false;
 		}
 
 		splarg[0] = toId(splarg[0]);
 
 		if (!splarg[0] || !splarg[1] || !splarg[2]) {
-			this.say(by, room, 'The correct format is +addcom __command__::__rank__::__output__');
+			this.say(by, room, 'The correct format is ' + config.commandcharacter[0] + 'addcom __command__::__rank__::__output__');
 			return false;
 		}
 		if (!(tarRanks.indexOf(splarg[1]) > -1) || splarg[1].length !== 1) {
@@ -1554,7 +1488,7 @@ exports.commands = {
 		if (room.charAt(0) !== ',') return false;
 		arg = toId(arg);
 		fs.appendFile('data/mailbl.txt', arg + '\n', function() {
-			this.say(by, room, arg + ' is now banned from using .mail');
+			this.say(by, room, arg + ' is now banned from using ' + config.commandcharacter[0] + 'mail');
 		}.bind(this));
 		this.botlog('global', arg + ' was banned from using mail by ' + by);
 	},
@@ -2123,7 +2057,7 @@ exports.commands = {
 				playerData[room][currentPlayer[room]].hand = deck[room].slice(0, 2);
 				deck[room] = deck[room].slice(2);
 				*/
-				this.say(config.nick, room, playerData[room][currentPlayer[room]].name + '\'s turn! __(+hit or +stay)__')
+				this.say(config.nick, room, playerData[room][currentPlayer[room]].name + '\'s turn! __(' + config.commandcharacter[0] + 'hit or ' + config.commandcharacter[0] + 'stay)__')
 				this.talk(room, '/w ' + currentPlayer[room] + ', [' + room + '] Your hand is [' + playerData[room][currentPlayer[room]].hand.join('], [') + ']. The total is ' + playerData[room][currentPlayer[room]].total);
 				//start the turns
 				blackJack[room] = setInterval(function() {
@@ -2191,7 +2125,7 @@ exports.commands = {
 					}
 					else {
 						currentPlayer[room] = playerCount[room][playerCount[room].indexOf(currentPlayer[room]) + 1];
-						this.say(config.nick, room, playerData[room][currentPlayer[room]].name + '\'s turn! __(+hit or +stay)__')
+						this.say(config.nick, room, playerData[room][currentPlayer[room]].name + '\'s turn! __(' + config.commandcharacter[0] + 'hit or ' + config.commandcharacter[0] + 'stay)__')
 						this.talk(room, '/w ' + currentPlayer[room] + ', [' + room + '] Your hand is [' + playerData[room][currentPlayer[room]].hand.join('], [') + ']. The total is ' + playerData[room][currentPlayer[room]].total)
 					}
 				}.bind(this), 90000);
@@ -2284,7 +2218,7 @@ exports.commands = {
 			}
 			else {
 				currentPlayer[room] = playerCount[room][playerCount[room].indexOf(currentPlayer[room]) + 1];
-				this.say(config.nick, room, playerData[room][currentPlayer[room]].name + '\'s turn! __(+hit or +stay)__');
+				this.say(config.nick, room, playerData[room][currentPlayer[room]].name + '\'s turn! __(' + config.commandcharacter[0] + 'hit or ' + config.commandcharacter[0] + 'stay)__');
 				this.talk(room, '/w ' + currentPlayer[room] + ', [' + room + '] Your hand is [' + playerData[room][currentPlayer[room]].hand.join('], [') + ']. The total is ' + playerData[room][currentPlayer[room]].total)
 			}
 
@@ -2354,7 +2288,7 @@ exports.commands = {
 				}
 				else {
 					currentPlayer[room] = playerCount[room][playerCount[room].indexOf(currentPlayer[room]) + 1];
-					this.say(config.nick, room, playerData[room][currentPlayer[room]].name + '\'s turn! __(+hit or +stay)__');
+					this.say(config.nick, room, playerData[room][currentPlayer[room]].name + '\'s turn! __(' + config.commandcharacter[0] + 'hit or ' + config.commandcharacter[0] + 'stay)__');
 					this.talk(room, '/w ' + currentPlayer[room] + ', [' + room + '] Your hand is [' + playerData[room][currentPlayer[room]].hand.join('], [') + ']. The total is ' + playerData[room][currentPlayer[room]].total)
 				}
 			}.bind(this), 90000);
@@ -2433,7 +2367,7 @@ exports.commands = {
 		}
 		else {
 			currentPlayer[room] = playerCount[room][playerCount[room].indexOf(currentPlayer[room]) + 1];
-			this.say(config.nick, room, playerData[room][currentPlayer[room]].name + '\'s turn! __(+hit or +stay)__');
+			this.say(config.nick, room, playerData[room][currentPlayer[room]].name + '\'s turn! __(' + config.commandcharacter[0] + 'hit or ' + config.commandcharacter[0] + 'stay)__');
 			this.talk(room, '/w ' + currentPlayer[room] + ', [' + room + '] Your hand is [' + playerData[room][currentPlayer[room]].hand.join('], [') + ']. The total is ' + playerData[room][currentPlayer[room]].total)
 		}
 
@@ -2507,7 +2441,7 @@ exports.commands = {
 			}
 			else {
 				currentPlayer[room] = playerCount[room][playerCount[room].indexOf(currentPlayer[room]) + 1];
-				this.say(config.nick, room, playerData[room][currentPlayer[room]].name + '\'s turn! __(+hit or +stay)__');
+				this.say(config.nick, room, playerData[room][currentPlayer[room]].name + '\'s turn! __(' + config.commandcharacter[0] + 'hit or ' + config.commandcharacter[0] + 'stay)__');
 				this.talk(room, '/w ' + currentPlayer[room] + ', [' + room + '] Your hand is [' + playerData[room][currentPlayer[room]].hand.join('], [') + ']. The total is ' + playerData[room][currentPlayer[room]].total)
 			}
 		}.bind(this), 90000);
@@ -2532,7 +2466,7 @@ exports.commands = {
 				this.say(config.nick, room, 'The goal is to be the first player to get rid of all your cards.  A [ 2] will cause the next player to draw 2 cards and lose their turn.')
 				this.say(config.nick, room, 'A [ J] will skip the next player\'s turn and a [♠Q] will make the next player forfeit his/her turn and draw 4 cards. An [ 8] will allow the player to change the suit.');
 				this.say(config.nick, room, 'You can play a card with either the same suit or number/letter.  The goal is to get rid of your cards before the other players do so.');
-				this.say(config.nick, room, 'You only need to say first letter of the suit + value to play your card. Ex. +play sQ would be playing the Queen of Spades.')
+				this.say(config.nick, room, 'You only need to say first letter of the suit + value to play your card. Ex. ' + config.commandcharacter[0] + 'play sQ would be playing the Queen of Spades.')
 				game('crazyeights', room);
 				crazyeight.gameStatus[room] = 'signups';
 				crazyeight.playerData[room] = {};
@@ -2578,7 +2512,7 @@ exports.commands = {
 				crazyeight.gameStatus[room] = 'on';
 				crazyeight.deck[room] = this.generateDeck(1);
 
-				this.say(by, room, 'Use +play [card] to play a card. c for clubs, h for hearts, s for spades and, d for diamonds. When playing a [ 8], be sure to include what you\'re changing to (+play c8 s)')
+				this.say(by, room, 'Use ' + config.commandcharacter[0] + 'play [card] to play a card. c for clubs, h for hearts, s for spades and, d for diamonds. When playing a [ 8], be sure to include what you\'re changing to (' + config.commandcharacter[0] + 'play c8 s)')
 
 				//deal the cards
 				for (var j = 0; j < 7; j++) {
@@ -2607,7 +2541,7 @@ exports.commands = {
 				crazyeight.currentPlayer[room] = crazyeight.playerList[room][0];
 
 				this.talk(',' + crazyeight.currentPlayer[room], '(' + room + ') ' + '[' + crazyeight.playerData[room][crazyeight.currentPlayer[room]].hand.join('], [') + ']')
-				this.talk(room, crazyeight.playerData[room][crazyeight.currentPlayer[room]].name + '\'s turn! __(+play [card] or +draw)__')
+				this.talk(room, crazyeight.playerData[room][crazyeight.currentPlayer[room]].name + '\'s turn! __(' + config.commandcharacter[0] + 'play [card] or ' + config.commandcharacter[0] + 'draw)__')
 
 
 				crazyeight.interval[room] = setInterval(function() {
@@ -2648,7 +2582,7 @@ exports.commands = {
 
 					//pming next user their hand
 					this.talk(',' + crazyeight.currentPlayer[room], '(' + room + ') ' + '[' + crazyeight.playerData[room][crazyeight.currentPlayer[room]].hand.join('], [') + ']')
-					this.talk(room, crazyeight.playerData[room][crazyeight.currentPlayer[room]].name + '\'s turn! __(+play [card] or +draw)__');
+					this.talk(room, crazyeight.playerData[room][crazyeight.currentPlayer[room]].name + '\'s turn! __(' + config.commandcharacter[0] + 'play [card] or ' + config.commandcharacter[0] + 'draw)__');
 					this.talk(room, '**Top Card: [' + crazyeight.topCard[room] + ']**');
 				}.bind(this), 90000)
 		}
@@ -2669,7 +2603,7 @@ exports.commands = {
 
 		var suit = arg[0].slice(0, 1).toLowerCase().replace('c', '♣').replace('h', '♥').replace('d', '♦').replace('s', '♠');
 		var value = arg[0].slice(1).toUpperCase();
-		if (suitList.indexOf(suit) === -1 || valueList.indexOf(value) === -1) return this.say(by, ',' + by, 'To play a card use the first letter of the card\'s suit + the value of the card. (ex. +play cK would be [♣K])');
+		if (suitList.indexOf(suit) === -1 || valueList.indexOf(value) === -1) return this.say(by, ',' + by, 'To play a card use the first letter of the card\'s suit + the value of the card. (ex. ' + config.commandcharacter[0] + 'play cK would be [♣K])');
 		var card = suit + value;
 
 		if (crazyeight.playerData[room][crazyeight.currentPlayer[room]].hand.indexOf(card) === -1) {
@@ -2679,7 +2613,7 @@ exports.commands = {
 			return this.say(by, room, 'You can\'t play this card now.');
 		}
 		if (value === '8' && !modifier) {
-			return this.say(by, room, 'Please choose what suit to change to.  Ex. +play c8 s')
+			return this.say(by, room, 'Please choose what suit to change to.  Ex. ' + config.commandcharacter[0] + 'play c8 s')
 		}
 		if (modifier) {
 			if (suitList.indexOf(modifier) === -1) {
@@ -2752,7 +2686,7 @@ exports.commands = {
 
 		crazyeight.currentPlayer[room] = crazyeight.playerList[room][(crazyeight.playerList[room].indexOf(crazyeight.currentPlayer[room]) + 1) % crazyeight.playerList[room].length];
 		this.talk(',' + crazyeight.currentPlayer[room], '(' + room + ') ' + '[' + crazyeight.playerData[room][crazyeight.currentPlayer[room]].hand.join('], [') + ']')
-		this.talk(room, crazyeight.playerData[room][crazyeight.currentPlayer[room]].name + '\'s turn! __(+play [card] or +draw)__');
+		this.talk(room, crazyeight.playerData[room][crazyeight.currentPlayer[room]].name + '\'s turn! __(' + config.commandcharacter[0] + 'play [card] or ' + config.commandcharacter[0] + 'draw)__');
 		//start new dq cycle
 		crazyeight.interval[room] = setInterval(function() {
 			if (crazyeight.gameStatus[room] !== 'on') {
@@ -2792,7 +2726,7 @@ exports.commands = {
 
 			//pming next user their hand
 			this.talk(',' + crazyeight.currentPlayer[room], '(' + room + ') ' + '[' + crazyeight.playerData[room][crazyeight.currentPlayer[room]].hand.join('], [') + ']')
-			this.talk(room, crazyeight.playerData[room][crazyeight.currentPlayer[room]].name + '\'s turn! __(+play [card] or +draw)__');
+			this.talk(room, crazyeight.playerData[room][crazyeight.currentPlayer[room]].name + '\'s turn! __(' + config.commandcharacter[0] + 'play [card] or ' + config.commandcharacter[0] + 'draw)__');
 			this.talk(room, '**Top Card: [' + crazyeight.topCard[room] + ']**');
 		}.bind(this), 90000)
 	},
@@ -2811,7 +2745,7 @@ exports.commands = {
 		crazyeight.currentPlayer[room] = crazyeight.playerList[room][(crazyeight.playerList[room].indexOf(crazyeight.currentPlayer[room]) + 1) % crazyeight.playerList[room].length];
 		this.talk(',' + crazyeight.currentPlayer[room], '(' + room + ') ' + '[' + crazyeight.playerData[room][crazyeight.currentPlayer[room]].hand.join('], [') + ']')
 		this.talk(room, '**Top Card: [' + crazyeight.topCard[room] + ']**');
-		this.talk(room, crazyeight.playerData[room][crazyeight.currentPlayer[room]].name + '\'s turn! __(+play [card] or +draw)__');
+		this.talk(room, crazyeight.playerData[room][crazyeight.currentPlayer[room]].name + '\'s turn! __(' + config.commandcharacter[0] + 'play [card] or ' + config.commandcharacter[0] + 'draw)__');
 		//start new dq cycle
 		crazyeight.interval[room] = setInterval(function() {
 			if (crazyeight.gameStatus[room] !== 'on') {
@@ -2851,7 +2785,7 @@ exports.commands = {
 
 			//pming next user their hand
 			this.talk(',' + crazyeight.currentPlayer[room], '(' + room + ') ' + '[' + crazyeight.playerData[room][crazyeight.currentPlayer[room]].hand.join('], [') + ']')
-			this.talk(room, crazyeight.playerData[room][crazyeight.currentPlayer[room]].name + '\'s turn! __(+play [card] or +draw)__');
+			this.talk(room, crazyeight.playerData[room][crazyeight.currentPlayer[room]].name + '\'s turn! __(' + config.commandcharacter[0] + 'play [card] or ' + config.commandcharacter[0] + 'draw)__');
 			this.talk(room, '**Top Card: [' + crazyeight.topCard[room] + ']**');
 		}.bind(this), 90000)
 	},
@@ -2860,7 +2794,7 @@ exports.commands = {
 		var TriviaDataBase = fs.readFileSync('data/trivia.txt').toString().split('\n');
 		var uploadText = '';
 		for (var i = 0; i < TriviaDataBase.length - 1; i++) {
-			uploadText += 'Question: ' + TriviaDataBase[i] + '\Answer: ' + TriviaDataBase[i + 1] + '\n\n'
+			uploadText += 'Question: ' + TriviaDataBase[i] + '\nAnswer: ' + TriviaDataBase[i + 1] + '\n\n'
 			i++;
 		}
 		this.uploadToHastebin(uploadText, function(link) {
@@ -2870,13 +2804,13 @@ exports.commands = {
 	addtrivia: function(arg, by, room) {
 		if (!this.rankFrom(by, '+') || room.charAt(0) !== ',') return false;
 		arg = arg.replace(/, /g, ',').split(',');
-		if (!arg[1] || !arg[0]) return this.say(by, room, 'Le format est !addtrivia [question], [reponse]');
+		if (!arg[1] || !arg[0]) return this.say(by, room, 'The format is ' + config.commandcharacter[0] + 'addtrivia [question], [reponse]');
 		var saveAnswer = toId(arg[arg.length - 1]);
 		var saveQuestion = arg.slice(0, arg.length - 1).join(', ');
 		var TriviaDataBase = fs.readFileSync('data/trivia.txt').toString().split('\n');
-		if (TriviaDataBase.indexOf(saveQuestion) > -1) return this.say(by, room, 'Cette question existe deja!');
+		if (TriviaDataBase.indexOf(saveQuestion) > -1) return this.say(by, room, 'This question already exists!');
 		fs.appendFile('data/trivia.txt', '\n' + saveQuestion + '\n' + saveAnswer);
-		this.say(by, room, 'Succès!');
+		this.say(by, room, 'Done!');
 		triviaQuestions = fs.readFileSync('data/trivia.txt').toString().split('\n');
 	},
 	setemotemod: 'emotemoderation',
@@ -3306,7 +3240,8 @@ exports.commands = {
 		getData('http://pokemonshowdown.com/users/' + toId(arg) + '.json', function(data) {
 			try {
 				data = JSON.parse(data);
-			} catch (e){
+			}
+			catch (e) {
 				self.say(by, room, 'ERROR in retrieving data.')
 			}
 			switch (cmd) {
