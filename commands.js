@@ -646,7 +646,7 @@ exports.commands = {
 			return this.say(by, room, 'You can\'t kick someone that is of a higher rank!')
 		}
 		if (botsRank <= targetRank) return false;
-		if(this.rankFrom(by, '+')){
+		if(this.rankFrom(victim, '+')){
 			return this.say(by, room, 'Access denied :^)');
 		}
 		this.say(by, room, '/rb ' + victim + ',♥ ^_^ ♥');
