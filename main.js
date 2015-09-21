@@ -168,10 +168,11 @@ if (config.url) {
 				// The rooms that should be joined.
 				//autojoin code
 				try {
-					var rooms = config.rooms = JSON.parse(fs.readFileSync('data/newrooms/' + nick + '_' + serverid + '.json'));
+					config.rooms = JSON.parse(fs.readFileSync('data/newrooms/' + config.nick + '_' + config.serverid + '.json'));;
 				}
 				catch (e) {
 					config.rooms = [];
+					console.log('Rooms are not loaded.')
 				}
 			}
 			else {
