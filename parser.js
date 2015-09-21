@@ -926,8 +926,8 @@ exports.parse = {
 		var data = fs.readFileSync('data/wcmsg.txt').toString().split('\n');
 		var ignore = fs.readFileSync('data/ignorewcmsg.txt').toString().split('\n');
 		if (ignore.indexOf(toId(by)) > -1) return false;
-		if (data.indexOf(room) > -1 && data[data.indexOf(room) + 1].charAt(0) === 'n') {
-			return this.talk(room, '/w ' + by + ',' + data[data.indexOf(room) + 1].slice(2).replace(/{by}/g, by));
+		if (data.indexOf(room + '|' + config.serverid) > -1 && data[data.indexOf(room + '|' + config.serverid) + 1].charAt(0) === 'n') {
+			return this.talk(room, '/w ' + by + ',' + data[data.indexOf(room + '|' + config.serverid) + 1].slice(2).replace(/{by}/g, by));
 		}
 	},
 	roomIsBanned: function(room) {
