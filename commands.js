@@ -1766,11 +1766,11 @@ exports.commands = {
 			case 'set':
 				if (!this.hasRank(by, '#&~')) return false;
 				if (!arg[1]) return this.say(by, room, 'You forgot to include a message.');
-				if (data.indexOf(room) > -1) {
-					data[data.indexOf(room) + 1] = 'n|' + stripCommands(arg.slice(1).join(', '));
+				if (data.indexOf(room + '|' + config.serverid) > -1) {
+					data[data.indexOf(room + '|' + config.serverid) + 1] = 'n|' + stripCommands(arg.slice(1).join(', '));
 				}
 				else {
-					data[data.length] = room;
+					data[data.length] = room + '|' + config.serverid;
 					data[data.length] = 'n|' + stripCommands(arg.slice(1).join(', '));
 				}
 				this.say(by, room, 'The welcome message was set.');
@@ -1779,8 +1779,8 @@ exports.commands = {
 				break;
 			case 'on':
 				if (!this.hasRank(by, '#&~')) return false;
-				if (data.indexOf(room) > -1) {
-					data[data.indexOf(room) + 1] = 'n' + data[data.indexOf(room) + 1].slice(1);
+				if (data.indexOf(room + '|' + config.serverid) > -1) {
+					data[data.indexOf(room + '|' + config.serverid) + 1] = 'n' + data[data.indexOf(room + '|' + config.serverid) + 1].slice(1);
 				}
 				else {
 					return this.say(by, room, 'You need to set a welcome message first')
@@ -1790,8 +1790,8 @@ exports.commands = {
 				break;
 			case 'off':
 				if (!this.hasRank(by, '#&~')) return false;
-				if (data.indexOf(room) > -1) {
-					data[data.indexOf(room) + 1] = 'd' + data[data.indexOf(room) + 1].slice(1);
+				if (data.indexOf(room + '|' + config.serverid) > -1) {
+					data[data.indexOf(room + '|' + config.serverid) + 1] = 'd' + data[data.indexOf(room + '|' + config.serverid) + 1].slice(1);
 				}
 				else {
 					return this.say(by, room, 'You need to set a welcome message first')
@@ -1815,8 +1815,8 @@ exports.commands = {
 				break;
 			case 'show':
 				if (!this.hasRank(by, '#&~')) return false;
-				if (data.indexOf(room) === -1) return false;
-				this.say(by, room, '\"' + data[data.indexOf(room) + 1].slice(2) + '\"');
+				if (data.indexOf(room + '|' + config.serverid) === -1) return false;
+				this.say(by, room, '\"' + data[data.indexOf(room + '|' + config.serverid) + 1].slice(2) + '\"');
 		}
 	},
 	randpoke: function(arg, by, room) {

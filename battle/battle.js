@@ -1135,15 +1135,12 @@ exports.commands = {
         if (!link) return this.say(by, room, 'The format is ' + config.commandcharacter[0] + ' addteam tier, hastebin of team')
         if (link.indexOf('hastebin.com') === -1) return false;
         var id = link.trim().split('/');
-        console.log(id);
         id = id[id.length - 1];
         var destination = 'http://hastebin.com/raw/' + id;
         var self = this;
         var packedTeam = [];
-        console.log(destination);
         try {
             this.getHastebin(destination, function(data) {
-                console.log(data);
                 if (!data) return self.say(by, room, 'Error parsing hastebin.')
                 self.say(by, room, 'Parsing Team....')
                 var PokemonData = data.split('\n\n');
@@ -1210,7 +1207,6 @@ exports.commands = {
                                         evData[e] = evData[e].trim();
                                         var eValue = evData[e].split(' ')[0];
                                         var eID = evData[e].split(' ')[1];
-                                        console.log(eID + ': ' + eValue);
                                         tarPoke.evs[order.indexOf(eID)] = eValue;
                                     }
                                     break;
@@ -1261,7 +1257,6 @@ exports.commands = {
                 }
                 //end of each poke
                 packedTeam = packedTeam.join(']');
-                console.log(packedTeam);
 
                 if (!TEAMS[tier]) {
                     TEAMS[tier] = [];
