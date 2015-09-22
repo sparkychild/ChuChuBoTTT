@@ -342,6 +342,7 @@ function bestMove(moves, user, target, room, extras) {
 
 function bestMatchUp(myTeam, targetTeam, room) {
     debug('{bestmatchup}' + JSON.stringify(myTeam) + '|' + JSON.stringify(targetTeam));
+    
     var Pokedex = isolate(POKEDEX);
     var Movedex = isolate(MOVEDEX);
     var TypeChart = isolate(TYPECHART);
@@ -384,6 +385,11 @@ function bestMatchUp(myTeam, targetTeam, room) {
     var Pokedex = isolate(POKEDEX);
     var Movedex = isolate(MOVEDEX);
     var TypeChart = isolate(TYPECHART);
+    //safetycatch for random battles/opponent has no known 'team'
+    if(targetTeam.length === 0){
+        return Battles[room].bot.teamlist.indexOf(myTeam[0]) + 1;
+    }
+    
     //details:
     //myTeam refers to what isn't Ko'd yet
     //targetTeam refers to what isn't ko'd yet
