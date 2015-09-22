@@ -1092,6 +1092,7 @@ exports.battleParser = {
                     send((room === 'lobby' ? '' : room) + '|/tour acceptchallenge');
                 }
                 else if (tourData.challenges) {
+                    var tier = Tours[room];
                     if (!tourData.challenges[0]) return;
                     if (TEAMS[tier]) {
                         var selectTeam = TEAMS[tier][~~(TEAMS[tier].length * Math.random())]
