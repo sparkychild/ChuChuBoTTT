@@ -1377,6 +1377,24 @@ exports.commands = {
 		}
 		this.say(by, room, text);
 	},
+	editcom: function(arg, by, room) {
+		if (!this.canUse('addcom', room, by) || !arg || arg.split(',').length < 2) return false;
+		var command = toId(arg.split(',')[0]);
+		var output = arg.split(',').slice(1).join(',').trim();
+		if(!output || output.length === 0) return false;
+		var search = config.serverid + '|' + toId(config.nick) + '|' + room + '|' + command + '|';
+		var ccommands = fs.readFileSync('data/addcom.txt').toString().split("\n");
+		for (var i = 0; i < ccommands.length; i++) {
+			if(ccommands[i].indexOf(search) === 0){
+				var spl = ccommands[i].split('|');
+				var part = spl.slice(0, 5).join('|');
+				ccommands[i] = part + '|' + output + '|' + by;
+				fs.writeFileSync('data/addcom.txt', ccommands.join('\n'));
+				return this.say(by, room, 'Command edited!');
+			}
+		}
+		this.say(by, room, 'I was unable to find the command!');
+	},
 	setcom: function(arg, by, room) {
 		if (!this.canUse('addcom', room, by) || !arg || arg.split(',').length < 2) return false;
 		var command = toId(arg.split(',')[0]);
