@@ -772,10 +772,10 @@ exports.battleParser = {
                 var tarMon = Battles[room].nicknames[info[0]];
                 //remove from team's standing mons
                 if (player !== Battles[room].id) {
-                    Battles[room].bot.team.splice(Battles[room].bot.team.indexOf(tarMon), 1);
+                    Battles[room].opponent.team.splice(Battles[room].opponent.team.indexOf(tarMon), 1);
                 }
                 Battles[room].faints++
-                    debug(JSON.stringify(Battles[room].opponent.team));
+                debug(JSON.stringify(Battles[room].opponent.team));
                 debug(JSON.stringify(Battles[room].bot.team));
                 //wait to get all faint messages
 
