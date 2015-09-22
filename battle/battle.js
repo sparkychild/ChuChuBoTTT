@@ -339,47 +339,6 @@ function bestMove(moves, user, target, room, extras) {
     debug('{mymovechoice} ' + top[0]);
     return allMoves.indexOf(top[0]) + 1;
 }
-
-function bestMatchUp(myTeam, targetTeam, room) {
-    debug('{bestmatchup}' + JSON.stringify(myTeam) + '|' + JSON.stringify(targetTeam));
-    
-    var Pokedex = isolate(POKEDEX);
-    var Movedex = isolate(MOVEDEX);
-    var TypeChart = isolate(TYPECHART);
-    //details:
-    //myTeam refers to what isn't Ko'd yet
-    //targetTeam refers to what isn't ko'd yet
-    //room is the battle.id
-    //discover the target team's weakness;
-    //gather types in opponent's team
-    var tTypes = [];
-    for (var i = 0; i < targetTeam.length; i++) {
-        tTypes.push(Pokedex[targetTeam[i]].types[0]);
-        if (Pokedex[targetTeam[i]].types[1]) {
-            tTypes.push(Pokedex[targetTeam[i]].types[1]);
-        }
-    }
-    //calculate total weakness
-    var tWeak = TypeChart[tTypes[0]].damageTaken;
-    //console.log(JSON.stringify(tWeak));
-    for (var i = 1; i < tTypes.length; i++) {
-        for (var type in tWeak) {
-            tWeak[type] = tWeak[type] * TypeChart[tTypes[i]].damageTaken[type];
-        }
-    }
-    //determine who does best;
-    var best = ['', 0];
-    for (var i = 0; i < myTeam.length; i++) {
-        var type1 = Pokedex[myTeam[i]].types[0];
-        var type2 = Pokedex[myTeam[i]].types[1] || type1;
-        var total = tWeak[type1] + tWeak[type2];
-        if (total > best[1]) {
-            best = [myTeam[i], total];
-        }
-    }
-    return Battles[room].bot.teamlist.indexOf(best[0]) + 1;
-}
-
 function bestMatchUp(myTeam, targetTeam, room) {
     debug('{bestmatchup}' + JSON.stringify(myTeam) + '|' + JSON.stringify(targetTeam));
     var Pokedex = isolate(POKEDEX);
