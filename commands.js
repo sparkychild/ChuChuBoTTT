@@ -1419,7 +1419,7 @@ exports.commands = {
 		var splarg = arg.split(',');
 		var tarRanks = 'n+★%@#&~';
 		if (!splarg[0] || !splarg[1] || !splarg[2]) {
-			this.say(by, room, 'The correct format is +addcom __command__::__rank__::__output__');
+			this.say(by, room, 'The correct format is +addcom __command__, __rank__, __output__');
 			return false;
 		}
 
@@ -1427,7 +1427,7 @@ exports.commands = {
 		splarg[1] = splarg[1].trim();
 
 		if (!splarg[0] || !splarg[1] || !splarg[2]) {
-			this.say(by, room, 'The correct format is +addcom __command__::__rank__::__output__');
+			this.say(by, room, 'The correct format is +addcom __command__, __rank__, __output__');
 			return false;
 		}
 		if (!(tarRanks.indexOf(splarg[1]) > -1) || splarg[1].length !== 1) {
