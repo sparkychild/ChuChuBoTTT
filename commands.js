@@ -1377,24 +1377,6 @@ exports.commands = {
 		}
 		this.say(by, room, text);
 	},
-	editcom: function(arg, by, room) {
-		if (!this.canUse('addcom', room, by) || !arg || arg.split(',').length < 2) return false;
-		var command = toId(arg.split(',')[0]);
-		var output = arg.split(',').slice(1).join(', ').trim();
-		if (!output || output.length === 0) return false;
-		var search = config.serverid + '|' + toId(config.nick) + '|' + room + '|' + command + '|';
-		var ccommands = fs.readFileSync('data/addcom.txt').toString().split("\n");
-		for (var i = 0; i < ccommands.length; i++) {
-			if (ccommands[i].indexOf(search) === 0) {
-				var spl = ccommands[i].split('|');
-				var part = spl.slice(0, 5).join('|');
-				ccommands[i] = part + '|' + output + '|' + by;
-				fs.writeFileSync('data/addcom.txt', ccommands.join('\n'));
-				return this.say(by, room, 'Command edited!');
-			}
-		}
-		this.say(by, room, 'I was unable to find the command!');
-	},
 	setcom: function(arg, by, room) {
 		if (!this.canUse('addcom', room, by) || !arg || arg.split(',').length < 2) return false;
 		var command = toId(arg.split(',')[0]);
@@ -1416,24 +1398,25 @@ exports.commands = {
 	},
 	addcom: function(arg, by, room) {
 		if (!this.canUse('addcom', room, by)) return false;
-		var splarg = arg.split('::');
+		var splarg = arg.split(',');
 		var tarRanks = 'n+★%@#&~';
 		if (!splarg[0] || !splarg[1] || !splarg[2]) {
-			this.say(by, room, 'The correct format is ' + config.commandcharacter[0] + 'addcom __command__::__rank__::__output__');
+			this.say(by, room, 'The correct format is +addcom __command__::__rank__::__output__');
 			return false;
 		}
 
 		splarg[0] = toId(splarg[0]);
+		splarg[1] = splarg[1].trim();
 
 		if (!splarg[0] || !splarg[1] || !splarg[2]) {
-			this.say(by, room, 'The correct format is ' + config.commandcharacter[0] + 'addcom __command__::__rank__::__output__');
+			this.say(by, room, 'The correct format is +addcom __command__::__rank__::__output__');
 			return false;
 		}
 		if (!(tarRanks.indexOf(splarg[1]) > -1) || splarg[1].length !== 1) {
 			splarg[1] = config.defaultrank;
 		}
 		if (Commands[splarg[0]]) {
-			this.say(by, room, 'Such a command already exists.');
+			this.say(by, room, 'Such a command already exists naturally on the bot.');
 			return false;
 		}
 		var ccommands = fs.readFileSync('data/addcom.txt').toString().split("\n");
@@ -1441,12 +1424,11 @@ exports.commands = {
 		for (var idx = 0; idx < ccommands.length; idx++) {
 			var comspl = ccommands[idx].split('|');
 			if (room === comspl[2] && splarg[0] === comspl[3] && comspl[0] === config.serverid && comspl[1] === toId(config.nick)) {
-				return this.say(by, room, 'This custom command already exists!!!!');
+				return this.say(by, room, 'This custom command already exists! To change it, use ' + config.commandcharacter[0] + 'editcom [command], [output]');
 			}
 		}
-		if (splarg[2].indexOf('psim') > -1 && splarg[2].indexOf('eos.psim') === -1) return this.say(by, room, 'LOL nice try!')
-		fs.appendFile('data/addcom.txt', config.serverid + '|' + toId(config.nick) + '|' + room + '|' + splarg[0] + '|' + splarg[1] + '|' + splarg[2] + '|' + by + '\n');
-		this.say(by, room, 'The custom command **' + splarg[0] + '** has successfully been entered!!!');
+		fs.appendFile('data/addcom.txt', config.serverid + '|' + toId(config.nick) + '|' + room + '|' + splarg[0] + '|' + splarg[1] + '|' + splarg.slice(2).join(',') + '|' + by + '\n');
+		this.say(by, room, 'The custom command "' + splarg[0] + '" has successfully been entered!!!');
 	},
 	delcom: 'deletecom',
 	deletecom: function(arg, by, room) {
@@ -1465,7 +1447,7 @@ exports.commands = {
 					var output = temp.substr(0, idx) + temp.substr(idx + search.length);
 					output = output.replace(/^\s*$[\n\r]{1,}/gm, '');
 					fs.writeFileSync('data/addcom.txt', output);
-					this.say(by, room, 'The command ' + arg + ' has been removed from the room ' + room);
+					this.say(by, room, 'The command "' + arg + '" has been removed from the room ' + room);
 					success = true;
 				}
 			}
