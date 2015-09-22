@@ -24,6 +24,7 @@ checkData();
 //battle component 
 var Battle = require('./battle/battle.js').battleParser;
 global.TEAMS = JSON.parse(fs.readFileSync('battle/teams.json'));
+global.Tours = {};
 global.Battles = {};
 
 var deck = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ';
