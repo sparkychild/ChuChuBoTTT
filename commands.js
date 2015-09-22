@@ -646,7 +646,7 @@ exports.commands = {
 			return this.say(by, room, 'You can\'t kick someone that is of a higher rank!')
 		}
 		if (botsRank <= targetRank) return false;
-		if(this.rankFrom(victim, '+')){
+		if (this.rankFrom(victim, '+')) {
 			return this.say(by, room, 'Access denied :^)');
 		}
 		this.say(by, room, '/rb ' + victim + ',♥ ^_^ ♥');
@@ -3260,5 +3260,25 @@ exports.commands = {
 					break;
 			}
 		})
+	},
+	tour: function(arg, by, room) {
+		if (!this.hasRank(by, '@&#~')) return false;
+		if (!this.settings[config.serverid][toId(config.nick)].tournaments) {
+			this.settings[config.serverid][toId(config.nick)].tournaments = {};
+		}
+		if (!arg || ['on', 'off'].indexOf(toId(arg)) === -1) return this.say(by, room, 'Tour autojoin is ' + (this.settings[config.serverid][toId(config.nick)].tournaments[room] ? 'ON' : 'OFF'));
+		switch (toId(arg)) {
+			case 'on':
+				this.settings[config.serverid][toId(config.nick)].tournaments[room] = true;
+				this.writeSettings();
+				break;
+			case 'off':
+				if (this.settings[config.serverid][toId(config.nick)].tournaments[room]) {
+					delete this.settings[config.serverid][toId(config.nick)].tournaments[room];
+					this.writeSettings();
+				}
+				break;
+		}
+		this.say(by, room, 'Tour autojoin is ' + (this.settings[config.serverid][toId(config.nick)].tournaments[room] ? 'ON' : 'OFF'));
 	}
 };

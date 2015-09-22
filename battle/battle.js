@@ -1051,9 +1051,6 @@ exports.battleParser = {
     },
     accept: function(user, tier) {
         if (!user || !tier) return;
-        if(!TEAMS[tier]){
-            console.log('I dont have a team for ' + tier);
-        }
         if ((!TEAMS[tier] && ['battlefactory', 'randombattle', 'challengecup1v1', 'monotyperandombattle', 'hackmonscup'].indexOf(tier) === -1) || Object.keys(Battles).length >= MAXBATTLES || Parse.isBanned(user)) {
             return send('|/reject ' + user);
         }
@@ -1063,6 +1060,48 @@ exports.battleParser = {
         }
         send('|/accept ' + user);
     },
+    tournaments: function(message, room) {
+        //'a[">viridianforest\\n|tournament|create|ou|Single Elimination|0"]'
+        //cmd: /tour acceptchallenge
+        var info = message;
+        if (!info[0]) return false;
+        switch (info[0]) {
+            case 'create':
+                tier = info[1];
+                if (!Parse.settings[config.serverid][toId(config.nick)].tournaments) {
+                    Parse.settings[config.serverid][toId(config.nick)].tournaments = {};
+                }
+                if(!Parse.settings[config.serverid][toId(config.nick)].tournaments[room]) return false;
+                if (!TEAMS[tier] && ['battlefactory', 'randombattle', 'challengecup1v1', 'monotyperandombattle', 'hackmonscup'].indexOf(tier) === -1) return false;
+                Tours[room] = info[1];
+                send((room === 'lobby' ? '' : room) + '|/tour join');
+                break;
+            case 'update':
+                try {
+                    var tourData = JSON.parse(info[1]);
+                }
+                catch (e) {
+                    return false;
+                }
+                if (tourData.challenged) {
+                    var tier = Tours[room];
+                    if (TEAMS[tier]) {
+                        var selectTeam = TEAMS[tier][~~(TEAMS[tier].length * Math.random())]
+                        send('|/useteam ' + selectTeam);
+                    }
+                    send((room === 'lobby' ? '' : room) + '|/tour acceptchallenge');
+                }
+                else if (tourData.challenges) {
+                    if (!tourData.challenges[0]) return;
+                    if (TEAMS[tier]) {
+                        var selectTeam = TEAMS[tier][~~(TEAMS[tier].length * Math.random())]
+                        send('|/useteam ' + selectTeam);
+                    }
+                    send((room === 'lobby' ? '' : room) + '|/tour challenge ' + tourData.challenges[0]);
+                }
+                break;
+        }
+    }
 };
 exports.commands = {
     evalbattle: function(arg, user, room) {
@@ -1128,7 +1167,7 @@ exports.commands = {
         var tier = toId(parts[0]);
         //DONT ALLOW ANYTHING GOES BC OF NO SPECIES CLAUSE;
         var allowedTiers = ['ubers', 'oumomega', 'ou', 'uu', 'ru', 'nu', 'pu', 'monotype', 'lc', 'oumomega', 'battlespotsingles', 'cap', '1v1', 'lcuu'];
-        if(allowedTiers.indexOf(tier) == -1){
+        if (allowedTiers.indexOf(tier) == -1) {
             return this.say(by, room, 'Sorry, I don\'t accept these teams becaues I cannot play these formats!')
         }
         var link = parts[1].trim();
@@ -1257,7 +1296,8 @@ exports.commands = {
                 }
                 //end of each poke
                 packedTeam = packedTeam.join(']');
-
+                //sync teams first
+                TEAMS = JSON.parse(fs.readFileSync('battle/teams.json'));
                 if (!TEAMS[tier]) {
                     TEAMS[tier] = [];
                 }

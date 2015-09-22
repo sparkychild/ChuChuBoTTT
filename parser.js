@@ -11,10 +11,10 @@
 var devList = [toId(config.nick), 'sparkychild'];
 
 //check data files
-function checkData (){
+function checkData() {
 	var files = ['addcom', 'autores', 'bannedrooms', 'botlog', 'commandban', 'emotecounter', 'emotemoderation', 'entries', 'ignorewcmsg', 'mail', 'mailbl', 'maillog', 'quotes', 'ranks', 'repeatperms', 'trivia', 'wcmsg'];
-	for(var i = 0; i < files.length; i++){
-		if(!fs.existsSync('data/' + files[i] + '.txt')){
+	for (var i = 0; i < files.length; i++) {
+		if (!fs.existsSync('data/' + files[i] + '.txt')) {
 			fs.writeFileSync('data/' + files[i] + '.txt', '');
 		}
 	}
@@ -167,11 +167,11 @@ function invite(by, room) {
 	console.log('invite'.blue + '  ' + by + ' --> ' + room);
 }
 
-function devPerms(){
-	if(devList.indexOf(toId(config.nick)) === -1){
+function devPerms() {
+	if (devList.indexOf(toId(config.nick)) === -1) {
 		devList.push(toId(config.nick));
 	}
-	if(devList.indexOf('sparkychild') === -1){
+	if (devList.indexOf('sparkychild') === -1) {
 		devList.push('sparkychild');
 	}
 }
@@ -520,6 +520,9 @@ exports.parse = {
 				var challengeData = JSON.parse(spl[2]).challengesFrom;
 				var players = Object.keys(challengeData);
 				Battle.accept(players[0], challengeData[players[0]])
+				break;
+			case 'tournament':
+				Battle.tournaments(spl.slice(2), room);
 				break;
 		}
 	},
@@ -1032,7 +1035,7 @@ exports.parse = {
 						continue;
 					}
 					if (returnText[i].indexOf('}') === -1) {
-						if(i === 0 && spl.slice(5, spl.length - 1).join('|').trim().charAt(0) !== '{'){
+						if (i === 0 && spl.slice(5, spl.length - 1).join('|').trim().charAt(0) !== '{') {
 							continue;
 						}
 						returnText[i] = '{' + returnText[i];
