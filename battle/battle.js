@@ -248,13 +248,14 @@ function bestMove(moves, user, target, room, extras) {
                 continue;
             }
         }
+        //sleep clause
         if (Movedex[move].status === 'slp') {
-            for (var tarMon in Battles[room].opponent.status) {
-                if (Battles[room].opponent.status[tarMon] === 'slp') {
-                    continue;
-                }
+            if (Object.values(Battles[room].opponent.status).indexOf('slp') > -1) {
+                score = 0;
             }
-            score = 160;
+            else {
+                score = 160;
+            }
         }
         if (Movedex[move].status === 'par' && Pokedex[target].baseStats.spe >= 80) {
             if (Pokedex[target].types.indexOf('Electric') === -1) {
@@ -339,16 +340,17 @@ function bestMove(moves, user, target, room, extras) {
     debug('{mymovechoice} ' + top[0]);
     return allMoves.indexOf(top[0]) + 1;
 }
+
 function bestMatchUp(myTeam, targetTeam, room) {
     debug('{bestmatchup}' + JSON.stringify(myTeam) + '|' + JSON.stringify(targetTeam));
     var Pokedex = isolate(POKEDEX);
     var Movedex = isolate(MOVEDEX);
     var TypeChart = isolate(TYPECHART);
     //safetycatch for random battles/opponent has no known 'team'
-    if(targetTeam.length === 0){
+    if (targetTeam.length === 0) {
         return Battles[room].bot.teamlist.indexOf(myTeam[0]) + 1;
     }
-    
+
     //details:
     //myTeam refers to what isn't Ko'd yet
     //targetTeam refers to what isn't ko'd yet
@@ -740,7 +742,7 @@ exports.battleParser = {
                     Battles[room].opponent.team.splice(Battles[room].opponent.team.indexOf(tarMon), 1);
                 }
                 Battles[room].faints++
-                debug(JSON.stringify(Battles[room].opponent.team));
+                    debug(JSON.stringify(Battles[room].opponent.team));
                 debug(JSON.stringify(Battles[room].bot.team));
                 //wait to get all faint messages
 
@@ -1036,7 +1038,7 @@ exports.battleParser = {
                 if (!Parse.settings[config.serverid][toId(config.nick)].tournaments) {
                     Parse.settings[config.serverid][toId(config.nick)].tournaments = {};
                 }
-                if(!Parse.settings[config.serverid][toId(config.nick)].tournaments[room]) return false;
+                if (!Parse.settings[config.serverid][toId(config.nick)].tournaments[room]) return false;
                 if (!TEAMS[tier] && ['battlefactory', 'randombattle', 'challengecup1v1', 'monotyperandombattle', 'hackmonscup'].indexOf(tier) === -1) return false;
                 Tours[room] = info[1];
                 send((room === 'lobby' ? '' : room) + '|/tour join');
