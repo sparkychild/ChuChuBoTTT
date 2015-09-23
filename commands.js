@@ -2945,7 +2945,7 @@ exports.commands = {
 	language: function(arg, by, room) {
 		if (!this.hasRank(by, '#~')) return false;
 		if (!arg) {
-			return this.say(by, room, this.settings[config.serverid][toId(config.nick)].translation[room] || 'en', true)
+			return this.say(by, room, config.nick + ' is operating in :' + this.settings[config.serverid][toId(config.nick)].translation[room] || 'en', true)
 		}
 		arg = toId(arg).slice(0, 2);
 		var allowed = ['zh', 'en', 'fr', 'de', 'ar', 'it', 'es', 'ja', 'he', 'ru', 'pt', 'th', 'uk', 'nl', 'ko', 'id'];
