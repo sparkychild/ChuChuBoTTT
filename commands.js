@@ -184,7 +184,7 @@ exports.commands = {
 		}
 	},
 	git: function(arg, by, room) {
-		if (!this.hasRank('&#~')) room = ',' + by
+		if (!this.hasRank(by, '&#~')) room = ',' + by
 		return this.say(by, room, 'https://github.com/sparkychild/ChuChu-BoTTT', true);
 	},
 	c: 'custom',
