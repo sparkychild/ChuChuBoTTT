@@ -469,7 +469,7 @@ exports.parse = {
 			case 'j':
 				var by = spl[2];
 				this.rooms[room].users[toId(by)] = by.charAt(0);
-				if (config.rooms.indexOf(room) === -1 && room.substr(0, 7) !== 'battle-') {
+				if (config.rooms.indexOf(room) === -1 && room.substr(0, 7) !== 'battle-' && room.substr(0, 10) !== 'groupchat-') {
 					config.rooms.push(room);
 					fs.writeFileSync('data/newrooms/' + config.nick + '_' + config.serverid + '.json', JSON.stringify(config.rooms));
 				}
