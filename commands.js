@@ -71,11 +71,6 @@ var rpModes = [
 	'dungeonsanddragons', 'The host is the gamemaster, taking control of the RP\'s setting, plot, and other things, such as doing the rolls usually in front of the players. The players choose a class from the host\'s document, then fight various battles and go through the host\'s scenario\/"campaign".',
 	'goodvsevil', 'In this RP, two sides, the particular Good and Evil \'sides\', duke it out in PS! battles until one of the sides is victorious. Each team has a leader, which decide the setting of what they\'re protecting, and control how the groups attack. http://tinyurl.com/gudvsevil'
 ];
-//
-//repeat based variables
-var repeatON = false;
-var repeatText;
-var repeatRoom;
 // TRIVIA BASED VARIABLES
 var triviaON = {};
 var triviaTimer = {};
@@ -1070,39 +1065,33 @@ exports.commands = {
 	repeat: function(arg, by, room) {
 		if (room.charAt(0) === ',') return false;
 		if (!arg) return false;
-		if (repeatON) {
-			this.say(by, room, 'The bot is already repeating something. Somewhere.');
-			return false;
-		}
-		if (!this.hasRank(by, '#')) return false;
-		var repeatperms = fs.readFileSync('data/repeatperms.txt').toString().split('\n')
 
-		if (repeatperms.indexOf(toId(by)) === -1) {
-			return this.say(by, room, '/w ' + by + ', Please contact sparkychild to request for perms to use this command.   Any abuse will NOT be tolerated')
+		if (!this.hasRank(by, '#') || !this.rankFrom(by, '+')) return false;
+		if (this.repeatON[room]) {
+			return this.say(by, room, 'There is already a repeat happening in this room.')
 		}
 
-		var spl = arg.split(':::');
-		var tarTime = spl[0].replace(/\s/g, '') * 60 * 1000;
+		var spl = arg.split(',');
+		var tarTime = spl[0].replace(/[^0-9\.]/g, '') * 60 * 1000;
 		if (!spl[0] || !spl[1]) {
-			this.say(by, room, 'The format is .repeat [minutes]:::[text]');
+			this.say(by, room, 'The format is repeat [minutes], [text]');
 			return false;
 		}
-		if (/(q|w|e|r|t|y|u|o|p|a|s|d|f|g|h|j|k|l|z|x|c|v|b|n|m|,|\/|'|;|\[|\]|=|-|!|@|#|\$|%|\^|&|\*|\(|\)|{|}|:|"|<|>|\?|~|`)/.test(tarTime)) return false;
-		repeatON = true;
+		if (isNaN(tarTime) || tarTime < 5 * 60000) {
+			return this.say(by, room, 'Please use a valid time interval more than 5 minutes.')
+		}
 		this.say(by, room, 'I will be repeating that text once every ' + tarTime / 60000 + ' minutes.');
-		repeatRoom = room;
-		repeatText = setInterval(function() {
-			this.talk(room, '/wall ' + spl[1]);
+		this.repeatON[room] = true;
+		this.repeatText[room] = setInterval(function() {
+			this.talk(room, stripCommands(spl.slice(1).join(',').trim()).replace('//wall', '/wall').replace('//declare', '/declare'));
 		}.bind(this), tarTime);
 	},
 	stoprepeat: function(arg, by, room) {
-		if (!repeatON) return false;
 		if (room.charAt(0) === ',') return false;
-		if (room !== repeatRoom) return false;
-		if (!this.hasRank(by, '#') && !repeatON) return false;
-		clearInterval(repeatText);
+		if (!this.hasRank(by, '#') && !this.repeatON[room]) return false;
+		clearInterval(this.repeatText[room]);
 		this.say(by, room, 'This repeat was ended');
-		repeatON = false;
+		delete this.repeatON[room];
 	},
 	triviapoints: function(arg, by, room) {
 		if (!triviaON[room]) return false;
