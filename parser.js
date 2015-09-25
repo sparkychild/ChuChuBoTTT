@@ -195,6 +195,8 @@ exports.parse = {
 	mutes: {},
 	blacklistRegexes: {},
 	rooms: {},
+	repeatON: {},
+	repeatText: {},
 	data: function(data) {
 		if (data.substr(0, 1) === 'a') {
 			data = JSON.parse(data.substr(1));
