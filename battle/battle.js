@@ -684,6 +684,10 @@ exports.battleParser = {
             case 'turn':
                 //ai -
                 //reset faint counter
+                if(toId(info[0]) === '1'){
+                    send(room + '|gl hf!')
+                    send(room + '|/timer on')
+                }
                 Battles[room].faints = 0;
                 Battles[room].decision = choose(room);
                 break;
@@ -970,7 +974,6 @@ exports.battleParser = {
                 break;
             case 'teampreview':
                 var firstMon = bestMatchUp(Battles[room].bot.team, Battles[room].opponent.team, room);
-                selectMove(room, 'gl hf!');
                 selectMove(room, '/choose team ' + firstMon);
                 break;
                 /*
