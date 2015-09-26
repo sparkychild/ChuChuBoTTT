@@ -22,7 +22,6 @@ A pastebin guide to the bot's features can be found [here][6]
 Installation
 ------------
 
-[Click here][4] for an in-depth installation guide, courtesy of Rival Nick. Otherwise, basic instructions follow.
 
 Pokémon Showdown Bot requires [node.js][2] to run.
 This bot has not been tested on every `node.js` version possible, but has the same version requirements as [Pokémon Showdown][3]: either v0.6.3 through v0.8.22, or v0.10.2 and up.
@@ -37,6 +36,8 @@ To install dependencies, run:
 
 Copy `config-example.js` to `config.js` and edit the needed variables.
 To change the commands that the bot responds to, edit `commands.js`.
+
+In the folder 'data', create a file and call it ranks.txt and add '~' plus your name in lowercase letters only (no spaces) on the first line.  This will give you admin priviledges on your bot.
 
 Now, to start the bot, use:
 
