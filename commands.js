@@ -1385,16 +1385,22 @@ exports.commands = {
 		this.say(by, room, 'I was unable to find the command!');
 	},
 	setcom: function(arg, by, room) {
-		if (!this.canUse('addcom', room, by) || !arg || arg.split(',').length < 2) return false;
+		if (!this.canUse('addcom', room, by) || !arg) return false;
 		var command = toId(arg.split(',')[0]);
 		var tarRanks = 'n+★%@#&~';
-		var newRank = arg.split(',')[1].trim();
-		if (newRank.length !== 1 || tarRanks.indexOf(newRank) === -1) return this.say(by, room, 'The format is ' + config.commandcharacter[0] + 'setcom [command], [rank]')
+		var newRank = arg.split(',')[1];
+		if(newRank){
+			newRank = newRank.trim();
+		}
+		if (newRank && (tarRanks.indexOf(newRank) === -1 || newRank.length !== 1)) return this.say(by, room, 'The format is ' + config.commandcharacter[0] + 'setcom [command], [rank]')
 		var search = config.serverid + '|' + toId(config.nick) + '|' + room + '|' + command + '|';
 		var ccommands = fs.readFileSync('data/addcom.txt').toString().split("\n");
 		for (var i = 0; i < ccommands.length; i++) {
 			if (ccommands[i].indexOf(search) === 0) {
 				var spl = ccommands[i].split('|');
+				if (!newRank) {
+					return this.say(by, room, config.commandcharacter[0] + command + ' is usable by users ' + spl[4].replace('n', '"reg"') + ' and higher')
+				}
 				var part = spl.slice(0, 4).join('|');
 				ccommands[i] = part + '|' + newRank + '|' + spl.slice(5).join('|');
 				fs.writeFileSync('data/addcom.txt', ccommands.join('\n'));
