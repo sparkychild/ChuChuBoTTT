@@ -9,7 +9,7 @@ var MAXBATTLES = 2;
 function selectMove(room, text) {
     if (!text || typeof text !== 'string') return false;
     if (!text.split(' ')[1] && text.charAt(0) === '/' && text.substr(0, 6) !== '/leave') return false;
-    if (Battles[room] && Battles[room].bot.currentMon.mega && text.indexOf('move ') > -1) {
+    if (Battles[room] && Battles[room].bot.currentMon.mega && text.indexOf('move ') > -1 && text.indexOf(' mega') === -1) {
         debug('[original] ' + text);
         text += ' mega';
     }
@@ -165,11 +165,10 @@ function bestMove(moves, user, target, room, extras) {
         }
         debug('{lookingthroughmoves} ' + move)
             //determine type changing abilities
-        var specialAbility = hasTypeChangingAbility(user);
-        if (specialAbility && Movedex[move].type === 'Normal') {
+        if (['pixilate', 'aerilate', 'refrigerate'].indexOf(Battles[room].bot.currentMon.baseAbility) > -1 && Movedex[move].type === 'Normal') {
             score = score * 1.3 * 1.5;
-            switch (specialAbility) {
-                case 'Pixilate':
+            switch (Battles[room].bot.currentMon.baseAbility) {
+                case 'pixilate':
                     if (isEffective('moonblast', target)) {
                         score = score * effectiveFactor('moonblast', target);
                     }
@@ -177,7 +176,7 @@ function bestMove(moves, user, target, room, extras) {
                         score = score * effectiveFactor('moonblast', target);
                     }
                     break;
-                case 'Refrigerate':
+                case 'refrigerate':
                     if (isEffective('icebeam', target)) {
                         score = score * effectiveFactor('icebeam', target);
                     }
@@ -185,7 +184,7 @@ function bestMove(moves, user, target, room, extras) {
                         score = score * effectiveFactor('icebeam', target);
                     }
                     break;
-                case 'Aerilate':
+                case 'aerilate':
                     if (isEffective('airslash', target)) {
                         score = score * effectiveFactor('airslash', target);
                     }
@@ -647,6 +646,7 @@ exports.battleParser = {
                     Battles[room].bot.currentMon.allMoves = [];
                     Battles[room].bot.currentMon.data = tarMoves;
                     Battles[room].bot.currentMon.item = req.side.pokemon[0].item;
+                    Battles[room].bot.currentMon.ability = req.side.pokemon[0].baseAbility;
                     Battles[room].bot.currentMon.mega = req.side.pokemon[0].canMegaEvo;
                     Battles[room].bot.currentMon.hp = req.side.pokemon[0].condition.split(' ')[0].split('/')[0] / req.side.pokemon[0].condition.split(' ')[0].split('/')[1];
                     //declare moves i guess....
@@ -684,12 +684,12 @@ exports.battleParser = {
             case 'turn':
                 //ai -
                 //reset faint counter
-                if(toId(info[0]) === '1'){
+                if (toId(info[0]) === '1') {
                     send(room + '|gl hf!')
                     send(room + '|/timer on')
                 }
                 Battles[room].faints = 0;
-                Battles[room].decision = choose(room);
+                choose(room);
                 break;
             case 'drag':
             case 'switch':
@@ -898,6 +898,12 @@ exports.battleParser = {
                 }
                 break;
             case 'inactive':
+                if (info[0]) {
+                    info[0] = info[0].split(' (')[0];
+                }
+                if (['You have 300 seconds to make your decision.', 'You have 150 seconds to make your decision.', 'Battle timer is now ON: inactive players will automatically lose when time\'s up.'].indexOf(info[0]) > -1) {
+                    break;
+                }
                 selectMove(room, Battles[room].decision)
                 break;
             case 'callback':
