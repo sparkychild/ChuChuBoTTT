@@ -180,7 +180,7 @@ exports.commands = {
 	},
 	git: function(arg, by, room) {
 		if (!this.hasRank(by, '&#~')) room = ',' + by
-		return this.say(by, room, 'https://github.com/sparkychild/ChuChu-BoTTT', true);
+		return this.say(by, room, 'https://github.com/sparkychild/ChuChuBoTTT', true);
 	},
 	c: 'custom',
 	custom: function(arg, by, room) {
