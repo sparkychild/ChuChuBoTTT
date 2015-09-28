@@ -3,7 +3,7 @@
 const MOVEDEX = require('./moves.js').BattleMovedex;
 const POKEDEX = require('./pokedex.js').BattlePokedex;
 const TYPECHART = require('./typeEff.js').BattleTypeChart;
-var MAXBATTLES = 2;
+var MAXBATTLES = 1;
 
 //send the move
 function selectMove(room, text) {
@@ -113,20 +113,6 @@ function isImmune(move, target) {
     return TypeChart[types[0]].damageTaken[attackType] === 0;
 }
 
-function hasTypeChangingAbility(user) {
-    var Pokedex = isolate(POKEDEX);
-    var Movedex = isolate(MOVEDEX);
-    var TypeChart = isolate(TYPECHART);
-    //return type and total basepower OR return false;
-    var abilities = Pokedex[user].abilities;
-    for (var i in abilities) {
-        if (['Pixilate', 'Aerilate', 'Refrigerate'].indexOf(abilities[i]) > -1) {
-            return abilities[i];
-        }
-    }
-    return false;
-}
-
 //function for selecting best move
 function bestMove(moves, user, target, room, extras) {
     debug('{bestmove}' + JSON.stringify(moves) + '|' + user + '|' + target)
@@ -136,6 +122,7 @@ function bestMove(moves, user, target, room, extras) {
     var allMoves = Battles[room].bot.currentMon.allMoves;
     //functions used to determine base power
     //select the best move;
+
     if (moves[0] === 'struggle') {
         if (extras) {
             return 0;
@@ -150,6 +137,7 @@ function bestMove(moves, user, target, room, extras) {
         }
         var score = Movedex[move].basePower;
         if (isImmune(move, target)) {
+            debug('{immunity} ' + target + ' is immune to ' + move);
             score = 0;
         }
         if (isResisted(move, target) && !Movedex[move].status) {
@@ -195,23 +183,19 @@ function bestMove(moves, user, target, room, extras) {
             }
         }
 
-        if (move === 'voltswitch' || move === 'uturn') {
+        if ((move === 'voltswitch' && !isImmune('voltswitch', target)) || (move === 'uturn' && !isImmune('uturn', target))) {
             score += 25;
-        }
-        //check for status moves
-        if (Movedex[move].status && Movedex[move].basePower === 0 && Battles[room].opponent.status[target]) {
-            continue;
         }
         //check rest talk
         //sleep talk first bc no need to spam rest >:(
         if (move === 'sleeptalk' && Battles[room].bot.status[user] !== 'slp') {
-            continue;
+            score = 0;
         }
         else if (move === 'sleeptalk' && Battles[room].bot.status[user] === 'slp') {
             return allMoves.indexOf('sleeptalk') + 1;
         }
         if (move === 'rest' && Battles[room].bot.currentMon.hp === 1) {
-            continue;
+            score = 0;
         }
         else if (move === 'rest' && Battles[room].bot.currentMon.hp < 0.4) {
             return allMoves.indexOf('rest') + 1;
@@ -220,23 +204,13 @@ function bestMove(moves, user, target, room, extras) {
 
         //check for special status
         if (['stunspore', 'spore', 'poisonpowder', 'sleeppowder'].indexOf(move) > -1 && Pokedex[target].types.indexOf('Grass') > -1) {
-            continue;
+            score = 0;
         }
         //electric types now
         if (Movedex[move].status && Movedex[move].status === 'par' && Pokedex[target].types.indexOf('Electric') > -1) {
-            continue;
+            score = 0;
         }
-        //check for magic bounce...
-        var MBcheck = false;
-        for (var id in Pokedex[target].abilities) {
-            if (Pokedex[target].abilities.id === 'Magic Bounce') {
-                MBcheck = true;
-                break;
-            }
-        }
-        if (MBcheck && Movedex[move].category === 'Status') {
-            continue;
-        }
+
         //knock off BP check - im going to ignore this kek
         //ASSIGN POINTS FOR STATUS
         if (Movedex[move].status === 'brn' && (Pokedex[target].baseStats.atk >= 90 || Pokedex[target].baseStats.atk >= Pokedex[target].baseStats.hp)) {
@@ -244,7 +218,7 @@ function bestMove(moves, user, target, room, extras) {
                 score = 130
             }
             else {
-                continue;
+                score = 0;
             }
         }
         //sleep clause
@@ -261,41 +235,51 @@ function bestMove(moves, user, target, room, extras) {
                 score = 130;
             }
             else {
-                continue;
+                score = 0;
             }
         }
 
         //check for hazards
         if (move === 'stealthrock') {
             if (Battles[room].bot.hazards.stealthrock === 1) {
-                continue;
+                score = 0;
             }
-            score = 125;
+            else {
+                score = 125;
+            }
         }
         if (move === 'spikes') {
             if (Battles[room].bot.hazards.spikes == 3) {
-                continue;
+                score = 0;
             }
-            score = 90;
+            else {
+                score = 90;
+            }
         }
         if (move === 'toxicspikes') {
             if (Battles[room].bot.hazards.toxicspikes == 2) {
-                continue;
+                score = 0;
             }
-            score = 80;
+            else {
+                score = 80;
+            }
         }
         if (move === 'stickyweb') {
             if (Battles[room].bot.hazards.stickyweb === 1) {
-                continue;
+                score = 0;
             }
-            //always use sticky web
-            return allMoves.indexOf('stickyweb') + 1;
+            else {
+                //always use sticky web
+                return allMoves.indexOf('stickyweb') + 1;
+            }
         }
         if (move === 'taunt') {
             if (Battles[room].opponent.currentMon.taunt) {
-                continue;
+                score = 0;
             }
-            score = 130;
+            else {
+                score = 130;
+            }
         }
         //healing moves
         if (Movedex[move].heal && Movedex[move].basePower === 0) {
@@ -303,7 +287,7 @@ function bestMove(moves, user, target, room, extras) {
                 score = 100 + (100 - Battles[room].bot.currentMon.hp * 100);
             }
             else {
-                continue;
+                score = 0;
             }
         }
         //boosting moves
@@ -316,13 +300,29 @@ function bestMove(moves, user, target, room, extras) {
                 score = 100 + (100 - Battles[room].bot.currentMon.hp * 100);
             }
             else {
-                continue;
+                score = 0;
             }
+        }
+        //check for status moves
+        if (Movedex[move].status && Movedex[move].basePower === 0 && Battles[room].opponent.status[target]) {
+            score = 0;
+        }
+        //check for magic bounce...
+        var MBcheck = false;
+        for (var id in Pokedex[target].abilities) {
+            if (Pokedex[target].abilities.id === 'Magic Bounce') {
+                MBcheck = true;
+                break;
+            }
+        }
+        if (MBcheck && Movedex[move].category === 'Status' && Movedex[move].target !== 'self') {
+            score = 0;
         }
 
         //ALWAYS IMPORTANT OFC
         bestMove[move] = score;
     }
+    debug('{bestMoveData}' + JSON.stringify(bestMove));
     var top = ['', 0];
     for (var key in bestMove) {
         if (top[1] === 0) {
@@ -508,7 +508,7 @@ function choose(room) {
         megaWeakness = false;
     }
 
-    if ((weakness(Battles[room].bot.currentMon.species, Battles[room].opponent.currentMon.species) > 1 || megaWeakness) && bestMove(Battles[room].bot.currentMon.moves, Battles[room].bot.currentMon.species, Battles[room].opponent.currentMon.species, room, true) < 160) {
+    if (((weakness(Battles[room].bot.currentMon.species, Battles[room].opponent.currentMon.species) > 1 || megaWeakness) && bestMove(Battles[room].bot.currentMon.moves, Battles[room].bot.currentMon.species, Battles[room].opponent.currentMon.species, room, true) < 160) || (bestMove(Battles[room].bot.currentMon.moves, Battles[room].bot.currentMon.species, Battles[room].opponent.currentMon.species, room, true) < 80 && Battles[room].bot.currentMon.item.substr(0, 6) === 'choice')) {
         //choose to switch
         debug('{choose: unfavourable}')
             //debug if it cant switch// dont need oscilation
@@ -532,13 +532,16 @@ function choose(room) {
         }
         if ((Battles[room].bot.currentMon.moves.indexOf('voltswitch') > -1 || Battles[room].bot.currentMon.moves.indexOf('uturn') > -1) && Pokedex[Battles[room].bot.currentMon.species].baseStats.spe > Pokedex[Battles[room].opponent.currentMon.species].baseStats.spe) {
             if (Battles[room].bot.currentMon.moves.indexOf('voltswitch') > -1) {
-                if (Pokedex[Battles[room].opponent.currentMon.species].types.indexOf('Ground') !== -1) {
+                if (isImmune('voltswitch', Battles[room].opponent.currentMon.species)) {
                     //choose to switch
+                    debug('voltswitch - opponent not immune')
                     var switchIn = bestSwitchIn(Battles[room].bot.team, Battles[room].opponent.currentMon.species, room);
                     Battles[room].decision = '/choose switch ' + switchIn;
                     return selectMove(room, Battles[room].decision);
                 }
                 else {
+                    debug('voltswitch - opponent not immune')
+
                     return selectMove(room, '/move ' + (Battles[room].bot.currentMon.moves.indexOf('voltswitch') + 1))
                     Battles[room].last = Battles[room].bot.currentMon.moves.indexOf('voltswitch') + 1
                 }
@@ -554,6 +557,26 @@ function choose(room) {
     }
     else {
         debug('{choose: favourable}')
+        if ((weakness(Battles[room].bot.currentMon.species, Battles[room].opponent.currentMon.species) > 1 || megaWeakness) && Pokedex[Battles[room].bot.currentMon.species].baseStats.spe < Pokedex[Battles[room].opponent.currentMon.species].baseStats.spe) {
+            debug('oh no! im too slow')
+            //determine if i should stay in - enough bulk?;
+            var defender = Battles[room].bot.currentMon.species;
+            var attacker = Battles[room].opponent.currentMon.species;
+            //if can mega
+            if (Battles[room].bot.currentMon.mega) {
+                defender += 'mega';
+            }
+            //use higher attacking stat of the opponent
+            var attackStat = (Pokedex[attacker].baseStats.spa > Pokedex[attacker].baseStats.atk ? 'spa' : 'atk');
+            var defendStat = (attackStat === 'atk' ? 'def' : 'spd');
+            //if i cant tank the move then i switch.
+            var tankIndex = Pokedex[attacker].baseStats[attackStat] / Pokedex[defender].baseStats[defendStat];
+            debug(tankIndex);
+            if(tankIndex > 1.2){
+                debug('and.... im switching!')
+                return selectMove(room, '/switch ' + bestSwitchIn(Battles[room].bot.team, Battles[room].opponent.currentMon.species, room))
+            }
+        }
         var action = bestMove(Battles[room].bot.currentMon.moves, Battles[room].bot.currentMon.species, Battles[room].opponent.currentMon.species, room);
         if (action === 'switch') {
             var switchIn = bestSwitchIn(Battles[room].bot.team, Battles[room].opponent.currentMon.species, room);
@@ -865,7 +888,7 @@ exports.battleParser = {
                 //choose a new mon
                 //bestSwitchIn(mon, room);
                 if (Battles[room].id === player) {
-                    if (tarMove === 'voltswitch' || tarMove === 'uturn') {
+                    if ((tarMove === 'voltswitch' || tarMove === 'uturn') && Battles[room].bot.team.length > 1) {
                         debug('{vs/uturn}')
                         Battles[room].decision = '/choose switch ' + bestSwitchIn(Battles[room].bot.team, Battles[room].opponent.currentMon.species, room);
                         selectMove(room, Battles[room].decision)
