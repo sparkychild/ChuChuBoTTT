@@ -551,15 +551,39 @@ function choose(room) {
             return selectMove(room, Battles[room].decision);
         }
         else {
-            return selectMove(room, '/switch ' + bestSwitchIn(Battles[room].bot.team, Battles[room].opponent.currentMon.species, room))
-        }
+            //prediction for double switches
+            var mathRand = Math.random();
+            var toggleID = Battles[room].iq * 1.2;
+            if (mathRand < toggleID && Battles[room].bot.team.length !== 1) {
+                var mySwitch = tarSwitchIn(Battles[room].bot.currentMon.species, Battles[room].bot.team, Battles[room].opponent.currentMon.species);
+                //find my opponent's switch in to my mon
+                var oppSwitch = tarSwitchIn(Battles[room].opponent.currentMon.species, Battles[room].opponent.team, mySwitch);
+                //find out if i can hit them super effectively?
+                var allMoves = Battles[room].bot.currentMon.allMoves;
+                var chosenMove = allMoves[bestMove(Battles[room].bot.currentMon.moves, Battles[room].bot.currentMon.species, oppSwitch, room) - 1];
+                if (isImmune(chosenMove, Battles[room].opponent.currentMon.species) || isResisted(chosenMove, Battles[room].opponent.currentMon.species)) {
+                    //attempt a double switch?
+                    var doubleSwitch = bestSwitchIn(Battles[room].bot.team, oppSwitch, room);
+                    if (doubleSwitch) {
+                        return selectMove(room, '/choose switch ' + doubleSwitch);
+                    }
+                }
+                else {
+                    return selectMove(room, '/choose move ' + (allMoves.indexOf(chosenMove) + 1))
+                }
 
+            }
+            var theSwitchIn = bestSwitchIn(Battles[room].bot.team, Battles[room].opponent.currentMon.species, room);
+            if (theSwitchIn) {
+                return selectMove(room, '/switch ' + theSwitchIn)
+            }
+        }
     }
     else {
         debug('{choose: favourable}')
         if ((weakness(Battles[room].bot.currentMon.species, Battles[room].opponent.currentMon.species) > 1 || megaWeakness) && Pokedex[Battles[room].bot.currentMon.species].baseStats.spe < Pokedex[Battles[room].opponent.currentMon.species].baseStats.spe) {
             debug('oh no! im too slow')
-            //determine if i should stay in - enough bulk?;
+                //determine if i should stay in - enough bulk?;
             var defender = Battles[room].bot.currentMon.species;
             var attacker = Battles[room].opponent.currentMon.species;
             //if can mega
@@ -572,9 +596,26 @@ function choose(room) {
             //if i cant tank the move then i switch.
             var tankIndex = Pokedex[attacker].baseStats[attackStat] / Pokedex[defender].baseStats[defendStat];
             debug(tankIndex);
-            if(tankIndex > 1.2){
+            if (tankIndex > 1.2) {
                 debug('and.... im switching!')
                 return selectMove(room, '/switch ' + bestSwitchIn(Battles[room].bot.team, Battles[room].opponent.currentMon.species, room))
+            }
+        }
+        //is the opponent going to switch?
+        if (weakness(Battles[room].opponent.currentMon.species, Battles[room].bot.currentMon.species) > 1) {
+            var mathRand = Math.random();
+            var toggleID = Battles[room].iq * 1.2;
+            if (mathRand < toggleID) {
+                //find my opponent's switch in to my mon
+                var oppSwitch = tarSwitchIn(Battles[room].opponent.currentMon.species, Battles[room].opponent.team, Battles[room].bot.currentMon.species);
+                //find out if i can hit them super effectively?
+                var allMoves = Battles[room].bot.currentMon.allMoves;
+                var moveChoice = bestMove(Battles[room].bot.currentMon.moves, Battles[room].bot.currentMon.species, oppSwitch, room);
+                //choose best move for that
+                var chosenMove = allMoves[moveChoice - 1];
+                if (!isImmune(chosenMove, Battles[room].opponent.currentMon.species)) {
+                    return selectMove(room, '/choose move ' + moveChoice);
+                }
             }
         }
         var action = bestMove(Battles[room].bot.currentMon.moves, Battles[room].bot.currentMon.species, Battles[room].opponent.currentMon.species, room);
@@ -591,8 +632,53 @@ function choose(room) {
     }
 }
 
+function tarSwitchIn(user, team, target) {
+    var best = {
+        score: -1,
+        Mon: []
+    };
+    //round 1 of choosing -- defensive typing
+    for (var i = 0; i < team.length; i++) {
+        if (team[i] === user) {
+            debug('{skipped} ' + team[i])
+            continue;
+        }
+        var score = 1 / (weakness(team[i], target) || 8);
+        if (score > best.score) {
+            best.Mon = [team[i]];
+            best.score = score;
+        }
+        else if (score === best.score) {
+            best.Mon.push(team[i]);
+        }
+    }
+    if (!best.Mon[0]) {
+        return false;
+    }
+    //round 2 - tiebreaker - offensive presence
+    if (best.Mon.length > 1) {
+        var tarMons = best.Mon
+        var best2 = {
+            score: 0,
+            Mon: []
+        };
+        for (var i = 0; i < tarMons.length; i++) {
+            var score = weakness(target, tarMons[i]);
+            if (score > best2.score) {
+                best2.Mon = [tarMons[i]];
+                best2.score = score;
+            }
+            else if (score === best2.score) {
+                best2.Mon.push(tarMons[i]);
+            }
+        }
+        best = best2;
+    }
+    return best.Mon[~~(best.Mon.length * Math.random())];
+}
 
-
+//battle parser
+//where it recieves information from the server
 exports.battleParser = {
     receive: function(data, room) {
         if (room.indexOf('battle-') !== 0) return;
@@ -654,7 +740,8 @@ exports.battleParser = {
                         id: '',
                         faints: 0,
                         decision: '',
-                        tier: room.split('-')[1]
+                        tier: room.split('-')[1],
+                        iq: 0
                     }
                 }
                 //request|JSON|
@@ -731,6 +818,8 @@ exports.battleParser = {
                         debug('{newmon}' + tarMon);
                         Battles[room].opponent.team.push(tarMon);
                     }
+                    Battles[room].iq += (1 - Battles[room].iq) / 10;
+
                 }
                 else {
                     Battles[room].bot.last = null;
@@ -741,6 +830,7 @@ exports.battleParser = {
                         Battles[room].bot.team[Battles[room].bot.team.indexOf(oldName)] = tarMon;
                     }
                     */
+                    Battles[room].iq = Battles[room].iq / 1.2;
                 }
                 if (Battles[room].voltTurn && player !== Battles[room].id) {
                     if (Battles[room].bot.team.length === 1) {
@@ -767,6 +857,10 @@ exports.battleParser = {
                 //remove from team's standing mons
                 if (player !== Battles[room].id) {
                     Battles[room].opponent.team.splice(Battles[room].opponent.team.indexOf(tarMon), 1);
+                    Battles[room].iq = Battles[room].iq / 1.25;
+                }
+                else {
+                    Battles[room].iq += (1 - Battles[room].iq) / 5;
                 }
                 Battles[room].faints++
                     debug(JSON.stringify(Battles[room].opponent.team));
@@ -899,6 +993,7 @@ exports.battleParser = {
                     if (tarMove === 'voltswitch' || tarMove === 'uturn') {
                         debug('{vs/uturn}')
                         Battles[room].voltTurn = true;
+                        Battles[room].iq += (1 - Battles[room].iq) / 10;
                     }
                 }
 
@@ -1046,6 +1141,27 @@ exports.battleParser = {
                     Battles[room][target].currentMon.species = targetMon;
                     Battles[room][target].team[Battles[room][target].team.indexOf(original)] = targetMon;
                 }
+                break;
+            case 'supereffective':
+                //|-supereffective|p1a: Cute Loyal User
+                var player = info[0].substr(0, 2);
+                if (player !== Battles[room].id) {
+                    Battles[room].iq = Battles[room].iq / 1.4;
+                }
+                else {
+                    Battles[room].iq += (1 - Battles[room].iq) / 5;
+                }
+                break;
+            case 'resisted':
+                //|-resisted|p1a: Rock-Solid Loyalty
+                var player = info[0].substr(0, 2);
+                if (player === Battles[room].id) {
+                    Battles[room].iq = Battles[room].iq / 1.33;
+                }
+                else {
+                    Battles[room].iq += (1 - Battles[room].iq) / 6;
+                }
+                break;
         }
     },
     accept: function(user, tier) {
