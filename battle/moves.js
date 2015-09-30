@@ -4027,7 +4027,7 @@ exports.BattleMovedex = {
 	"electroball": {
 		num: 486,
 		accuracy: 100,
-		basePower: 0,
+		basePower: 70,
 		basePowerCallback: function(pokemon, target) {
 			var ratio = (pokemon.getStat('spe') / target.getStat('spe'));
 			this.debug([40, 60, 80, 120, 150][(Math.floor(ratio) > 4 ? 4 : Math.floor(ratio))] + ' bp');
