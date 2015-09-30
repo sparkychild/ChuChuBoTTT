@@ -111,7 +111,7 @@ wallace
 The pokemon PC system is operated by this lady in the Hoenn Region.
 lanette
 The pokemon PC system was expanded to allow trade with Hoenn by this resident of One Island
-Celio
+celio
 Pokemon Platinum introduced this NPC, a scientist working with Team Galactic that was arrested in Stark Mountain.
 charon
 Viridian's gym leader, he is also the boss of Team Rocket.
@@ -216,8 +216,8 @@ Using this move raises a Pokemon's Defense by 3.
 cottonguard
 What is Pikachu's name in Japanese?
 pikachu
-What is the only Pokemon with a BST of 555?
-arcanine
+What is the only Pokemon with a BST of 507?
+pyroar
 What Pokemon evolves when it levels up with a Remoraid in the party?
 mantyke
 Seed Flare is the signature move of what Pokemon?
@@ -284,10 +284,10 @@ Who is the female counterpart to Red in Pokemon Fire Red and Leaf Green?
 leaf
 What is the biggest Pokemon by height?
 wailord
-[What is the fastest Pokemon **including** legendaries?]
+What is the fastest Pokemon **including** legendaries?
 deoxysspeed
 What Pokemon got banned from Ubers?
-megarayquaza
+megarayquaza,rayquazamega
 What is the Fresh Snow Pokemon that evolves from Eevee?
 glaceon
 What Pokemon has the most evolutions?
@@ -296,3 +296,15 @@ What **Fighting Type** Pokemon has the most evolutions?
 tyrogue
 I want to be the best Pokemon master ever. Who am I?
 ash
+What is the only Pokemon to have a number in their name?
+porygon2
+Name one of Ash's female travel companions
+misty,dawn,may,iris,bonnie,serena
+These Pokemon have 600BST evenly distributed across the stats.
+mew,celebi,jirachi,shaymin,manaphy,victini
+Name one of the 3 starters in the Unova Region.
+snivy,oshawott,tepig
+Name one of Hoenn's Psychic type gym leaders
+tate,liza
+Name a Pokemon that has a BST of 590
+alakazammega,altariamega,kangaskhanmega,slowbromega,megaalakazam,megaaltaria,megakangaskhan,megaslowbro

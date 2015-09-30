@@ -1009,21 +1009,26 @@ exports.commands = {
 		if (room.charAt(',') === 0) return false;
 		if (!this.canUse('trivia', room, by)) return false;
 		if (triviaON[room]) {
-			this.say(by, room, 'A trivia game cannot be started, as it is going on in another room.');
+			this.say(by, room, 'A trivia game cannot be started, as it is in progress already.');
 			return false;
 		}
 		triviaON[room] = true;
 		triviaPoints[room] = [];
-		triviaA[room] = '';
+		triviaA[room] = [];
 		game('trivia', room);
 		this.say(by, room, 'Hosting a game of trivia\. First to 10 points wins!  use ' + config.commandcharacter[0] + 'ta or ' + config.commandcharacter[0] + 'triviaanswer to submit your answer\.');
 		triviaTimer[room] = setInterval(function() {
-			if (triviaA[room]) {
-				this.say(config.nick, room, 'The correct answer is: ' + triviaA[room]);
+			if (triviaA[room][0]) {
+				if (triviaA[room].length > 1) {
+					this.say(config.nick, room, 'The correct answers are: ' + triviaA[room].join(', '));
+				}
+				else {
+					this.say(config.nick, room, 'The correct answer is: ' + triviaA[room].join(', '));
+				}
 			}
 			var TQN = 2 * (Math.floor(triviaQuestions.length * Math.random() / 2))
 			triviaQ[room] = triviaQuestions[TQN];
-			triviaA[room] = triviaQuestions[TQN + 1];
+			triviaA[room] = triviaQuestions[TQN + 1].toLowerCase().replace(/ /g, '').trim().split(',');
 			this.say(config.nick, room, 'Question: __' + triviaQ[room] + '__');
 		}.bind(this), 17000);
 
@@ -1034,9 +1039,9 @@ exports.commands = {
 		arg = toId(arg);
 		if (!arg) return false;
 		var user = toId(by);
-		if (arg === triviaA[room]) {
+		if (triviaA[room].indexOf(arg) !== -1) {
 			if (triviaPoints[room].indexOf(user) > -1) {
-				triviaA[room] = '';
+				triviaA[room] = [];
 				triviaPoints[room][triviaPoints[room].indexOf(user) + 1] = triviaPoints[room][triviaPoints[room].indexOf(user) + 1] + 1;
 				if (triviaPoints[room][triviaPoints[room].indexOf(user) + 1] >= 10) {
 					clearInterval(triviaTimer[room]);
@@ -1047,7 +1052,7 @@ exports.commands = {
 				this.say(config.nick, room, '' + by.slice(1, by.length) + ' got the right answer, and has ' + triviaPoints[room][triviaPoints[room].indexOf(user) + 1] + ' points!');
 			}
 			else {
-				triviaA[room] = '';
+				triviaA[room] = [];
 				triviaPoints[room][triviaPoints[room].length] = user;
 				triviaPoints[room][triviaPoints[room].length] = 1;
 				this.say(config.nick, room, '' + by.slice(1, by.length) + ' got the right answer, and has ' + triviaPoints[room][triviaPoints[room].indexOf(user) + 1] + ' point!');
@@ -1370,11 +1375,11 @@ exports.commands = {
 		if (!this.canUse('addcom', room, by) || !arg || arg.split(',').length < 2) return false;
 		var command = toId(arg.split(',')[0]);
 		var output = arg.split(',').slice(1).join(',').trim();
-		if(!output || output.length === 0) return false;
+		if (!output || output.length === 0) return false;
 		var search = config.serverid + '|' + toId(config.nick) + '|' + room + '|' + command + '|';
 		var ccommands = fs.readFileSync('data/addcom.txt').toString().split("\n");
 		for (var i = 0; i < ccommands.length; i++) {
-			if(ccommands[i].indexOf(search) === 0){
+			if (ccommands[i].indexOf(search) === 0) {
 				var spl = ccommands[i].split('|');
 				var part = spl.slice(0, 5).join('|');
 				ccommands[i] = part + '|' + output + '|' + by;
@@ -1389,7 +1394,7 @@ exports.commands = {
 		var command = toId(arg.split(',')[0]);
 		var tarRanks = 'n+★%@#&~';
 		var newRank = arg.split(',')[1];
-		if(newRank){
+		if (newRank) {
 			newRank = newRank.trim();
 		}
 		if (newRank && (tarRanks.indexOf(newRank) === -1 || newRank.length !== 1)) return this.say(by, room, 'The format is ' + config.commandcharacter[0] + 'setcom [command], [rank]')
@@ -2836,9 +2841,9 @@ exports.commands = {
 	addtrivia: function(arg, by, room) {
 		if (!this.rankFrom(by, '+') || room.charAt(0) !== ',') return false;
 		arg = arg.replace(/, /g, ',').split(',');
-		if (!arg[1] || !arg[0]) return this.say(by, room, 'The format is ' + config.commandcharacter[0] + 'addtrivia [question], [reponse]');
-		var saveAnswer = toId(arg[arg.length - 1]);
-		var saveQuestion = arg.slice(0, arg.length - 1).join(', ');
+		if (!arg[1] || !arg[0]) return this.say(by, room, 'The format is ' + config.commandcharacter[0] + 'addtrivia [question]::[reponse],[response2]...');
+		var saveAnswer = arg[1].toLowerCase().replace(/[^\,a-z0-9]/g, '');
+		var saveQuestion = arg[0];
 		var TriviaDataBase = fs.readFileSync('data/trivia.txt').toString().split('\n');
 		if (TriviaDataBase.indexOf(saveQuestion) > -1) return this.say(by, room, 'This question already exists!');
 		fs.appendFile('data/trivia.txt', '\n' + saveQuestion + '\n' + saveAnswer);
