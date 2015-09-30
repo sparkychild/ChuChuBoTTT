@@ -553,7 +553,7 @@ function choose(room) {
             //prediction for double switches
             var mathRand = Math.random();
             var toggleID = Battles[room].iq;
-            if (mathRand < toggleID && Battles[room].bot.team.length !== 1) {
+            if (mathRand < toggleID && Battles[room].bot.team.length !== 1 && Battles[room].opponent.team.length > 1) {
                 var mySwitch = tarSwitchIn(Battles[room].bot.currentMon.species, Battles[room].bot.team, Battles[room].opponent.currentMon.species);
                 //find my opponent's switch in to my mon
                 var oppSwitch = tarSwitchIn(Battles[room].opponent.currentMon.species, Battles[room].opponent.team, mySwitch);
@@ -601,7 +601,7 @@ function choose(room) {
             }
         }
         //is the opponent going to switch?
-        if (weakness(Battles[room].opponent.currentMon.species, Battles[room].bot.currentMon.species) > 1 && Battles[room].bot.team.length !== 1) {
+        if (weakness(Battles[room].opponent.currentMon.species, Battles[room].bot.currentMon.species) > 1 && Battles[room].bot.team.length !== 1 && Battles[room].opponent.team.length > 1) {
             var mathRand = Math.random();
             var toggleID = Battles[room].iq;
             if (mathRand < toggleID) {
