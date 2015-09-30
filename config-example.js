@@ -1,18 +1,11 @@
-// The WEBSOCKET server and port the bot should connect to.
-// Most of the time this isn't the same as the URL, check the `Request URL` of
-// the websocket.
 //place the URL of the showdown server you are aiming to connect to
 exports.url = 'play.pokemonshowdown.com';
 
-
 // The nick and password to log in with
-// If no password is required, leave pass empty
 var nick = exports.nick = ''
 exports.pass = '';
 
-// Any private rooms that should be joined.
-// Private rooms will be moderated differently (since /warn doesn't work in them).
-// The bot will also avoid leaking the private rooms through .seen
+// A list of private rooms that the bot will not leak through the seen command
 exports.privaterooms = [];
 
 // The character text should start with to be seen as a command.
@@ -75,6 +68,8 @@ exports.punishvals = {
 exports.googleapikey = '';
 
 //alt tracking - generally disabled bc it takes up a LOT of memory
+//if you use this, you will need to uncomment out the neccessary parts in the parser.js and commands.js
 exports.alts = false;
+
 //default avatar
-exports.avatar = 23;
+exports.avatar = null;

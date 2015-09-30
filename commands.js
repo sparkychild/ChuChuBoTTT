@@ -229,7 +229,8 @@ exports.commands = {
 			banword: 1,
 			trivia: 1,
 			hangman: 1,
-			anagrams: 1
+			anagrams: 1,
+			comlist: 1
 		};
 		var modOpts = {
 			flooding: 1,
@@ -1471,7 +1472,7 @@ exports.commands = {
 		if (success == false) this.say(by, room, 'The command does not exist');
 	},
 	comlist: function(arg, by, room) {
-		if (!this.canUse('addcom', room, by)) return false;
+		if (!this.canUse('comlist', room, by)) return false;
 
 		if (this.rankFrom(by, '@') && arg) {
 			room = toId(arg);
@@ -2838,7 +2839,7 @@ exports.commands = {
 	},
 	addtrivia: function(arg, by, room) {
 		if (!this.rankFrom(by, '+') || room.charAt(0) !== ',') return false;
-		arg = arg.replace(/, /g, ',').split(',');
+		arg = arg.split('::');
 		if (!arg[1] || !arg[0]) return this.say(by, room, 'The format is ' + config.commandcharacter[0] + 'addtrivia [question]::[reponse],[response2]...');
 		var saveAnswer = arg[1].toLowerCase().replace(/[^\,a-z0-9]/g, '');
 		var saveQuestion = arg[0];
@@ -3296,7 +3297,7 @@ exports.commands = {
 			}
 		})
 	},
-	tour: function(arg, by, room) {
+	tourjoin: function(arg, by, room) {
 		if (!this.hasRank(by, '@&#~')) return false;
 		if (!this.settings[config.serverid][toId(config.nick)].tournaments) {
 			this.settings[config.serverid][toId(config.nick)].tournaments = {};
