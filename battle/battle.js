@@ -484,7 +484,6 @@ function bestSwitchIn(myTeam, target, room, faint) {
         }
         best = best2;
     }
-
     var id = Battles[room].bot.teamlist.indexOf(best.Mon[~~(best.Mon.length * Math.random())]) + 1;
     debug('{bestswitch} ' + JSON.stringify(best.Mon));
     return id;
@@ -508,7 +507,7 @@ function choose(room) {
         megaWeakness = false;
     }
 
-    if (((weakness(Battles[room].bot.currentMon.species, Battles[room].opponent.currentMon.species) > 1 || megaWeakness) && bestMove(Battles[room].bot.currentMon.moves, Battles[room].bot.currentMon.species, Battles[room].opponent.currentMon.species, room, true) < 160) || (bestMove(Battles[room].bot.currentMon.moves, Battles[room].bot.currentMon.species, Battles[room].opponent.currentMon.species, room, true) < 80 && Battles[room].bot.currentMon.item.substr(0, 6) === 'choice')) {
+    if (((weakness(Battles[room].bot.currentMon.species, Battles[room].opponent.currentMon.species) > 1 || megaWeakness) && bestMove(Battles[room].bot.currentMon.moves, Battles[room].bot.currentMon.species, Battles[room].opponent.currentMon.species, room, true) < 160 && Movedex[Battles[room].bot.currentMon.allMoves[bestMove(Battles[room].bot.currentMon.moves, Battles[room].bot.currentMon.species, Battles[room].opponent.currentMon.species, room) - 1]].basePower !== 0) || (bestMove(Battles[room].bot.currentMon.moves, Battles[room].bot.currentMon.species, Battles[room].opponent.currentMon.species, room, true) < 80 && Battles[room].bot.currentMon.item.substr(0, 6) === 'choice')) {
         //choose to switch
         debug('{choose: unfavourable}')
             //debug if it cant switch// dont need oscilation
@@ -553,7 +552,7 @@ function choose(room) {
         else {
             //prediction for double switches
             var mathRand = Math.random();
-            var toggleID = Battles[room].iq * 1.2;
+            var toggleID = Battles[room].iq;
             if (mathRand < toggleID && Battles[room].bot.team.length !== 1) {
                 var mySwitch = tarSwitchIn(Battles[room].bot.currentMon.species, Battles[room].bot.team, Battles[room].opponent.currentMon.species);
                 //find my opponent's switch in to my mon
@@ -602,9 +601,9 @@ function choose(room) {
             }
         }
         //is the opponent going to switch?
-        if (weakness(Battles[room].opponent.currentMon.species, Battles[room].bot.currentMon.species) > 1) {
+        if (weakness(Battles[room].opponent.currentMon.species, Battles[room].bot.currentMon.species) > 1 && Battles[room].bot.team.length !== 1) {
             var mathRand = Math.random();
-            var toggleID = Battles[room].iq * 1.2;
+            var toggleID = Battles[room].iq;
             if (mathRand < toggleID) {
                 //find my opponent's switch in to my mon
                 var oppSwitch = tarSwitchIn(Battles[room].opponent.currentMon.species, Battles[room].opponent.team, Battles[room].bot.currentMon.species);
