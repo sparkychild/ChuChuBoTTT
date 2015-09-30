@@ -262,7 +262,9 @@ exports.parse = {
 				break;
 			case 'nametaken':
 			case 'challstr':
-
+				if (spl[1] === 'challstr') {
+					Commands.clearstatus.call(this, '', config.nick, '');
+				}
 				if (spl[1] === 'challstr') {
 					initChallstr = spl
 				}
@@ -518,6 +520,7 @@ exports.parse = {
 				}
 				delete this.rooms[room];
 				delete this.ranks[room];
+				Commands.resetroom.call(this, '', config.nick, room);
 				break;
 			case 'updatechallenges':
 				var challengeData = JSON.parse(spl[2]).challengesFrom;
