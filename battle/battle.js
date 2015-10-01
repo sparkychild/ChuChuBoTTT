@@ -136,6 +136,18 @@ function bestMove(moves, user, target, room, extras) {
             return 1;
         }
         var score = Movedex[move].basePower;
+        //score adjustment for certain moves hehehehe
+        if (move === 'acrobatics' && !Battles[room].bot.currentMon.item) {
+            score = score * 2;
+        }
+        if (move === 'knockoff' && !Battles[room].opponent.noitem[target]) {
+            score = score * 1.5;
+        }
+        //minor adjustment for priority moves
+        if (score > 0 && Movedex[move].priority >= 1 && Battles[room].bot.currentMon.hp <= 0.4) {
+            score = score * 1.3;
+        }
+
         if (isImmune(move, target)) {
             debug('{immunity} ' + target + ' is immune to ' + move);
             score = 0;
@@ -153,7 +165,7 @@ function bestMove(moves, user, target, room, extras) {
         }
         debug('{lookingthroughmoves} ' + move)
             //determine type changing abilities
-        if (['pixilate', 'aerilate', 'refrigerate'].indexOf(Battles[room].bot.currentMon.baseAbility) > -1 && Movedex[move].type === 'Normal') {
+        if (['pixilate', 'aerilate', 'refrigerate'].indexOf(Battles[room].bot.currentMon.ability) > -1 && Movedex[move].type === 'Normal') {
             score = score * 1.3 * 1.5;
             switch (Battles[room].bot.currentMon.baseAbility) {
                 case 'pixilate':
@@ -238,7 +250,9 @@ function bestMove(moves, user, target, room, extras) {
                 score = 0;
             }
         }
-
+        if(move === 'healbell' || move === 'aromatherapy'){
+            score = (Object.keys(Battles[room].bot.status).length * 50) + 100;
+        }
         //check for hazards
         if (move === 'stealthrock') {
             if (Battles[room].bot.hazards.stealthrock === 1) {
@@ -292,16 +306,20 @@ function bestMove(moves, user, target, room, extras) {
         }
         //boosting moves
         if (Movedex[move].boosts) {
-            score = Battles[room].bot.currentMon.hp + 30;
+            score = (Battles[room].bot.currentMon.hp * 100) + 30;
         }
         //wish
-        if (move === 'wish') {
-            if (Battles[room].bot.currentMon.hp <= 0.6) {
-                score = 100 + (100 - Battles[room].bot.currentMon.hp * 100);
+        if (move === 'wish' && !Battles[room].bot.wish) {
+            if (Battles[room].bot.currentMon.hp <= 0.5) {
+                score = 120 + (100 - Battles[room].bot.currentMon.hp * 100);
             }
             else {
                 score = 0;
             }
+        }
+        //protect
+        if (move === 'protect' && Battles[room].bot.wish) {
+            score = 1000;
         }
         //check for status moves
         if (Movedex[move].status && Movedex[move].basePower === 0 && Battles[room].opponent.status[target]) {
@@ -506,8 +524,15 @@ function choose(room) {
     else {
         megaWeakness = false;
     }
-
-    if (((weakness(Battles[room].bot.currentMon.species, Battles[room].opponent.currentMon.species) > 1 || megaWeakness) && bestMove(Battles[room].bot.currentMon.moves, Battles[room].bot.currentMon.species, Battles[room].opponent.currentMon.species, room, true) < 160 && Movedex[Battles[room].bot.currentMon.allMoves[bestMove(Battles[room].bot.currentMon.moves, Battles[room].bot.currentMon.species, Battles[room].opponent.currentMon.species, room) - 1]].basePower !== 0) || (bestMove(Battles[room].bot.currentMon.moves, Battles[room].bot.currentMon.species, Battles[room].opponent.currentMon.species, room, true) < 80 && Battles[room].bot.currentMon.item.substr(0, 6) === 'choice')) {
+    var canSwitch = false;
+    if (Battles[room].bot.team.length > 1) {
+        var possibleSwitch = tarSwitchIn(Battles[room].bot.currentMon.species, Battles[room].bot.team, Battles[room].opponent.currentMon.species);
+        canSwitch = true;
+    }
+    if(possibleSwitch && weakness(possibleSwitch, Battles[room].opponent.currentMon.species) > 1){
+        canSwitch = false;
+    }
+    if (canSwitch && ((weakness(Battles[room].bot.currentMon.species, Battles[room].opponent.currentMon.species) > 1 || megaWeakness) && bestMove(Battles[room].bot.currentMon.moves, Battles[room].bot.currentMon.species, Battles[room].opponent.currentMon.species, room, true) < 160 && Movedex[Battles[room].bot.currentMon.allMoves[bestMove(Battles[room].bot.currentMon.moves, Battles[room].bot.currentMon.species, Battles[room].opponent.currentMon.species, room) - 1]].basePower !== 0) /* Add an extra check for whether or not it wants it's best switch anyways */ || (bestMove(Battles[room].bot.currentMon.moves, Battles[room].bot.currentMon.species, Battles[room].opponent.currentMon.species, room, true) < 80 && Battles[room].bot.currentMon.item.substr(0, 6) === 'choice')) {
         //choose to switch
         debug('{choose: unfavourable}')
             //debug if it cant switch// dont need oscilation
@@ -722,7 +747,8 @@ exports.battleParser = {
                                 allMoves: [],
                             },
                             last: null,
-                            voltTurn: false
+                            voltTurn: false,
+                            wish: false
                         },
                         //opponent's stuff
                         opponent: {
@@ -734,6 +760,7 @@ exports.battleParser = {
                                 taunt: false,
                                 torment: false
                             },
+                            noitem: {}
                         },
                         nicknames: {},
                         id: '',
@@ -937,7 +964,7 @@ exports.battleParser = {
                 else {
                     target = 'opponent'
                 }
-                Battles[room].id
+                Battles[room][target].status = {}
                 break;
             case 'move':
                 //clear last decision
@@ -975,6 +1002,9 @@ exports.battleParser = {
                     }
                     if (tarMove === 'torment') {
                         Battles[room].opponent.currentMon.torment = true;
+                    }
+                    if (tarMove === 'wish') {
+                        Battles[room].bot.wish = true;
                     }
                 }
                 //volt switch and uturn callback
@@ -1159,6 +1189,19 @@ exports.battleParser = {
                 }
                 else {
                     Battles[room].iq += (1 - Battles[room].iq) / 6;
+                }
+                break;
+            case 'heal':
+                //|-heal|p1a: Loyalty is Beauty|304/394|[from] move: Wish|
+                if (info[0].substr(0, 2) === Battles[room].id && info[2] === '[from] move: Wish') {
+                    Battles[room].bot.wish = false;
+                }
+                break;
+            case 'enditem':
+                //|-enditem|p1a: Chinchou|Choice Scarf|[from] move: Knock Off|[of] p2a: Trickster
+                var tarMon = Battles[room].nicknames[info[0]];
+                if (Battles[room].id !== info[0].substr(0, 2)) {
+                    Battles[room].opponent.noitem[tarMon] = true;
                 }
                 break;
         }
@@ -1426,4 +1469,4 @@ exports.commands = {
             return this.say(by, room, 'ERROR in parsing team.')
         }
     },
-}
+};
