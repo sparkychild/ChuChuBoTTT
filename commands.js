@@ -222,6 +222,7 @@ exports.commands = {
 			'8ball': 1,
 			roomkick: 1,
 			addcom: 1,
+			viewbannedwords: 1,
 			games: 1,
 			wifi: 1,
 			runtour: 1,
@@ -512,7 +513,7 @@ exports.commands = {
 	viewbannedphrases: 'viewbannedwords',
 	vbw: 'viewbannedwords',
 	viewbannedwords: function(arg, by, room) {
-		if (!this.canUse('banword', room, by)) return false;
+		if (!this.canUse('viewbannedwords', room, by)) return false;
 		arg = arg.trim().toLowerCase();
 		var tarRoom = room;
 
@@ -2944,7 +2945,7 @@ exports.commands = {
 	language: function(arg, by, room) {
 		if (!this.hasRank(by, '#~')) return false;
 		if (!arg) {
-			return this.say(by, room, config.nick + ' is operating in :' + this.settings[config.serverid][toId(config.nick)].translation[room] || 'en', true)
+			return this.say(by, room, config.nick + ' is operating in: ' + this.settings[config.serverid][toId(config.nick)].translation[room] || 'en', true)
 		}
 		arg = toId(arg).slice(0, 2);
 		var allowed = ['zh', 'en', 'fr', 'de', 'ar', 'it', 'es', 'ja', 'he', 'ru', 'pt', 'th', 'uk', 'nl', 'ko', 'id'];
@@ -3225,9 +3226,8 @@ exports.commands = {
 			});
 		});
 	},
-	enable: 'toggle',
-	disable: 'toggle',
-	toggle: function(arg, by, room) {
+	state: 'toggle',
+	toggle: function(arg, by, room, cmd) {
 		if (!this.isDev(by)) return false;
 		var matchUp = {
 			false: true,
@@ -3246,6 +3246,9 @@ exports.commands = {
 			return false;
 		}
 		var state = (this.settings[config.serverid][toId(config.nick)].disable[command] ? this.settings[config.serverid][toId(config.nick)].disable[command] : false);
+		if (cmd === 'state') {
+			return this.say(by, room, command + ' is ' + (state ? 'disabled' : 'enabled'));
+		}
 		var setState = matchUp[state];
 		this.settings[config.serverid][toId(config.nick)].disable[command] = setState;
 		this.writeSettings();
@@ -3282,9 +3285,9 @@ exports.commands = {
 			}
 			switch (cmd) {
 				case 'regdate':
-					var regdate = data.registertime * 1000
-					var regDate = (new Date(regdate)).toString().substr(4, 11);
-					self.say(by, room, 'The account ' + arg + ' was registered on ' + regDate);
+					var regdate = data.registertime * 1000 - (1000 * 60 * 60 * 4)
+					var regDate = (new Date(regdate)).toString().substr(4, 20);
+					self.say(by, room, 'The account ' + arg + ' was registered on ' + regDate + 'EST.');
 					break;
 				case 'rank':
 					var battleRanks = data.ratings;
