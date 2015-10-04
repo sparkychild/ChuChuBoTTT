@@ -3210,6 +3210,7 @@ exports.commands = {
 		}
 		this.say(by, room, 'ResourceMonitor is now ' + state.toUpperCase() + ' in room ' + this.rooms[room].name + '.')
 		this.writeSettings();
+		monitor('ResourceMonitor is now ' + state.toUpperCase() + ' in room ' + this.rooms[room].name + '.');
 	},
 	reloadtiers: function(arg, by, room) {
 		if (!this.isDev(by)) return false;
