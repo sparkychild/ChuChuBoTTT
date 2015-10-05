@@ -84,6 +84,70 @@ var kunc = {
 	scorecap: {},
 	points: {}
 }
+var Movedex = require('./battle/moves.js').BattleMovedex;
+
+function scramble(array) {
+	var aLength = array.length;
+	var returnArray = [];
+	for (var i = 0; i < aLength; i++) {
+		var rand = ~~(Math.random() * array.length);
+		returnArray.push(array[rand]);
+		array.splice(rand, 1);
+	}
+	return returnArray;
+}
+
+function createMoveset(target) {
+	//pokemonData
+	var allMoves = scramble(JSON.parse(JSON.stringify(pokemonData[target].randomBattleMoves)));
+	if (allMoves.length <= 4) {
+		return allMoves;
+	}
+	var selectedMoves = [];
+	var damagingTypes = [];
+	for (var i = 0; i < allMoves.length; i++) {
+		if (selectedMoves.length >= 2) break;
+		var tarMove = allMoves[i];
+		var tarType = Movedex[tarMove].type;
+		if (Movedex[tarMove].basePower === 0) {
+			continue;
+		}
+		if (selectedMoves.join('').indexOf('hiddenpower') > -1 && tarMove.substr(0, 11) === 'hiddenpower') {
+			continue;
+		}
+		if (damagingTypes.indexOf(tarType) > -1 && ['uturn', 'voltswitch'].indexOf(tarMove) === -1) {
+			continue;
+		}
+		//add the data
+		selectedMoves.push(tarMove);
+		damagingTypes.push(tarType);
+	}
+	//add non damaging moves
+	for (var i = 0; i < allMoves.length; i++) {
+		if (selectedMoves.length >= 4) {
+			break;
+		}
+		if (selectedMoves.indexOf(allMoves[i]) > -1) {
+			continue;
+		}
+		if (selectedMoves.join('').indexOf('hiddenpower') > -1 && allMoves[i].substr(0, 11) === 'hiddenpower') {
+			continue;
+		}
+		selectedMoves.push(allMoves[i]);
+	}
+	return selectedMoves;
+}
+//end of select moves functions
+function formatMoves(array) {
+	var returnMoves = [];
+	for (var i = 0; i < array.length; i++) {
+		if (!array[i]) continue;
+		returnMoves.push(Movedex[toId(array[i])].name);
+	}
+	return returnMoves;
+}
+var POKEDEX = require('./battle/pokedex.js').BattlePokedex;
+
 
 exports.commands = {
 	/**
@@ -3426,14 +3490,15 @@ exports.commands = {
 	//kunc game
 	sk: 'kunc',
 	kunc: function(arg, by, room, cmd) {
-		if (!this.canUse('kunc', room, by)) return false;
+		if (!this.canUse('kunc', room, by) || room.charAt(0) === ',') return false;
 		if (cmd === 'sk') {
 			if (!kunc.on[room]) return false;
-			var tarAnswer = kunc.answer[room].substr(0, 1).toUpperCase() + kunc.answer[room].slice(1).replace('mega', ' - Mega').replace('primal', ' - Primal');
+			var tarAnswer = POKEDEX[kunc.answer[room]].species;
 			this.say(by, room, 'The correct answer was ' + tarAnswer)
 		}
 		if (kunc.on[room] && cmd === 'kunc') return this.say(by, room, kunc.question[room]);
 		if (cmd === 'kunc') {
+			game('kunc', room);
 			kunc.on[room] = true;
 			if (!arg) {
 				kunc.scorecap[room] = 1;
@@ -3449,50 +3514,6 @@ exports.commands = {
 				}
 			}
 			kunc.points[room] = {};
-		}
-		var Movedex = require('./battle/moves.js').BattleMovedex;
-
-		function createMoveset(target) {
-			//pokemonData
-			var allMoves = pokemonData[target].randomBattleMoves;
-			var selectedMoves = [];
-			var damagingTypes = [];
-			for (var i = 0; i < allMoves.length; i++) {
-				if (selectedMoves.length >= 4) break;
-				var tarMove = allMoves[i];
-				var tarType = Movedex[tarMove].type;
-				if (Movedex[tarMove].basePower === 0) {
-					continue;
-				}
-				if (selectedMoves.join('').indexOf('hiddenpower') > -1 && tarMove.substr(0, 11) === 'hiddenpower') {
-					continue;
-				}
-				if (damagingTypes.indexOf(tarType) > -1) {
-					continue;
-				}
-				//add the data
-				selectedMoves.push(tarMove);
-				damagingTypes.push(tarType);
-			}
-			//add non damaging moves
-			for (var i = 0; i < allMoves.length; i++) {
-				if (selectedMoves.length >= 4) {
-					break;
-				}
-				if (selectedMoves.indexOf(allMoves[i]) > -1) {
-					continue;
-				}
-				selectedMoves.push(allMoves[i]);
-			}
-			return selectedMoves;
-		}
-		//end of select moves functions
-		function formatMoves(array) {
-			var returnMoves = [];
-			for (var i = 0; i < array.length; i++) {
-				returnMoves.push(Movedex[toId(array[i])].name);
-			}
-			return returnMoves;
 		}
 		//now the real part;
 		//choose the random pokemon
@@ -3521,52 +3542,6 @@ exports.commands = {
 				return this.say(by, room, by.slice(1) + ' has won the game!')
 			}
 			this.say(config.nick, room, by.slice(1) + ' has the correct answer and now has ' + kunc.points[room][userid] + ' points!');
-			//code for next question:
-			var Movedex = require('./battle/moves.js').BattleMovedex;
-
-			function createMoveset(target) {
-				//pokemonData
-				var allMoves = pokemonData[target].randomBattleMoves;
-				var selectedMoves = [];
-				var damagingTypes = [];
-				for (var i = 0; i < allMoves.length; i++) {
-					if (selectedMoves.length >= 4) break;
-					var tarMove = allMoves[i];
-					var tarType = Movedex[tarMove].type;
-					if (Movedex[tarMove].basePower === 0) {
-						continue;
-					}
-					if (selectedMoves.join('').indexOf('hiddenpower') > -1 && tarMove.substr(0, 11) === 'hiddenpower') {
-						continue;
-					}
-					if (damagingTypes.indexOf(tarType) > -1) {
-						continue;
-					}
-					//add the data
-					selectedMoves.push(tarMove);
-					damagingTypes.push(tarType);
-				}
-				//add non damaging moves
-				for (var i = 0; i < allMoves.length; i++) {
-					if (selectedMoves.length >= 4) {
-						break;
-					}
-					if (selectedMoves.indexOf(allMoves[i]) > -1) {
-						continue;
-					}
-					selectedMoves.push(allMoves[i]);
-				}
-				return selectedMoves;
-			}
-			//end of select moves functions
-			function formatMoves(array) {
-				var returnMoves = [];
-				for (var i = 0; i < array.length; i++) {
-					returnMoves.push(Movedex[toId(array[i])].name);
-				}
-				return returnMoves;
-			}
-			//now the real part;
 			//choose the random pokemon
 			var allMons = Object.keys(pokemonData)
 			kunc.answer[room] = allMons[~~(allMons.length * Math.random())];
@@ -3584,7 +3559,7 @@ exports.commands = {
 	endkunc: function(arg, by, room) {
 		if (!this.canUse('kunc', room, by) || !kunc.on[room]) return false;
 		delete kunc.on[room];
-		var tarAnswer = kunc.answer[room].substr(0, 1).toUpperCase() + kunc.answer[room].slice(1).replace('mega', ' - Mega').replace('primal', ' - Primal');
+		var tarAnswer = POKEDEX[kunc.answer[room]].species;
 		return this.say(by, room, 'The game of kunc has ended. The correct answer is: ' + tarAnswer);
 	}
 };
