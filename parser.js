@@ -941,7 +941,7 @@ exports.parse = {
 	},
 	roomIsBanned: function(room) {
 		var willNotJoin = fs.readFileSync('data/bannedrooms.txt').toString().split('\n');
-		if (willNotJoin.indexOf(room) > -1) {
+		if (willNotJoin.indexOf(room) > -1){
 			return true;
 		}
 		else {
@@ -1133,7 +1133,7 @@ exports.parse = {
 		if (config.commandcharacter.indexOf(message.charAt(0)) !== -1) {
 			var temp = message.split(' ')[0].slice(1);
 			var command = toId(temp);
-			if (['triviaanswer', 'ta', 'guess', 'g'].indexOf(command) > -1) return;
+			if (['triviaanswer', 'ta', 'guess', 'g', 'gk'].indexOf(command) > -1) return;
 			if (Commands[command]) {
 				if (!this.monitor.user[user].command[command]) {
 					this.monitor.user[user].command[command] = 0;
@@ -1266,8 +1266,8 @@ exports.parse = {
 		var cmdrMessage = '["' + room + '|' + by + '|' + message + '"]';
 		message = message.trim();
 		// auto accept invitations to rooms
-		if (room.charAt(0) === ',' && message.substr(0, 8) === '/invite ' && this.hasRank(by, '%@&~') && !this.roomIsBanned(message.substr(8))) {
-			invite(by, message.substr(8))
+		if (room.charAt(0) === ',' && message.substr(0, 8) === '/invite ' && this.hasRank(by, '+%@&~') && !this.roomIsBanned(message.substr(8))) {
+			invite(by, message.substr(8));
 			this.talk('', '/join ' + message.substr(8));
 		}
 
@@ -1322,6 +1322,8 @@ exports.parse = {
 				catch (e) {
 					this.talk(room, 'The command failed! :o');
 					error(sys.inspect(e).toString().split('\n').join(' '))
+					console.log('');
+					console.log(e.stack);
 				}
 			}
 			else {
