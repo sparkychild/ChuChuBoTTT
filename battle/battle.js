@@ -17,7 +17,7 @@ function selectMove(room, text) {
     send(room + '|' + text);
     debug('[selection|' + room + '] ' + text);
 }
-//fuck javascript for changing my pokemon data
+//screw javascript for changing my pokemon data
 function isolate(data) {
     return JSON.parse(JSON.stringify(data));
 }
@@ -250,7 +250,7 @@ function bestMove(moves, user, target, room, extras) {
                 score = 0;
             }
         }
-        if(move === 'healbell' || move === 'aromatherapy'){
+        if(move === 'healbell' || move === 'aromatherapy' && Object.keys(Battles[room].bot.status).length > 0){
             score = (Object.keys(Battles[room].bot.status).length * 50) + 100;
         }
         //check for hazards
@@ -524,6 +524,7 @@ function choose(room) {
     else {
         megaWeakness = false;
     }
+    
     var canSwitch = false;
     if (Battles[room].bot.team.length > 1) {
         var possibleSwitch = tarSwitchIn(Battles[room].bot.currentMon.species, Battles[room].bot.team, Battles[room].opponent.currentMon.species);
@@ -532,6 +533,7 @@ function choose(room) {
     if(possibleSwitch && weakness(possibleSwitch, Battles[room].opponent.currentMon.species) > 1){
         canSwitch = false;
     }
+    
     if (canSwitch && ((weakness(Battles[room].bot.currentMon.species, Battles[room].opponent.currentMon.species) > 1 || megaWeakness) && bestMove(Battles[room].bot.currentMon.moves, Battles[room].bot.currentMon.species, Battles[room].opponent.currentMon.species, room, true) < 160 && Movedex[Battles[room].bot.currentMon.allMoves[bestMove(Battles[room].bot.currentMon.moves, Battles[room].bot.currentMon.species, Battles[room].opponent.currentMon.species, room) - 1]].basePower !== 0) /* Add an extra check for whether or not it wants it's best switch anyways */ || (bestMove(Battles[room].bot.currentMon.moves, Battles[room].bot.currentMon.species, Battles[room].opponent.currentMon.species, room, true) < 80 && Battles[room].bot.currentMon.item.substr(0, 6) === 'choice')) {
         //choose to switch
         debug('{choose: unfavourable}')
@@ -605,7 +607,7 @@ function choose(room) {
     }
     else {
         debug('{choose: favourable}')
-        if ((weakness(Battles[room].bot.currentMon.species, Battles[room].opponent.currentMon.species) > 1 || megaWeakness) && Pokedex[Battles[room].bot.currentMon.species].baseStats.spe < Pokedex[Battles[room].opponent.currentMon.species].baseStats.spe) {
+        if (canSwitch && (weakness(Battles[room].bot.currentMon.species, Battles[room].opponent.currentMon.species) > 1 || megaWeakness) && Pokedex[Battles[room].bot.currentMon.species].baseStats.spe < Pokedex[Battles[room].opponent.currentMon.species].baseStats.spe) {
             debug('oh no! im too slow')
                 //determine if i should stay in - enough bulk?;
             var defender = Battles[room].bot.currentMon.species;
@@ -887,9 +889,10 @@ exports.battleParser = {
                 }
                 else {
                     Battles[room].iq += (1 - Battles[room].iq) / 5;
+                    delete Battles[room].bot.status[tarMon];
                 }
                 Battles[room].faints++
-                    debug(JSON.stringify(Battles[room].opponent.team));
+                debug(JSON.stringify(Battles[room].opponent.team));
                 debug(JSON.stringify(Battles[room].bot.team));
                 //wait to get all faint messages
 
@@ -1025,9 +1028,6 @@ exports.battleParser = {
                         Battles[room].iq += (1 - Battles[room].iq) / 10;
                     }
                 }
-
-                //determine last move fuck you scarf
-
                 break;
             case 'start':
             case '-start':
