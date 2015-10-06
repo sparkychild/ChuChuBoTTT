@@ -27,6 +27,9 @@ global.TEAMS = JSON.parse(fs.readFileSync('battle/teams.json'));
 global.Tours = {};
 global.Battles = {};
 
+//bot economy
+global.Economy = require('./economy.js').Economy
+
 var deck = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ';
 var pmUser = [toId(config.nick)];
 var card = {
@@ -941,7 +944,7 @@ exports.parse = {
 	},
 	roomIsBanned: function(room) {
 		var willNotJoin = fs.readFileSync('data/bannedrooms.txt').toString().split('\n');
-		if (willNotJoin.indexOf(room) > -1){
+		if (willNotJoin.indexOf(room) > -1) {
 			return true;
 		}
 		else {
@@ -1135,6 +1138,16 @@ exports.parse = {
 			var command = toId(temp);
 			if (['triviaanswer', 'ta', 'guess', 'g', 'gk'].indexOf(command) > -1) return;
 			if (Commands[command]) {
+				var failsafe = 0
+				while (typeof Commands[command] !== "function" && failsafe++ < 10) {
+					command = Commands[command];
+				}
+				if (!this.settings[config.serverid][toId(config.nick)].disable) {
+					this.settings[config.serverid][toId(config.nick)].disable = {};
+				}
+				if (this.settings[config.serverid][toId(config.nick)].disable[command]) {
+					return;
+				}
 				if (!this.monitor.user[user].command[command]) {
 					this.monitor.user[user].command[command] = 0;
 				}
@@ -1312,7 +1325,7 @@ exports.parse = {
 				if (!this.settings[config.serverid][toId(config.nick)].disable) {
 					this.settings[config.serverid][toId(config.nick)].disable = {};
 				}
-				if (this.settings[config.serverid][toId(config.nick)].disable[cmd]) {
+				if (this.settings[config.serverid][toId(config.nick)].disable[cmd] && !this.isDev(by)) {
 					return;
 				}
 				cmdr(cmdrMessage);

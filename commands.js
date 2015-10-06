@@ -202,6 +202,9 @@ exports.commands = {
 		}
 		catch (e) {
 			this.talk(room, e.name + ": " + e.message);
+			console.log('ERROR')
+			console.log('');
+			console.log(e.stack)
 		}
 	},
 	reload: function(arg, by, room) {
@@ -303,7 +306,9 @@ exports.commands = {
 			trivia: 1,
 			hangman: 1,
 			anagrams: 1,
-			comlist: 1
+			comlist: 1,
+			kunc: 1,
+			givepoints: 1
 		};
 		var modOpts = {
 			flooding: 1,
@@ -794,7 +799,7 @@ exports.commands = {
 	usagedata: 'usagestats',
 	monousage: 'usagestats',
 	usagestats: function(arg, by, room, cmd) {
-		var usageLink = 'http://www.smogon.com/stats/2015-08/'
+		var usageLink = 'http://www.smogon.com/stats/2015-09/'
 		if (this.canUse('usagestats', room, by) || room.charAt(0) === ',') {
 			var text = '';
 		}
@@ -1117,7 +1122,8 @@ exports.commands = {
 				triviaPoints[room][triviaPoints[room].indexOf(user) + 1] = triviaPoints[room][triviaPoints[room].indexOf(user) + 1] + 1;
 				if (triviaPoints[room][triviaPoints[room].indexOf(user) + 1] >= 10) {
 					clearInterval(triviaTimer[room]);
-					this.say(config.nick, room, 'Congrats to ' + by + ' for winning!');
+					this.say(config.nick, room, 'Congrats to ' + by + ' for winning! Reward: ' + Economy.getPayout(triviaPoints[room].length / 2, room) + ' ' + Economy.currency(room));
+					Economy.give(by, Economy.getPayout((triviaPoints[room].length / 2), room), room)
 					triviaON[room] = false;
 					return false;
 				}
@@ -1296,7 +1302,8 @@ exports.commands = {
 		if (toId(arg).length > 1) {
 			if (toId(arg) === hangmanA[room]) {
 				clearInterval(hangmanInterval[room]);
-				this.say(config.nick, room, 'Congrats, ' + by + ' got the correct answer!');
+				this.say(config.nick, room, 'Congrats, ' + by + ' got the correct answer! Reward: ' + Economy.getPayout(3, room) + ' ' + Economy.currency(room));
+				Economy.give(by, Economy.getPayout(3, room), room);
 				hangmanA[room] = '';
 				hangmanON[room] = false;
 				if (!hangmanDes[room]) return false;
@@ -1334,7 +1341,8 @@ exports.commands = {
 						hangmanProgress[room] = hangmanProgress[room].slice(0, 2 * i) + toId(arg) + hangmanProgress[room].slice((2 * i) + 1, hangmanProgress[room].length);
 					}
 					if (!(hangmanProgress[room].indexOf('_') > -1)) {
-						this.say(config.nick, room, '' + by + ' has gotten all of the letters. Congrats on completing the word!');
+						this.say(config.nick, room, '' + by + ' has gotten all of the letters. Congrats on completing the word!  Reward: ' + Economy.getPayout(3, room) + ' ' + Economy.currency(room));
+						Economy.give(by, Economy.getPayout(3, room), room);
 						clearInterval(hangmanInterval[room]);
 						hangmanON[room] = false;
 						hangmanA[room] = '';
@@ -1409,7 +1417,8 @@ exports.commands = {
 			anagramPoints[room][anagramPoints[room].indexOf(user) + 1] = anagramPoints[room][anagramPoints[room].indexOf(user) + 1] + 1;
 			if (anagramPoints[room][anagramPoints[room].indexOf(user) + 1] >= 10) {
 				clearInterval(anagramInterval[room]);
-				this.say(config.nick, room, 'Congrats to ' + by + ' for winning!');
+				this.say(config.nick, room, 'Congrats to ' + by + ' for winning! Reward: ' + Economy.getPayout(anagramPoints[room].length / 2, room) + ' ' + Economy.currency(room));
+				Economy.give(by, Economy.getPayout(anagramPoints[room].length / 2, room), room)
 				anagramON[room] = false;
 				return false;
 			}
@@ -1929,7 +1938,7 @@ exports.commands = {
 		}
 	},
 	randpoke: function(arg, by, room) {
-		if (!this.hasRank(by, '&~')) return this.say(by, room, "You're not salty enough. Sorry. :^(");
+		if (!this.hasRank(by, '+%@#&~')) return false;
 		var ranges = [
 			['1', '151'],
 			['152', '251'],
@@ -2228,9 +2237,13 @@ exports.commands = {
 						gameStatus[room] = 'off';
 						clearInterval(blackJack[room]);
 						if (naturals[0]) {
-							this.say(config.nick, room, 'These players have a natural blackjack: ' + naturals.join(', '))
+							this.say(config.nick, room, 'These players have a natural blackjack: ' + naturals.join(', ') + ' - and recieve an extra ' + Economy.getPayout(3, room) + ' ' + Economy.currency(room) + '.');
+							Economy.give(naturals, Economy.getPayout(3, room), room);
 						}
-						return this.say(config.nick, room, (winnerList[0] ? 'The winners are: ' + winnerList.join(', ') : 'Sorry, no winners this time.'))
+						if (winnerList[0]) {
+							Economy.give(winnerList, Economy.getPayout(5, room), room);
+						}
+						return this.say(config.nick, room, (winnerList[0] ? 'The winners are: ' + winnerList.join(', ') + '. Rewards: ' + Economy.getPayout(5, room) + ' ' + Economy.currency(room) : 'Sorry, no winners this time.'))
 					}
 					else {
 						currentPlayer[room] = playerCount[room][playerCount[room].indexOf(currentPlayer[room]) + 1];
@@ -2320,9 +2333,13 @@ exports.commands = {
 				}
 				gameStatus[room] = 'off';
 				if (naturals[0]) {
-					this.say(config.nick, room, 'These players have a natural blackjack: ' + naturals.join(', '))
+					this.say(config.nick, room, 'These players have a natural blackjack: ' + naturals.join(', ') + ' - and recieve an extra ' + Economy.getPayout(3, room) + ' ' + Economy.currency(room) + '.');
+					Economy.give(naturals, Economy.getPayout(3, room), room);
 				}
-				return this.say(config.nick, room, (winnerList[0] ? 'The winners are: ' + winnerList.join(', ') : 'Sorry, no winners this time.'));
+				if (winnerList[0]) {
+					Economy.give(winnerList, Economy.getPayout(5, room), room);
+				}
+				return this.say(config.nick, room, (winnerList[0] ? 'The winners are: ' + winnerList.join(', ') + '. Rewards: ' + Economy.getPayout(5, room) + ' ' + Economy.currency(room) : 'Sorry, no winners this time.'))
 				clearInterval(blackJack[room]);
 			}
 			else {
@@ -2391,9 +2408,13 @@ exports.commands = {
 					gameStatus[room] = 'off';
 					clearInterval(blackJack[room]);
 					if (naturals[0]) {
-						this.say(config.nick, room, 'These players have a natural blackjack: ' + naturals.join(', '))
+						this.say(config.nick, room, 'These players have a natural blackjack: ' + naturals.join(', ') + ' - and recieve an extra ' + Economy.getPayout(3, room) + ' ' + Economy.currency(room) + '.');
+						Economy.give(naturals, Economy.getPayout(3, room), room);
 					}
-					return this.say(config.nick, room, (winnerList[0] ? 'The winners are: ' + winnerList.join(', ') : 'Sorry, no winners this time.'))
+					if (winnerList[0]) {
+						Economy.give(winnerList, Economy.getPayout(5, room), room);
+					}
+					return this.say(config.nick, room, (winnerList[0] ? 'The winners are: ' + winnerList.join(', ') + '. Rewards: ' + Economy.getPayout(5, room) + ' ' + Economy.currency(room) : 'Sorry, no winners this time.'))
 				}
 				else {
 					currentPlayer[room] = playerCount[room][playerCount[room].indexOf(currentPlayer[room]) + 1];
@@ -2468,11 +2489,14 @@ exports.commands = {
 				}
 			}
 			gameStatus[room] = 'off';
-			clearInterval(blackJack[room]);
 			if (naturals[0]) {
-				this.say(config.nick, room, 'These players have a natural blackjack: ' + naturals.join(', '))
+				this.say(config.nick, room, 'These players have a natural blackjack: ' + naturals.join(', ') + ' - and recieve an extra ' + Economy.getPayout(3, room) + ' ' + Economy.currency(room) + '.');
+				Economy.give(naturals, Economy.getPayout(3, room), room);
 			}
-			return this.say(config.nick, room, (winnerList[0] ? 'The winners are: ' + winnerList.join(', ') : 'Sorry, no winners this time.'))
+			if (winnerList[0]) {
+				Economy.give(winnerList, Economy.getPayout(5, room), room);
+			}
+			return this.say(config.nick, room, (winnerList[0] ? 'The winners are: ' + winnerList.join(', ') + '. Rewards: ' + Economy.getPayout(5, room) + ' ' + Economy.currency(room) : 'Sorry, no winners this time.'))
 		}
 		else {
 			currentPlayer[room] = playerCount[room][playerCount[room].indexOf(currentPlayer[room]) + 1];
@@ -2542,10 +2566,14 @@ exports.commands = {
 					}
 				}
 				gameStatus[room] = 'off';
-				if (naturals[0]) {
-					this.say(config.nick, room, 'These players have a natural blackjack: ' + naturals.join(', '))
-				}
-				return this.say(config.nick, room, (winnerList[0] ? 'The winners are: ' + winnerList.join(', ') : 'Sorry, no winners this time.'))
+						if (naturals[0]) {
+							this.say(config.nick, room, 'These players have a natural blackjack: ' + naturals.join(', ') + ' - and recieve an extra ' + Economy.getPayout(3, room) + ' ' + Economy.currency(room) + '.');
+							Economy.give(naturals, Economy.getPayout(3, room), room);
+						}
+						if (winnerList[0]) {
+							Economy.give(winnerList, Economy.getPayout(5, room), room);
+						}
+						return this.say(config.nick, room, (winnerList[0] ? 'The winners are: ' + winnerList.join(', ') + '. Rewards: ' + Economy.getPayout(5, room) + ' ' + Economy.currency(room) : 'Sorry, no winners this time.'))
 				clearInterval(blackJack[room]);
 			}
 			else {
@@ -2680,6 +2708,8 @@ exports.commands = {
 					}
 					else if (crazyeight.playerList[room].length === 1) {
 						this.say(config.nick, room, crazyeight.playerData[room][crazyeight.playerList[room][0]].name + ' wins!');
+						this.say(config.nick, room, 'Rewards: ' + Economy.getPayout(crazyeight.playerList[room].length, room) + ' ' + Economy.currency(room));
+						Economy.give(crazyeight.playerData[room][crazyeight.playerList[room][0]].name, Economy.getPayout(crazyeight.playerList[room].length, room), room)
 					}
 					if (crazyeight.playerList[room].length < 2) {
 						clearInterval(crazyeight.interval[room]);
@@ -2788,6 +2818,8 @@ exports.commands = {
 		}
 		if (crazyeight.playerData[room][crazyeight.currentPlayer[room]].hand.length < 1) {
 			this.say(config.nick, room, by.slice(1) + ' wins!');
+									this.say(config.nick, room, 'Rewards: ' + Economy.getPayout(crazyeight.playerList[room].length, room) + ' ' + Economy.currency(room));
+						Economy.give(crazyeight.playerData[room][crazyeight.playerList[room][0]].name, Economy.getPayout(crazyeight.playerList[room].length, room), room)
 			clearInterval(crazyeight.interval[room]);
 			crazyeight.gameStatus[room] = 'off';
 			return;
@@ -2824,6 +2856,8 @@ exports.commands = {
 			}
 			else if (crazyeight.playerList[room].length === 1) {
 				this.say(config.nick, room, crazyeight.playerData[room][crazyeight.playerList[room][0]].name + ' wins!');
+										this.say(config.nick, room, 'Rewards: ' + Economy.getPayout(crazyeight.playerList[room].length, room) + ' ' + Economy.currency(room));
+						Economy.give(crazyeight.playerData[room][crazyeight.playerList[room][0]].name, Economy.getPayout(crazyeight.playerList[room].length, room), room)
 			}
 			if (crazyeight.playerList[room].length < 2) {
 				clearInterval(crazyeight.interval[room]);
@@ -2883,6 +2917,8 @@ exports.commands = {
 			}
 			else if (crazyeight.playerList[room].length === 1) {
 				this.say(config.nick, room, crazyeight.playerData[room][crazyeight.playerList[room][0]].name + ' wins!');
+										this.say(config.nick, room, 'Rewards: ' + Economy.getPayout(crazyeight.playerList[room].length, room) + ' ' + Economy.currency(room));
+						Economy.give(crazyeight.playerData[room][crazyeight.playerList[room][0]].name, Economy.getPayout(crazyeight.playerList[room].length, room), room)
 			}
 			if (crazyeight.playerList[room].length < 2) {
 				clearInterval(crazyeight.interval[room]);
@@ -3301,7 +3337,7 @@ exports.commands = {
 	},
 	state: 'toggle',
 	toggle: function(arg, by, room, cmd) {
-		if (!this.isDev(by)) return false;
+		if (!this.rankFrom(by, '~')) return false;
 		var matchUp = {
 			false: true,
 			true: false
@@ -3314,9 +3350,6 @@ exports.commands = {
 		}
 		while (typeof Commands[command] !== "function" && failsafe++ < 10) {
 			command = Commands[command];
-		}
-		if (command === 'toggle') {
-			return false;
 		}
 		var state = (this.settings[config.serverid][toId(config.nick)].disable[command] ? this.settings[config.serverid][toId(config.nick)].disable[command] : false);
 		if (cmd === 'state') {
@@ -3526,6 +3559,7 @@ exports.commands = {
 		if (kunc.answer[room].substr(0, 6) === 'arceus') {
 			kunc.answer[room] = 'arceus';
 		}
+		if(kunc.answer[room])
 		kunc.question[room] = '``Moveset: ' + formatMoves(createMoveset(kunc.answer[room])).join(', ') + '.`` Use ' + config.commandcharacter[0] + 'gk to guess the Pokemon.';
 		this.say(by, room, kunc.question[room])
 	},
@@ -3539,7 +3573,8 @@ exports.commands = {
 			kunc.points[room][userid]++;
 			if (kunc.points[room][userid] >= kunc.scorecap[room]) {
 				delete kunc.on[room];
-				return this.say(by, room, by.slice(1) + ' has won the game!')
+				Economy.give(by, Economy.getPayout(kunc.scorecap[room], room), room);
+				return this.say(by, room, by.slice(1) + ' has won the game! Rewards: ' + Economy.getPayout(kunc.scorecap[room], room) + ' ' + Economy.currency(room));
 			}
 			this.say(config.nick, room, by.slice(1) + ' has the correct answer and now has ' + kunc.points[room][userid] + ' points!');
 			//choose the random pokemon
@@ -3561,5 +3596,122 @@ exports.commands = {
 		delete kunc.on[room];
 		var tarAnswer = POKEDEX[kunc.answer[room]].species;
 		return this.say(by, room, 'The game of kunc has ended. The correct answer is: ' + tarAnswer);
+	},
+	//commands for score and such
+	resetleaderboard: function(arg, by, room) {
+		if (!this.hasRank(by, '#~')) return false;
+		Economy.clear(room, by);
+		this.say(by, room, 'The leaderboard has been reset.')
+	},
+	registerroom: function(arg, by, room) {
+		if (room.charAt(0) === ',' || !this.rankFrom(by, '~')) return false;
+		if (Economy.addRoom(room)) {
+			return this.say(by, room, 'An individual leaderboard has been enabled for this room.')
+		}
+		else {
+			return this.say(by, room, 'An individual leaderboard already exists for this room.')
+		}
+	},
+	deregisterroom: function(arg, by, room) {
+		if (room.charAt(0) === ',' || !this.rankFrom(by, '~')) return false;
+		if (Economy.deleteRoom(room)) {
+			return this.say(by, room, 'The individual leaderboard has been deleted for this room.')
+		}
+		else {
+			return this.say(by, room, 'An individual leaderboard does not exist for this room.')
+		}
+	},
+	takepoints: 'givepoints',
+	givepoints: function(arg, by, room, cmd) {
+		if (!this.canUse('givepoints', room, by) || !arg) return false;
+		if (!Economy.isRegistered(room) && !this.rankFrom(by, '@')) return false;
+		arg = arg.split(',');
+		var target = toId(arg[0]);
+		var amount = toId(arg[1]).replace(/[^0-9]/g, '');
+		if (!amount) return;
+		if(cmd === 'takepoints') amount = amount * -1;
+		Economy.give(target, amount * 1, room);
+		if(amount < 0){
+			return this.say(by, room, target + ' has lost ' + amount * -1 + ' ' + Economy.currency(room))
+		}
+		return this.say(by, room, target + ' has been given ' + amount + ' ' + Economy.currency(room))
+	},
+	points: 'atm',
+	score: 'atm',
+	wallet: 'atm',
+	atm: function(arg, by, room) {
+		if (!this.hasRank(by, '+%@#&~')) {
+			var targetRoom = ',' + by;
+		}
+		else {
+			targetRoom = room
+		}
+		if (arg) {
+			var user = arg.split(',')[0];
+			if (arg.split(',')[1]) {
+				room = toId(arg.split(',')[1]);
+			}
+		}
+		var target = user || by;
+		return this.say(by, targetRoom, '(' + (Economy.isRegistered(room) ? room : 'global') + ') ' +target + ' has ' + Economy.getPoints(target, room) + ' ' + Economy.currency(room));
+	},
+	top: function(arg, by, room) {
+		if (!this.hasRank(by, '+%@#&~')) {
+			var targetRoom = ',' + by;
+		}
+		else {
+			targetRoom = room
+		}
+		if (arg) {
+			room = toId(arg);
+		}
+		this.say(by, targetRoom, Economy.getTop(room));
+	},
+	leaderboard: function(arg, by, room) {
+		if (!this.hasRank(by, '+%@#&~')) {
+			var targetRoom = ',' + by;
+		}
+		else {
+			targetRoom = room
+		}
+		if (arg) {
+			room = toId(arg);
+		}
+		var text = Economy.getHastebinLeaderboard(room);
+		this.uploadToHastebin(text, function(link) {
+			return this.say(by, targetRoom, link);
+		}.bind(this));
+	},
+	cp: function(arg, by, room) {
+		if (!this.hasRank(by, '#~') || !arg) return false;
+		if (!Economy.isRegistered(room) && !this.rankFrom(by, '~')) return false;
+		arg = arg.split(',');
+		if (arg.length !== 2) return false;
+		var param = toId(arg[0]);
+		var value = toId(arg[1]);
+		if (!param || !value) return false;
+		if (Economy.isRegistered(room)) {
+			var economyCP = Economy.economy.rooms[room].cp;
+		}
+		else {
+			var economyCP = Economy.economy.global.cp;
+		}
+		switch (param) {
+			case 'currency':
+			case 'name':
+			case 'points':
+				economyCP.currency = value;
+				this.say(by, room, '"Points" renamed to ' + value);
+				break;
+			case 'factor':
+			case 'payout':
+				if (/[^0-9]/i.test(value)) {
+					return this.say(by, room, 'Invalid value.');
+				}
+				economyCP.factor = value * 1;
+				this.say(by, room, 'Payout factor for winning games is: ' + value);
+				break;
+		}
+		Economy.write()
 	}
 };

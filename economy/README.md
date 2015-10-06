@@ -1,0 +1,1 @@
+Economy File for each server/botname stored here.
