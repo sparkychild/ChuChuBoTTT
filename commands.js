@@ -860,7 +860,7 @@ exports.commands = {
 				case 'ou':
 					targetTier = 'ou';
 					break;
-				case 'doubles':
+				case 'smogondoubles':
 					targetTier = 'doublesou';
 					break;
 				default:
