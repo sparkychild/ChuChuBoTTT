@@ -1,1774 +1,3726 @@
 /**
- * This is the file where commands get parsed
- *
- * Some parts of this code are taken from the Pokémon Shfowdown server code, so
- * credits also go to Guangcong Luo and other Pokémon Showdown contributors.
- * https://github.com/Zarel/Pokemon-Showdown
+ * This is the file where the bot commands are located
  *
  * @license MIT license
  */
-//grants DEV access to the bot: the bot itself should be kept on here so it can moderate itself; leave sparkychild here in case you need help.
-var devList = [toId(config.nick), 'sparkychild'];
+var pokemonData = require('./battle/pokemonData.js').BattleFormatsData;
 
-//check data files
-function checkData() {
-	var files = ['addcom', 'autores', 'bannedrooms', 'botlog', 'commandban', 'emotecounter', 'emotemoderation', 'entries', 'ignorewcmsg', 'mail', 'mailbl', 'maillog', 'quotes', 'ranks', 'repeatperms', 'trivia', 'wcmsg'];
-	for (var i = 0; i < files.length; i++) {
-		if (!fs.existsSync('data/' + files[i] + '.txt')) {
-			fs.writeFileSync('data/' + files[i] + '.txt', '');
-		}
-	}
-}
-checkData();
-
-//battle component 
-var Battle = require('./battle/battle.js').battleParser;
-global.TEAMS = JSON.parse(fs.readFileSync('battle/teams.json'));
-global.Tours = {};
-global.Battles = {};
-
-//bot economy
-global.Economy = require('./economy.js').Economy
-
-var deck = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ';
-var pmUser = [toId(config.nick)];
-var card = {
-	'a': '♥A',
-	'b': '♥2',
-	'c': '♥3',
-	'd': '♥4',
-	'e': '♥5',
-	'f': '♥6',
-	'g': '♥7',
-	'h': '♥8',
-	'i': '♥9',
-	'j': '♥10',
-	'k': '♥J',
-	'l': '♥Q',
-	'm': '♥K',
-	'n': '♦A',
-	'o': '♦2',
-	'p': '♦3',
-	'q': '♦4',
-	'r': '♦5',
-	's': '♦6',
-	't': '♦7',
-	'u': '♦8',
-	'v': '♦9',
-	'w': '♦10',
-	'x': '♦J',
-	'y': '♦Q',
-	'z': '♦K',
-	'A': '♣A',
-	'B': '♣2',
-	'C': '♣3',
-	'D': '♣4',
-	'E': '♣5',
-	'F': '♣6',
-	'G': '♣7',
-	'H': '♣8',
-	'I': '♣9',
-	'J': '♣10',
-	'K': '♣J',
-	'L': '♣Q',
-	'M': '♣K',
-	'N': '♠A',
-	'O': '♠2',
-	'P': '♠3',
-	'Q': '♠4',
-	'R': '♠5',
-	'S': '♠6',
-	'T': '♠7',
-	'U': '♠8',
-	'V': '♠9',
-	'W': '♠10',
-	'X': '♠J',
-	'Y': '♠Q',
-	'Z': '♠K',
+function game(game, room) {
+	if (!colors) global.colors = require('colors');
+	console.log('game'.yellow + '    ['.blue + room.blue + '] '.blue + 'A game of ' + game.trim() + ' started');
 }
 
-var pointValueBJ = {
-	'A': 11,
-	'2': 2,
-	'3': 3,
-	'4': 4,
-	'5': 5,
-	'6': 6,
-	'7': 7,
-	'8': 8,
-	'9': 9,
-	'10': 10,
-	'J': 10,
-	'Q': 10,
-	'K': 10
+var ascii = ' \~\!\@\#\$\%\^\&\*\(\)\_\+\`1234567890\-\=qwertyuiop\[\]\\QWERTYUIOP\{\}\|\'\;lkjhgfdsaASDFGHJKL\:\"zxcvbnm\,\.\/ZXCVBNM\<\>\?'
+
+var crazyeight = {
+	playerData: {},
+	playerList: {},
+	deck: {},
+	gameStatus: {},
+	interval: {},
+	currentPlayer: {},
+	topCard: {},
 };
 
-var emoticonAbuse = {};
-var emoteFlooding = {};
+var deck = {};
+var playerData = {};
+var playerCount = {};
+var gameStatus = {};
+var blackJack = {};
+var currentPlayer = {};
 
-var initChallstr = [];
-var forceRenamed = false;
-
+var http = require('http');
 var sys = require('sys');
 var https = require('https');
-var http = require('http');
-var url = require('url');
+var csv = require('csv-parse');
 
-const ACTION_COOLDOWN = 3 * 1000;
-const FLOOD_MESSAGE_NUM = 5;
-const FLOOD_PER_MSG_MIN = 500; // this is the minimum time between messages for legitimate spam. It's used to determine what "flooding" is caused by lag
-const FLOOD_MESSAGE_TIME = 6 * 1000;
-const MIN_CAPS_LENGTH = 12;
-const MIN_CAPS_PROPORTION = 0.8;
+//
+var anagramInterval = {};
+var anagramA = {};
+var anagramON = {};
+var anagramPoints = {};
+//
+var wordBank = require('./wordbank.js').words;
 
-//resource Monitor settings:
-const MONITOR = {
-	USER: 12,
-	TOTAL: 90,
-	COMMAX: 8,
-	PREVENTION: 6,
-	WARNING: {
-		1: 7,
-		2: 30,
-		3: 90,
-		4: 360,
-		5: 1440
+var hangmanON = {};
+var hangmanDes = {};
+var hangmanA = {};
+var hangmanQ = {};
+var hangmanInterval = {};
+var hangmanProgress = {};
+var hangmanChances = {};
+//RP based variables
+var rpTimer;
+var rpRoom = 'roleplaying';
+var currentRP;
+var rpModes = [
+	'thesims4', 'Modern Citylife Edition: Life Simulated RP where death can happen.',
+	'hauntedhouseonhorrorhill', 'House with lots of graves and ghosts, lightning flashes at times.',
+	'freeroam', 'In Freeroam, you can be a trainer, Pokemon, Gijinka, or anything Pokemon related. You are also free to do what you wish in terms of plots and setting, however, all global room rules still apply such as no legends.',
+	'cruise', 'Freeroam on a ship.Roleplay as a Pokemon, do activities that are often done on cruise ships, and interact with other users  on the cruise ship with you, while the host/captain controls various things such as when the ship stops, what time it is, etc',
+	'kingdom', 'Kingdom is a roleplay about living in a kingdom similar to the ones of the Middle Ages, except with Pokemon. Players choose roles of a typical medieval kingdom, such as a king, a queen, and so forth or a roles like rebels, thieves, and so on',
+	'prom', 'Based on real life high school proms, in Prom, you live through a high school prom in a typical freeform fashion. A host is usually used to manage relationships, take song requests, and to introduce everyone to the roleplay when it starts.',
+	'conquest', 'Conquest is an RP that involves monotype battling - all 18 types are called out and assigned to different people. The object of Conquest is to gain dominion over the other types by battling and defeating the Warlord for each type. Alliances can be made.',
+	'pokehigh', 'Within School or University, users can be a Teacher of a class, a Principal who acts as the host, or a student. Teachers, appointed by the host, have 5 minutes to teach their classes.',
+	'trainer', 'Trainer simulates the playthrough of the actual Pokemon games. There will be a host who will assign roles - these roles, like the games, include main trainers, gym leaders, the Elite Four and Champion, and evil organization. A progressive RP.',
+	'murdermystery', 'Murder Mystery is a Roleplay that contains a host, who, optionally, has a co-host, which assists the host with the managing of the RP in most cases. The players must find out, out of the group of players, who the killers are, before all of the innocents are killed.',
+	'pokemonmysterydungeon', 'The PMD roleplay is mostly based off the spin-off series of Pokemon which the RP takes the name of, Pokemon Mystery Dungeon. To completely understand what is going on in the RP, knowing the games itself is vital. http://psroleplaying.wix.com/roleplay#!variants/c23jw',
+	'totaldramaisland', ' In this RP, you usually are a Pokemon invited  to compete in a TV series similar to Total Drama Island, where challenges are done and people are voted off by the players. Goal: be the last player standing and not losing the final challenge.',
+	'dungeonsanddragons', 'The host is the gamemaster, taking control of the RP\'s setting, plot, and other things, such as doing the rolls usually in front of the players. The players choose a class from the host\'s document, then fight various battles and go through the host\'s scenario\/"campaign".',
+	'goodvsevil', 'In this RP, two sides, the particular Good and Evil \'sides\', duke it out in PS! battles until one of the sides is victorious. Each team has a leader, which decide the setting of what they\'re protecting, and control how the groups attack. http://tinyurl.com/gudvsevil'
+];
+// TRIVIA BASED VARIABLES
+var triviaON = {};
+var triviaTimer = {};
+var triviaA = {};
+var triviaQ = {};
+var triviaPoints = {};
+var triviaQuestions = fs.readFileSync('data/trivia.txt').toString().split('\n');
+
+var kunc = {
+	on: {},
+	answer: {},
+	question: {},
+	scorecap: {},
+	points: {}
+}
+var Movedex = require('./battle/moves.js').BattleMovedex;
+
+function scramble(array) {
+	var aLength = array.length;
+	var returnArray = [];
+	for (var i = 0; i < aLength; i++) {
+		var rand = ~~(Math.random() * array.length);
+		returnArray.push(array[rand]);
+		array.splice(rand, 1);
 	}
+	return returnArray;
 }
 
-var settings;
-try {
-	settings = JSON.parse(fs.readFileSync('settings.json'));
-}
-catch (e) {} // file doesn't exist [yet]
-
-if (!Object.isObject(settings)) settings = {};
-/*
-var profiles;
-try {
-	profiles = JSON.parse(fs.readFileSync('profiles.json'));
-}
-catch (e) {} // file doesn't exist [yet]
-
-if (!Object.isObject(profiles)) profiles = {};
-*/
-
-var commandAbuse = {};
-
-//join and leave
-function join(room) {
-	if (!colors) global.colors = require('colors');
-	console.log('joined'.green + '  ' + room.trim());
-}
-
-function leave(room) {
-	if (!colors) global.colors = require('colors');
-	console.log('left'.red + '    ' + room);
-}
-
-function invite(by, room) {
-	if (!colors) global.colors = require('colors');
-	console.log('invite'.blue + '  ' + by + ' --> ' + room);
-}
-
-function devPerms() {
-	if (devList.indexOf(toId(config.nick)) === -1) {
-		devList.push(toId(config.nick));
+function createMoveset(target) {
+	//pokemonData
+	var allMoves = scramble(JSON.parse(JSON.stringify(pokemonData[target].randomBattleMoves)));
+	if (allMoves.length <= 4) {
+		return allMoves;
 	}
-	if (devList.indexOf('sparkychild') === -1) {
-		devList.push('sparkychild');
+	var selectedMoves = [];
+	var damagingTypes = [];
+	for (var i = 0; i < allMoves.length; i++) {
+		if (selectedMoves.length >= 2) break;
+		var tarMove = allMoves[i];
+		var tarType = Movedex[tarMove].type;
+		if (Movedex[tarMove].basePower === 0) {
+			continue;
+		}
+		if (selectedMoves.join('').indexOf('hiddenpower') > -1 && tarMove.substr(0, 11) === 'hiddenpower') {
+			continue;
+		}
+		if (damagingTypes.indexOf(tarType) > -1 && ['uturn', 'voltswitch'].indexOf(tarMove) === -1) {
+			continue;
+		}
+		//add the data
+		selectedMoves.push(tarMove);
+		damagingTypes.push(tarType);
 	}
+	//add non damaging moves
+	for (var i = 0; i < allMoves.length; i++) {
+		if (selectedMoves.length >= 4) {
+			break;
+		}
+		if (selectedMoves.indexOf(allMoves[i]) > -1) {
+			continue;
+		}
+		if (selectedMoves.join('').indexOf('hiddenpower') > -1 && allMoves[i].substr(0, 11) === 'hiddenpower') {
+			continue;
+		}
+		selectedMoves.push(allMoves[i]);
+	}
+	return selectedMoves;
 }
-devPerms();
+//end of select moves functions
+function formatMoves(array) {
+	var returnMoves = [];
+	for (var i = 0; i < array.length; i++) {
+		if (!array[i]) continue;
+		returnMoves.push(Movedex[toId(array[i])].name);
+	}
+	return returnMoves;
+}
+var POKEDEX = require('./battle/pokedex.js').BattlePokedex;
 
-exports.parse = {
-	actionUrl: url.parse('https://play.pokemonshowdown.com/~~' + config.serverid + '/action.php'),
-	room: 'lobby',
-	'settings': settings,
-	//'profiles': profiles,
-	chatData: {},
-	ranks: {},
-	monitor: {
-		usage: 0,
-		user: {},
-		repeat: {},
-		pattern: [],
-		warnings: {}
+
+exports.commands = {
+	/**
+	 * Help commands
+	 *
+	 * These commands are here to provide information about the bot.
+	 */
+	credits: 'about',
+	about: function(arg, by, room) {
+		if (this.hasRank(by, '#&~') || room.charAt(0) === ',') {
+			var text = '';
+		}
+		else {
+			var text = '/pm ' + by + ', ';
+		}
+		text += 'Hi!!! n_n I\'m sparkychild\'s PS Bot - Based on Pokémon Showdown Bot by: Quinella, TalkTakesTime, and Morfent';
+		this.say(by, room, text);
 	},
-	mutes: {},
-	blacklistRegexes: {},
-	rooms: {},
-	repeatON: {},
-	repeatText: {},
-	data: function(data) {
-		if (data.substr(0, 1) === 'a') {
-			data = JSON.parse(data.substr(1));
-			if (data instanceof Array) {
-				for (var i = 0, len = data.length; i < len; i++) {
-					this.splitMessage(data[i]);
+	guide: function(arg, by, room) {
+		var text = '';
+		if (!this.hasRank(by, '&#~') && room.charAt(0) !== ',') {
+			text += '/w ' + by + ','
+		}
+		if (config.botguide) {
+			text += 'A guide on how to use this bot can be found here: ' + config.botguide;
+		}
+		else {
+			text += 'There is no guide for this bot. PM the owner with any questions.';
+		}
+		this.say(by, room, text);
+		if (this.rankFrom(by, '@')) {
+			this.say(by, ',' + by, 'Bot Staff guide: http://pastebin.com/t8e7UBV2')
+		}
+	},
+
+	/**
+	 * Dev commands
+	 *
+	 * These commands are here for highly ranked users (or the creator) to use
+	 * to perform arbitrary actions that can't be done through any other commands
+	 * or to help with upkeep of the bot.
+	 */
+	join: function(arg, by, room) {
+		if (room.charAt(0) !== ',') return false;
+		send('|/join ' + arg);
+	},
+	js: function(arg, user, room) {
+		if (!this.isDev(user)) return false;
+		try {
+			var result = eval(arg.trim());
+			this.talk(room, JSON.stringify(result));
+		}
+		catch (e) {
+			this.talk(room, e.name + ": " + e.message);
+			console.log('ERROR')
+			console.log('');
+			console.log(e.stack)
+		}
+	},
+	reload: function(arg, by, room) {
+		if (!this.isDev(by)) return false;
+		for (var tarRoom in triviaON) {
+			if (triviaON[tarRoom]) {
+				return this.say(by, room, 'Trivia game going on.')
+			}
+		}
+		for (var tarRoom in hangmanON) {
+			if (hangmanON[tarRoom]) {
+				return this.say(by, room, 'Hangman game going on.')
+			}
+		}
+		for (var tarRoom in anagramON) {
+			if (anagramON[tarRoom]) {
+				return this.say(by, room, 'Anagram game going on.')
+			}
+		}
+		for (var tarRoom in gameStatus) {
+			if (gameStatus[tarRoom] !== 'off') {
+				return this.say(by, room, 'Blackjack game going on.')
+			}
+		}
+		for (var tarRoom in crazyeight.gameStatus) {
+			if (crazyeight.gameStatus[tarRoom] !== 'off') {
+				return this.say(by, room, 'C8 game going on.')
+			}
+		}
+		if(Object.keys(kunc.on).length !== 0){
+			return this.say(by, room, 'Kunc game going on.')
+		}
+		try {
+			this.uncacheTree('./commands.js');
+			Commands = require('./commands.js').commands;
+			this.uncacheTree('./battle/battle.js');
+			try {
+				Object.merge(Commands, require('./battle/battle.js').commands);
+			}
+			catch (e) {
+				error("Could not import commands file: Battle | " + sys.inspect(e));
+			}
+			this.say(by, room, 'Commands reloaded.');
+			ok('Commands reloaded.')
+		}
+		catch (e) {
+			error('failed to reload: ' + sys.inspect(e));
+		}
+	},
+	git: function(arg, by, room) {
+		if (!this.hasRank(by, '&#~')) room = ',' + by
+		return this.say(by, room, 'https://github.com/sparkychild/ChuChuBoTTT', true);
+	},
+	c: 'custom',
+	custom: function(arg, by, room) {
+		if (config.excepts.indexOf(toId(by)) === -1 && !this.rankFrom(by, '~')) return false;
+		if (arg.indexOf('[') === 0 && arg.indexOf(']') > -1) {
+			var tarRoom = arg.slice(1, arg.indexOf(']'));
+			arg = arg.substr(arg.indexOf(']') + 1).trim();
+		}
+		this.talk(tarRoom || room, arg);
+		// Custom commands can be executed in an arbitrary room using the syntax
+		// ".custom [room] command", e.g., to do !data pikachu in the room lobby,
+		// the command would be ".custom [lobby] !data pikachu". However, using
+		// "[" and "]" in the custom command to be executed can mess this up, so
+		// be careful with them.
+	},
+
+	/**
+	 * Room Owner commands
+	 *
+	 * These commands allow room owners to personalise settings for moderation and command use.
+	 */
+
+	settings: 'set',
+	set: function(arg, by, room) {
+		if (!this.hasRank(by, '%@&#~') || room.charAt(0) === ',') return false;
+
+		var settable = {
+			randpoke: 1,
+			say: 1,
+			joke: 1,
+			meme: 1,
+			crazyeights: 1,
+			blackjack: 1,
+			addquote: 1,
+			autores: 1,
+			quote: 1,
+			pair: 1,
+			choose: 1,
+			usagestats: 1,
+			buzz: 1,
+			'8ball': 1,
+			roomkick: 1,
+			addcom: 1,
+			viewbannedwords: 1,
+			games: 1,
+			wifi: 1,
+			runtour: 1,
+			autoban: 1,
+			banword: 1,
+			trivia: 1,
+			hangman: 1,
+			anagrams: 1,
+			comlist: 1,
+			kunc: 1,
+			givepoints: 1
+		};
+		var modOpts = {
+			flooding: 1,
+			caps: 1,
+			stretching: 1,
+			bannedwords: 1
+		};
+
+		var opts = arg.split(',');
+		var cmd = toId(opts[0]);
+		if (cmd === 'mod' || cmd === 'm' || cmd === 'modding') {
+			if (!opts[1] || !toId(opts[1]) || !(toId(opts[1]) in modOpts)) return this.say(by, room, 'Incorrect command: correct syntax is ' + config.commandcharacter + 'set mod, [' +
+				Object.keys(modOpts).join('/') + '](, [on/off])');
+
+			if (!this.settings[config.serverid][toId(config.nick)]['modding']) this.settings[config.serverid][toId(config.nick)]['modding'] = {};
+			if (!this.settings[config.serverid][toId(config.nick)]['modding'][room]) this.settings[config.serverid][toId(config.nick)]['modding'][room] = {};
+			if (opts[2] && toId(opts[2])) {
+				if (!this.hasRank(by, '#&~')) return false;
+				if (!(toId(opts[2]) in {
+						on: 1,
+						off: 1
+					})) return this.say(by, room, 'Incorrect command: correct syntax is ' + config.commandcharacter + 'set mod, [' +
+					Object.keys(modOpts).join('/') + '](, [on/off])');
+				if (toId(opts[2]) === 'off') {
+					this.settings[config.serverid][toId(config.nick)]['modding'][room][toId(opts[1])] = 0;
 				}
+				else {
+					delete this.settings[config.serverid][toId(config.nick)]['modding'][room][toId(opts[1])];
+				}
+				this.writeSettings();
+				this.say(by, room, 'Moderation for ' + toId(opts[1]) + ' in this room is now ' + toId(opts[2]).toUpperCase() + '.');
+				return;
 			}
 			else {
-				this.splitMessage(data);
-			}
-		}
-	},
-	splitMessage: function(message) {
-		if (!message) return;
-		if (!this.settings[config.serverid]) {
-			this.settings[config.serverid] = {};
-			console.log('Created subsettings: serverid')
-		}
-		if (!this.settings[config.serverid][toId(config.nick)]) {
-			this.settings[config.serverid][toId(config.nick)] = {};
-			console.log('Created subsettings: nick')
-		}
-		this.writeSettings();
-		var room = 'lobby';
-		if (message.indexOf('\n') < 0) return this.message(message, room);
-
-		var spl = message.split('\n|:|')[0].split('\n');
-		/*
-		if (spl[0].charAt(0) === '>') {
-			if (spl[1].substr(1, 10) === 'tournament') return;
-			room = spl.shift().substr(1);
-			if (spl[0].substr(1, 4) === 'init') {
-				var users = spl[2].substr(7).split(',');
-				var nickId = toId(config.nick);
-				for (var i = users.length; i--;) {
-					if (toId(users[i]) === nickId) {
-						this.ranks[room] = users[i].trim().charAt(0);
-						break;
-					}
-				}
-				return ok('joined ' + room);
-			}
-		}*/
-		if (spl[0].charAt(0) === '>') {
-			room = spl.shift().substr(1);
-		}
-		for (var i = 0, len = spl.length; i < len; i++) {
-			this.message(spl[i], room);
-		}
-	},
-	message: function(message, room) {
-		Battle.receive(message, room);
-		var spl = message.split('|');
-		switch (spl[1]) {
-			case 'init':
-				if (!this.rooms[room]) {
-					this.rooms[room] = this.rooms[room] || {
-						name: null,
-						users: {}
-					};
-				}
-				break;
-			case 'nametaken':
-			case 'challstr':
-				if (spl[1] === 'challstr') {
-					Commands.clearstatus.call(this, '', config.nick, '');
-				}
-				if (spl[1] === 'challstr') {
-					initChallstr = spl
-				}
-				else {
-					spl = initChallstr;
-					forceRenamed = true;
-				}
-
-				info('received challstr, logging in...');
-				var id = spl[2];
-				var str = spl[3];
-
-				var requestOptions = {
-					hostname: this.actionUrl.hostname,
-					port: this.actionUrl.port,
-					path: this.actionUrl.pathname,
-					agent: false
-				};
-
-				if (!config.pass) {
-					requestOptions.method = 'GET';
-					requestOptions.path += '?act=getassertion&userid=' + toId(config.nick) + '&challengekeyid=' + id + '&challenge=' + str;
-				}
-				else {
-					requestOptions.method = 'POST';
-					var data = 'act=login&name=' + config.nick + '&pass=' + config.pass + '&challengekeyid=' + id + '&challenge=' + str;
-					requestOptions.headers = {
-						'Content-Type': 'application/x-www-form-urlencoded',
-						'Content-Length': data.length
-					};
-				}
-
-				var req = https.request(requestOptions, function(res) {
-					res.setEncoding('utf8');
-					var data = '';
-					res.on('data', function(chunk) {
-						data += chunk;
-					});
-					res.on('end', function() {
-						if (data === ';') {
-							error('failed to log in; nick is registered - invalid or no password given');
-							process.exit(-1);
-						}
-						if (data.length < 50) {
-							error('failed to log in: ' + data);
-							process.exit(-1);
-						}
-
-						if (data.indexOf('heavy load') !== -1) {
-							error('the login server is under heavy load; trying again in one minute');
-							setTimeout(function() {
-								this.message(message);
-							}.bind(this), 60 * 1000);
-							return;
-						}
-
-						if (data.substr(0, 16) === '<!DOCTYPE html>') {
-							error('Connection error 522; trying agian in one minute');
-							setTimeout(function() {
-								this.message(message);
-							}.bind(this), 60 * 1000);
-							return;
-						}
-
-						try {
-							data = JSON.parse(data.substr(1));
-							if (data.actionsuccess) {
-								data = data.assertion;
-							}
-							else {
-								error('could not log in; action was not successful: ' + JSON.stringify(data));
-								process.exit(-1);
-							}
-						}
-						catch (e) {}
-						send('|/trn ' + config.nick + ',0,' + data);
-					}.bind(this));
-				}.bind(this));
-
-				req.on('error', function(err) {
-					error('login error: ' + sys.inspect(err));
-				});
-
-				if (data) req.write(data);
-				req.end();
-				break;
-			case 'updateuser':
-				if (spl[2] !== config.nick) return;
-
-				if (forceRenamed) {
-					forceRenamed = false;
-					return;
-				}
-
-				if (spl[3] !== '1') {
-					error('failed to log in, still guest');
-					process.exit(-1);
-				}
-
-				ok('logged in as ' + spl[2]);
-
-				// Now join the rooms
-				if (config.avatar) {
-					send('|/avatar ' + config.avatar);
-				}
-				for (var i = 0, len = config.rooms.length; i < len; i++) {
-					var room = toId(config.rooms[i]);
-					send('|/join ' + room);
-				}
-				try {
-					if (this.settings[config.serverid][toId(config.nick)].blacklist) {
-						var blacklist = this.settings[config.serverid][toId(config.nick)].blacklist;
-						for (var room in blacklist) {
-							this.updateBlacklistRegex(room);
-						}
-					}
-				}
-				catch (e) {
-					error('Blacklists not loaded..')
-				}
-				setInterval(this.cleanChatData.bind(this), 30 * 60 * 1000);
-				//reset ResourceMonitor
-				setInterval(function() {
-					var warnings = this.monitor.warnings;
-					var repeat = this.monitor.repeat;
-					var pattern = this.monitor.pattern;
-					this.monitor = {
-						usage: 0,
-						user: {},
-						pattern: pattern,
-						repeat: repeat,
-						warnings: warnings
-					};
-				}.bind(this), 1 * 60 * 1000);
-
-				break;
-			case 'c':
-				var by = spl[2];
-				spl = spl.slice(3).join('|');
-				this.rooms[room].users[toId(by)] = by.charAt(0);
-				if (this.roomIsBanned(room)) return this.talk(room, '/leave', true);
-				if (this.isBlacklisted(toId(by), room)) return this.talk(room, '/roomban ' + by + ', Blacklisted user', true);
-				if (!this.hasRank(by, '%@&#~')) {
-					this.processChatData(toId(by), room, spl);
-				}
-				else {
-					this.updateSeen(toId(by), 'c', room);
-				}
-				if (toId(by) === toId(config.nick)) {
-					this.ranks[room] = by.charAt(0);
-				}
-				this.chatMessage(spl, by, room);
-				this.mailUser(by, room);
-				break;
-			case 'c:':
-				var by = spl[3];
-				spl = spl.slice(4).join('|');
-				this.rooms[room].users[toId(by)] = by.charAt(0);
-				if (this.roomIsBanned(room)) return this.talk(room, '/leave', true);
-				if (this.isBlacklisted(toId(by), room)) return this.talk(room, '/roomban ' + by + ', Blacklisted user', true);
-				if (!this.hasRank(by, '%@&#~')) {
-					this.processChatData(toId(by), room, spl);
-				}
-				else {
-					this.updateSeen(toId(by), 'c', room);
-				}
-				this.updateSeen(by, spl[1], room);
-				if (toId(by) === toId(config.nick)) {
-					this.ranks[room] = by.charAt(0);
-				}
-				if (this.isDev(by) && spl.slice(0, 4) === '>>>>') {
-					this.eval(spl, room);
-				}
-				this.chatMessage(spl, by, room);
-				this.mailUser(by, room);
-				break;
-			case 'pm':
-				var by = spl[2];
-				this.chatMessage(spl.slice(4).join('|'), by, ',' + by);
-				if (this.isDev(by) && spl.slice(4).join('|').slice(0, 4) === '>>>>') {
-					this.eval(spl.slice(4).join('|'), ',' + by);
-				}
-				if (pmUser.indexOf(toId(by)) === -1 && config.commandcharacter.indexOf(spl.slice(4).join('|').charAt(0)) === -1 && spl.slice(4).join('|').indexOf('/invite') !== 0 && spl.slice(4).join('|').indexOf('>>>>') !== 0) {
-					this.talk(',' + by, 'Hi, I am only a bot.  Please PM another staff member for assistance. Use ' + config.commandcharacter[0] + 'guide to see my commands. ' + 'Have a nice day! n_n');
-					pmUser.push(toId(by));
-				}
-
-				break;
-			case 'N':
-				var by = spl[2];
-				delete this.rooms[room].users[toId(spl[3])];
-				this.rooms[room].users[toId(by)] = by.charAt(0);
-				if (toId(by) === toId(config.nick)) {
-					this.ranks[room] = by.charAt(0);
-				}
-				if (this.isBlacklisted(toId(by), room)) return this.talk(room, '/roomban ' + by + ', Blacklisted user');
-				this.updateSeen(spl[3], spl[1], toId(by));
-				this.botBanTransfer(by, spl[3]);
-				/*
-				if(config.alts){
-					this.updateProfile(by, room, spl[3]);
-				}*/
-				this.mailUser(by, room);
-				break;
-			case 'J':
-			case 'j':
-				var by = spl[2];
-				this.rooms[room].users[toId(by)] = by.charAt(0);
-				if (config.rooms.indexOf(room) === -1 && room.substr(0, 7) !== 'battle-' && room.substr(0, 10) !== 'groupchat-') {
-					config.rooms.push(room);
-					fs.writeFileSync('data/newrooms/' + config.nick + '_' + config.serverid + '.json', JSON.stringify(config.rooms));
-				}
-				if (this.roomIsBanned(room)) return this.talk(room, '/leave');
-				if (toId(by) === toId(config.nick)) {
-					this.ranks[room] = by.charAt(0);
-				}
-				if (this.isBlacklisted(toId(by), room)) return this.talk(room, '/roomban ' + by + ', Blacklisted user');
-				this.autorank(by, room);
-				this.joinMessages(room, by);
-				this.updateSeen(toId(by), spl[1], room);
-				this.mailUser(by, room);
-				break;
-			case 'l':
-			case 'L':
-				this.updateSeen(toId(spl[2]), spl[1], room);
-				delete this.rooms[room].users[toId(spl[2])];
-				break;
-			case 'raw':
-				this.parseEmotes(spl[2], room);
-				break;
-			case 'users':
-				var userList = spl[2].split(',').slice(1);
-				for (var i = 0; i < userList.length; i++) {
-					this.rooms[room].users[toId(userList[i])] = userList[i].charAt(0);
-					if (toId(userList[i]) === toId(config.nick)) {
-						this.ranks[room] = userList[i].charAt(0);
-					}
-				}
-				break;
-			case 'title':
-				if (spl[2].indexOf(config.nick + ' vs. ') == 0 || spl[2].indexOf('vs. ' + config.nick) > -1) {
-					break;
-				}
-				join(spl[2]);
-				this.rooms[room].name = spl[2];
-				break;
-			case 'popup':
-				this.parseTransfer(spl.slice(2).join('|'))
-				break;
-			case 'deinit':
-				if (room.substr(0, 7) !== 'battle-') {
-					leave(room);
-				}
-				delete this.rooms[room];
-				delete this.ranks[room];
-				Commands.resetroom.call(this, '', config.nick, room);
-				break;
-			case 'updatechallenges':
-				var challengeData = JSON.parse(spl[2]).challengesFrom;
-				var players = Object.keys(challengeData);
-				Battle.accept(players[0], challengeData[players[0]])
-				break;
-			case 'tournament':
-				Battle.tournaments(spl.slice(2), room);
-				break;
-		}
-	},
-	parseTransfer: function(text) {
-		if (toId(config.nick) !== 'sparkybottt') return;
-		if (text.split(' has transferred ').length < 2) return;
-		var user = text.split(' has transferred ')[0];
-		var amount = text.split(' has transferred ')[1].split(' buck')[0] * 1;
-		if (typeof amount !== 'number') {
-			if (text.split(' has transferred ').length < 3) return;
-			user += ' has transferred ';
-			amount = text.split(' has transferred')[2].split(' buck')[0] * 1
-		}
-		console.log(user + ' has transfered ' + amount + 'bucks');
-	},
-	/*
-	updateProfile: function(by, room, oldname) {
-		if (!by || !oldname || !room || !config.alts) return;
-		var user = toId(by);
-		oldname = toId(oldname);
-		if (this.profiles[user] && this.profiles[oldname]) {
-			if (this.profiles[user].indexOf(oldname) > -1 && this.profiles[oldname].indexOf(user) > -1) {
+				this.say(by, room, 'Moderation for ' + toId(opts[1]) + ' in this room is currently ' +
+					(this.settings[config.serverid][toId(config.nick)]['modding'][room][toId(opts[1])] === 0 ? 'OFF' : 'ON') + '.');
 				return;
 			}
 		}
-		if (user === oldname) {
-			return;
-		}
-		var profile = this.profiles;
-		if (!profile[user]) {
-			profile[user] = [user];
-		}
-		var alts = profile[user];
-		if (alts.indexOf(oldname) === -1) {
-			alts.push(oldname);
-		}
-		//compile FULL alt list
-		for (var i = 0; i < alts.length; i++) {
-			//safety catch
-			if (!profile[alts[i]]) {
-				profile[alts[i]] = [alts[i]];
-			}
-			//gather full alts list
-			if (profile[alts[i]].length > 0) {
-				for (var j = 0; j < profile[alts[i]].length; j++) {
-					if (alts.indexOf(profile[alts[i]][j]) > -1) {
-						continue;
+		else {
+			if (!Commands[cmd]) return this.say(by, room, config.commandcharacter + '' + opts[0] + ' is not a valid command.');
+			var failsafe = 0;
+			while (!(cmd in settable)) {
+				if (typeof Commands[cmd] === 'string') {
+					cmd = Commands[cmd];
+				}
+				else if (typeof Commands[cmd] === 'function') {
+					if (cmd in settable) {
+						break;
 					}
-					if (!profile[alts[i]][j]) {
-						continue;
+					else {
+						this.say(by, room, 'The settings for ' + config.commandcharacter + '' + opts[0] + ' cannot be changed.');
+						return;
 					}
-					alts.push(profile[alts[i]][j]);
 				}
-			}
-		}
-		//syncronize alts
-		for (i = 0; i < alts.length; i++) {
-			profile[alts[i]] = alts;
-		}
-		this.profiles = profile;
-		fs.writeFileSync('profiles.json', JSON.stringify(profile))
-	},
-	*/
-	autorank: function(user, room) {
-		if (!this.settings[config.serverid][toId(config.nick)].autorank) {
-			this.settings[config.serverid][toId(config.nick)].autorank = {};
-		}
-		if (!this.settings[config.serverid][toId(config.nick)].autorank[room]) return;
-		var rank = this.settings[config.serverid][toId(config.nick)].autorank[room];
-		var ranks = '+$%@&#~'
-		if (ranks.indexOf(user.charAt(0)) >= ranks.indexOf(rank)) return;
-		switch (rank) {
-			case '+':
-				return this.talk(room, '/roomvoice ' + user);
-				break;
-			case '%':
-				return this.talk(room, '/roomdriver ' + user);
-				break;
-			case '$':
-				return this.talk(room, '/roomop ' + user);
-				break;
-			case '@':
-				return this.talk(room, '/roommod ' + user);
-				break;
-			case '&':
-				return this.talk(room, '/roomleader ' + user);
-				break;
-		}
-	},
-	autoRes: function(msg, by, room) {
-		if (this.isBanned(by) || toId(by) === toId(config.nick)) return false;
-		var autoRes = fs.readFileSync('data/autores.txt').toString().split('\n');
-		for (var i = 0; i < autoRes.length; i++) {
-			var spl = autoRes[i].split('||')
-			if (spl[0] === config.serverid && spl[1] === toId(config.nick) && spl[2] === room) {
-				try {
-					var regex = new RegExp(spl[3], 'i');
-				}
-				catch (e) {
-					continue;
-				}
-				if (!regex.test(msg)) {
-					continue;
-				}
-				(commandAbuse[toId(by)] ? commandAbuse[toId(by)]++ : commandAbuse[toId(by)] = 1);
-				setTimeout(function() {
-					commandAbuse[toId(by)]--
-				}.bind(this), 5000)
-				if (commandAbuse[toId(by)] >= 4) {
-					this.mute(toId(by));
-					cleanBuffer(toId(by));
+				else {
+					this.say(by, room, 'Something went wrong. PM TalkTakesTime here or on Smogon with the command you tried.');
 					return;
 				}
-				return this.say(by, room, spl.slice(4).join('||').replace(/{by}/g, by), true);
-			}
-		}
-		return false;
-	},
-	parseEmotes: function(html, room) {
-
-		if (html.indexOf('<div class=\'chat\'><small>') !== 0) return false;
-		var emoteList = ["#freewolf", "feelsbd", "feelsbn", "feelspn", "feelsdd", "feelsgd", "feelsgn", "feelsmd", "feelsnv", "feelsok", "feelspika", "feelspink", "feelsrs", "feelssc", "fukya", "funnylol", "hmmface", "Kappa", "noface", "Obama", "oshet", "PJSalt", "trumpW", "Sanic", "wtfman", "xaa", "yayface", "yesface", "meGusta", "trollface", "Doge"];
-		var initialLength = html.length;
-		var usersearch = html.indexOf('</small><button name=\'parseCommand\' value=\'/user ') + 49
-
-		var user = html.slice(usersearch).split('\' style=\'background:none;border:0;padding:0 5px 0 0;font-family:Verdana,Helvetica,Arial,sans-serif;font-size:9pt;cursor:pointer\'><b><font color=')[0];
-
-
-		if (toId(user) === toId(config.nick)) return false;
-		var emoteCount = 0;
-
-		var emoteStats = {};
-
-		for (var j = 0; j < emoteList.length; j++) {
-			var replacer = '" title="' + emoteList[j] + '" />';
-			var newText = '';
-			emoteStats[emoteList[j]] = 0;
-			for (var i = 0; i < ~~(initialLength / replacer.length) + 1; i++) {
-				if (html.indexOf(replacer) === -1) {
-					break;
-				}
-				emoteStats[emoteList[j]]++;
-				html = html.replace(replacer, '');
-				emoteCount++;
-			}
-		}
-
-		//parse flooding
-		if (emoteStats) {
-			if (!emoteFlooding[toId(user)]) {
-				emoteFlooding[toId(user)] = 0;
-			}
-			emoteFlooding[toId(user)]++
-				setTimeout(function() {
-					emoteFlooding[toId(user)]--
-				}.bind(this), FLOOD_MESSAGE_TIME);
-			if (emoteFlooding[toId(user)] >= FLOOD_MESSAGE_NUM) {
-				emoteCount = emoteFlooding[toId(user)];
-			}
-		}
-		//data logging
-		this.emoteCount(emoteStats);
-		//moderation
-		this.emoteModerate(emoteCount, user, room)
-	},
-	emoteModerate: function(count, user, room) {
-		if (this.rankFrom(user, '+')) return false;
-
-		if (!emoticonAbuse[toId(user)]) {
-			emoticonAbuse[toId(user)] = 0
-		}
-		if (count < 3) return false;
-		if (count > 2) {
-			emoticonAbuse[toId(user)] = emoticonAbuse[toId(user)] + count;
-		}
-
-		var noModeration = fs.readFileSync('data/emotemoderation.txt').toString().split('\n');
-		if (noModeration.indexOf('d|' + room) > -1) {
-			return false;
-		}
-
-
-		if (count > 15) {
-			if (this.hasRank(this.ranks[room], '@#&~')) {
-				return this.talk(room, '/roomban ' + user + ', Emoticon Spam (' + count + ' [' + emoticonAbuse[toId(user)] + '])');
-			}
-			else if (this.hasRank(this.ranks[room], '%')) {
-				return this.talk(room, '/hourmute ' + user + ', Emoticon Spam (' + count + ' [' + emoticonAbuse[toId(user)] + '])');
-			}
-		}
-		//
-
-		if (emoticonAbuse[toId(user)] > 150) {
-			if (this.hasRank(this.ranks[room], '@#&~')) {
-				return this.talk(room, '/roomban ' + user + ', Emoticon Spam (' + count + ' [' + emoticonAbuse[toId(user)] + '])');
-			}
-			else if (this.hasRank(this.ranks[room], '%')) {
-				return this.talk(room, '/hourmute ' + user + ', Emoticon Spam (' + count + ' [' + emoticonAbuse[toId(user)] + '])');
-			}
-		}
-		else if (emoticonAbuse[toId(user)] > 50 && emoticonAbuse[toId(user)] < 151) {
-			if (this.hasRank(this.ranks[room], '%@#&~')) {
-				return this.talk(room, '/hourmute ' + user + ', Please do not spam emoticons. (' + count + ' [' + emoticonAbuse[toId(user)] + '])');
-			}
-		}
-		else if (emoticonAbuse[toId(user)] > 6 && emoticonAbuse[toId(user)] < 51) {
-			if (this.hasRank(this.ranks[room], '%@#&~')) {
-				return this.talk(room, '/mute ' + user + ', Please do not abuse emoticons. (' + count + ' [' + emoticonAbuse[toId(user)] + '])');
-			}
-		}
-		else if (emoticonAbuse[toId(user)] > 2 && emoticonAbuse[toId(user)] < 7) {
-			if (this.hasRank(this.ranks[room], '%@#&~')) {
-				return this.talk(room, '/warn ' + user + ', Please use emoticons in moderation. (' + count + ' [' + emoticonAbuse[toId(user)] + '])');
-			}
-		}
-	},
-	emoteCount: function(stats) {
-		var emoteList = ["#freewolf", "feelsbd", "feelsbn", "feelspn", "feelsdd", "feelsgd", "feelsgn", "feelsmd", "feelsnv", "feelsok", "feelspika", "feelspink", "feelsrs", "feelssc", "fukya", "funnylol", "hmmface", "Kappa", "noface", "Obama", "oshet", "PJSalt", "trumpW", "Sanic", "wtfman", "xaa", "yayface", "yesface", "meGusta", "trollface", "Doge"];
-		var emoteData = fs.readFileSync('data/emotecounter.txt').toString().split('\n');
-		if (emoteData.length !== emoteList.length * 2) {
-			emoteData = [];
-			for (var l = 0; l < emoteList.length; l++) {
-				emoteData.push(emoteList[l]);
-				emoteData.push(0);
-			}
-		}
-		for (var i = 0; i < emoteList.length; i++) {
-			if (!stats[emoteList[i]]) {
-				continue;
-			}
-			emoteData[emoteData.indexOf(emoteList[i]) + 1] = emoteData[emoteData.indexOf(emoteList[i]) + 1] * 1 + stats[emoteList[i]];
-		}
-		fs.writeFileSync('data/emotecounter.txt', emoteData.join('\n'));
-	},
-	parseHandTotal: function(hand) {
-		var aceCount = 0
-		var handTotal = 0;
-
-		for (var i = 0; i < hand.length; i++) {
-			handTotal = handTotal + pointValueBJ[hand[i].slice(1)]
-			if (hand[i].slice(1) === 'A') {
-				aceCount++
-			}
-		}
-		if (handTotal > 21) {
-			var difference = ~~((handTotal - 22) / 10) + 1;
-			if (aceCount >= difference) {
-				handTotal = handTotal - 10 * difference;
-			}
-			else {
-				handTotal = handTotal - aceCount * 10;
-			}
-		}
-		return handTotal;
-	},
-	generateDeck: function(packs) {
-		if (!packs || isNaN(packs * 1)) {
-			packs = 1;
-		}
-		else {
-			packs = ~~packs
-		}
-		var tarDeck = ''
-		for (var i = 0; i < packs; i++) {
-			tarDeck += deck;
-		}
-		for (var idx = 0; idx < (tarDeck.length + 2) * (tarDeck.length + 2); idx++) {
-			var randomInt = Math.floor(Math.random() * 52 + 1);
-			tarDeck = tarDeck.slice(1, randomInt) + tarDeck.charAt(0) + tarDeck.slice(randomInt, tarDeck.length);
-		}
-		var returnDeck = [];
-		for (var i = 0; i < tarDeck.length; i++) {
-			returnDeck[returnDeck.length] = card[tarDeck[i]];
-		}
-		return returnDeck;
-	},
-	mute: function(user, duration, by) {
-		if (!by) {
-			by === '~ResourceMonitor';
-		}
-		if (!duration) {
-			duration = 7;
-		}
-		duration = duration * 1;
-		if (isNaN(duration)) {
-			duration = 7;
-		}
-		user = toId(user);
-		this.botlog('global', toId(user) + ' was muted from using the bot for ' + duration + ' minutes by' + by);
-		if (this.isBanned(user)) return false;
-		var d = new Date();
-		var date = d.valueOf();
-		this.mutes[user] = date + duration * 1000 * 60;
-	},
-	isBanned: function(by) {
-		var commandban = fs.readFileSync('data/commandban.txt').toString().split('\n');
-		var user = toId(by);
-		if (this.mutes[user]) {
-			var d = new Date();
-			var date = d.valueOf();
-			if (this.mutes[user] * 1 <= date * 1) {
-				this.mutes[user] = false;
-			}
-		}
-		return (((commandban.indexOf(toId(by)) > -1) || this.mutes[toId(by)]) && !this.isDev(by));
-	},
-	botlog: function(room, message) {
-		if (room === 'joim') {
-			return false;
-		}
-		if (!room) {
-			room = 'global';
-		}
-		var d = new Date();
-		fs.appendFile('data/botlog.txt', '(' + d + ') (' + room + ') ' + message + '\n');
-	},
-	botBanTransfer: function(target, oldName) {
-		target = toId(target);
-		if (this.mutes[toId(oldName)]) {
-			var end = this.mutes[oldName];
-			if (this.mutes[target]) {
-				if (this.mutes[target] < end) {
-					this.mutes[target] = end;
+				failsafe++;
+				if (failsafe > 5) {
+					this.say(by, room, 'The command "' + config.commandcharacter + '' + opts[0] + '" could not be found.');
+					return;
 				}
 			}
+
+			var settingsLevels = {
+				off: false,
+				disable: false,
+				'+': '+',
+				'%': '%',
+				'@': '@',
+				'&': '&',
+				'#': '#',
+				'~': '~',
+				on: true,
+				enable: true
+			};
+			if (!opts[1] || !opts[1].trim()) {
+				var msg = '';
+				if (!this.settings[config.serverid][toId(config.nick)][cmd] || (!this.settings[config.serverid][toId(config.nick)][cmd][room] && this.settings[config.serverid][toId(config.nick)][cmd][room] !== false)) {
+					msg = '' + config.commandcharacter + '' + cmd + ' is available for users of rank ' + ((cmd === 'autoban' || cmd === 'banword') ? '#' : config.defaultrank) + ' and above.';
+				}
+				else if (this.settings[config.serverid][toId(config.nick)][cmd][room] in settingsLevels) {
+					msg = '' + config.commandcharacter + '' + cmd + ' is available for users of rank ' + this.settings[config.serverid][toId(config.nick)][cmd][room] + ' and above.';
+				}
+				else if (this.settings[config.serverid][toId(config.nick)][cmd][room] === true) {
+					msg = '' + config.commandcharacter + '' + cmd + ' is available for all users in this room.';
+				}
+				else if (this.settings[config.serverid][toId(config.nick)][cmd][room] === false) {
+					msg = '' + config.commandcharacter + '' + cmd + ' is not available for use in this room.';
+				}
+				this.say(by, room, msg);
+				return;
+			}
 			else {
-				this.mutes[target] = end;
+				if (!this.hasRank(by, '#&~')) return false;
+				var newRank = opts[1].trim();
+				if (!(newRank in settingsLevels)) return this.say(by, room, 'Unknown option: "' + newRank + '". Valid settings are: off/disable, +, %, @, &, #, ~, on/enable.');
+				if (!this.settings[config.serverid][toId(config.nick)][cmd]) this.settings[config.serverid][toId(config.nick)][cmd] = {};
+				this.settings[config.serverid][toId(config.nick)][cmd][room] = settingsLevels[newRank];
+				this.writeSettings();
+				this.say(by, room, 'The command ' + config.commandcharacter + '' + cmd + ' is now ' +
+					(settingsLevels[newRank] === newRank ? ' available for users of rank ' + newRank + ' and above.' :
+						(this.settings[config.serverid][toId(config.nick)][cmd][room] ? 'available for all users in this room.' : 'unavailable for use in this room.')))
 			}
 		}
-
-		var commandban = fs.readFileSync('data/commandban.txt').toString().split('\n');
-
-		if (!oldName) return;
-		if (this.rankFrom(target, '+') && commandban.indexOf(oldName) > -1) {
-			this.botlog('global', target + ' would be added to botban list, but has rank ' + this.botRank(target) + ' (Alt of: ' + oldName + ')');
-			return false;
-		}
-		if (commandban.indexOf(toId(oldName)) === -1) {
-			return;
-		}
-		else {
-			if (commandban.indexOf(toId(target)) > -1) return;
-			fs.appendFile('data/commandban.txt', target + '\n');
-			this.botlog('global', 'Automatically added to botBan list: ' + target + ' (Alt of: ' + oldName + ')');
-		}
 	},
-	outrank: function(by, target) {
-		if (this.isDev(by) || this.botRank(by) === '~') return true;
+	blacklist: 'autoban',
+	ban: 'autoban',
+	ab: 'autoban',
+	autoban: function(arg, by, room) {
+		if (!this.canUse('autoban', room, by) || room.charAt(0) === ',') return false;
+		if (!this.hasRank(this.ranks[room] || ' ', '@&#~')) return this.say(by, room, config.nick + ' requires rank of @ or higher to (un)blacklist.');
 
-		var ranks = ' +@~';
-		var outrank = (ranks.indexOf(this.botRank(by)) > ranks.indexOf(this.botRank(target)));
-		return outrank;
-	},
-	botRank: function(by) {
-		var rankData = fs.readFileSync('data/ranks.txt').toString().split('\n');
-		for (var i = 0; i < rankData.length; i++) {
-			if (!rankData[i]) {
+		arg = arg.split(',');
+		var added = [];
+		var illegalNick = [];
+		var alreadyAdded = [];
+		if (!arg.length || (arg.length === 1 && !arg[0].trim().length)) return this.say(by, room, 'You must specify at least one user to blacklist.');
+		for (var i = 0; i < arg.length; i++) {
+			var tarUser = toId(arg[i]);
+			if (tarUser.length < 1 || tarUser.length > 18) {
+				illegalNick.push(tarUser);
 				continue;
 			}
-			if (toId(by) === toId(rankData[i])) {
-				return rankData[i].charAt(0);
+			if (!this.blacklistUser(tarUser, room)) {
+				alreadyAdded.push(tarUser);
+				continue;
 			}
+			this.say(config.nick, room, '/roomban ' + tarUser + ', Blacklisted user');
+			this.say(config.nick, room, '/modnote ' + tarUser + ' was added to the blacklist by ' + by + '.');
+			added.push(tarUser);
 		}
-		return ' ';
-	},
-	isDev: function(by) {
-		if (!by) return false;
-		var isDev = (devList.indexOf(toId(by)) !== -1);
-		return isDev;
-	},
-	rankFrom: function(by, rank) {
-		var ranks = '+@~';
-		var enoughRank = (ranks.indexOf(this.botRank(by)) >= ranks.indexOf(rank));
-		return (enoughRank || this.isDev(by));
-	},
 
-	hasRank: function(by, rank) {
-		if (this.isDev(by)) return true;
-		if ((rank.indexOf('+') > -1 || rank.indexOf('%') > -1) && this.rankFrom(by, '+')) {
-			return true;
+		var text = '';
+		if (added.length) {
+			text += 'User(s) "' + added.join('", "') + '" added to blacklist successfully. ';
+			this.writeSettings();
 		}
-		else if ((rank.indexOf('&') > -1 || rank.indexOf('@') > -1) && this.rankFrom(by, '@')) {
-			return true;
-		}
-		else if ((rank.indexOf('#') > -1 || rank.indexOf('~') > -1) && this.rankFrom(by, '~')) {
-			return true;
-		}
-		else {
-			return this.haveRank(by, rank)
-		}
+		if (alreadyAdded.length) text += 'User(s) "' + alreadyAdded.join('", "') + '" already present in blacklist. ';
+		if (illegalNick.length) text += 'All ' + (text.length ? 'other ' : '') + 'users had illegal nicks and were not blacklisted.';
+		this.say(by, room, text);
 	},
-	eval: function(msg, room) {
+	unblacklist: 'unautoban',
+	unban: 'unautoban',
+	unab: 'unautoban',
+	unautoban: function(arg, by, room) {
+		if (!this.canUse('autoban', room, by) || room.charAt(0) === ',') return false;
+		if (!this.hasRank(this.ranks[room] || ' ', '@&#~')) return this.say(by, room, config.nick + ' requires rank of @ or higher to (un)blacklist.');
+
+		arg = arg.split(',');
+		var removed = [];
+		var notRemoved = [];
+		if (!arg.length || (arg.length === 1 && !arg[0].trim().length)) return this.say(by, room, 'You must specify at least one user to unblacklist.');
+		for (var i = 0; i < arg.length; i++) {
+			var tarUser = toId(arg[i]);
+			if (tarUser.length < 1 || tarUser.length > 18) {
+				notRemoved.push(tarUser);
+				continue;
+			}
+			if (!this.unblacklistUser(tarUser, room)) {
+				notRemoved.push(tarUser);
+				continue;
+			}
+			this.say(config.nick, room, '/roomunban ' + tarUser);
+			removed.push(tarUser);
+		}
+
+		var text = '';
+		if (removed.length) {
+			text += 'User(s) "' + removed.join('", "') + '" removed from blacklist successfully. ';
+			this.writeSettings();
+		}
+		if (notRemoved.length) text += (text.length ? 'No other ' : 'No ') + 'specified users were present in the blacklist.';
+		this.say(by, room, text);
+	},
+	rab: 'regexautoban',
+	regexautoban: function(arg, by, room) {
+		if (!this.rankFrom(by, '~') || !this.canUse('autoban', room, by) || room.charAt(0) === ',') return false;
+		if (!this.hasRank(this.ranks[room] || ' ', '@&#~')) return this.say(by, room, config.nick + ' requires rank of @ or higher to (un)blacklist.');
+		if (!arg) return this.say(by, room, 'You must specify a regular expression to (un)blacklist.');
+
 		try {
-			var result = eval(msg.slice(4).trim());
-			this.talk(room, '<<<< ' + JSON.stringify(result));
+			new RegExp(arg, 'i');
 		}
 		catch (e) {
-			this.talk(room, '<<<< ' + e.name + ": " + e.message);
+			return this.say(by, room, e.message);
 		}
-	},
-	joinMessages: function(room, by) {
-		if (toId(by) === toId(config.nick)) return false;
 
-		var data = fs.readFileSync('data/wcmsg.txt').toString().split('\n');
-		var ignore = fs.readFileSync('data/ignorewcmsg.txt').toString().split('\n');
-		if (ignore.indexOf(toId(by)) > -1) return false;
-		if (data.indexOf(room + '|' + config.serverid) > -1 && data[data.indexOf(room + '|' + config.serverid) + 1].charAt(0) === 'n') {
-			return this.talk(room, '/w ' + by + ',' + data[data.indexOf(room + '|' + config.serverid) + 1].slice(2).replace(/{by}/g, by));
-		}
+		arg = '/' + arg + '/i';
+		if (!this.blacklistUser(arg, room)) return this.say(by, room, '/' + arg + ' is already present in the blacklist.');
+
+		this.writeSettings();
+		this.say(by, room, '/' + arg + ' was added to the blacklist successfully.');
 	},
-	roomIsBanned: function(room) {
-		var willNotJoin = fs.readFileSync('data/bannedrooms.txt').toString().split('\n');
-		if (willNotJoin.indexOf(room) > -1) {
-			return true;
+	unrab: 'unregexautoban',
+	unregexautoban: function(arg, by, room) {
+		if (!this.rankFrom(by, '~') || !this.canUse('autoban', room, by) || room.charAt(0) === ',') return false;
+		if (!this.hasRank(this.ranks[room] || ' ', '@&#~')) return this.say(by, room, config.nick + ' requires rank of @ or higher to (un)blacklist.');
+		if (!arg) return this.say(by, room, 'You must specify a regular expression to (un)blacklist.');
+
+		arg = '/' + arg.replace(/\\\\/g, '\\') + '/i';
+		if (!this.unblacklistUser(arg, room)) return this.say(by, room, '/' + arg + ' is not present in the blacklist.');
+
+		this.writeSettings();
+		this.say(by, room, '/' + arg + ' was removed from the blacklist successfully.');
+	},
+	viewbans: 'viewblacklist',
+	vab: 'viewblacklist',
+	viewautobans: 'viewblacklist',
+	viewblacklist: function(arg, by, room) {
+		if (!this.canUse('autoban', room, by) || room.charAt(0) === ',') return false;
+
+		var text = '';
+		if (!this.settings[config.serverid][toId(config.nick)].blacklist || !this.settings[config.serverid][toId(config.nick)].blacklist[room]) {
+			text = 'No users are blacklisted in this room.';
 		}
 		else {
-			return false;
-		}
-	},
-	loadQuotes: function(room) {
-		var quoteList = fs.readFileSync('data/quotes.txt').toString().split('\n');
-		var text = [];
-		var hasQuote = false;
-		for (var i = 0; i < quoteList.length; i++) {
-			var spl = quoteList[i].split('|')
-			var tarRoom = spl[0];
-			spl = spl.slice(1).join('|');
-			if (room === tarRoom) {
-				text[text.length] = spl;
-				hasQuote = true;
-			}
-		}
-		if (!hasQuote) return '';
-		return text;
-	},
-	loadEntries: function(room) {
-		var quoteList = fs.readFileSync('data/entries.txt').toString().split('\n');
-		var text = [];
-		var hasQuote = false;
-		for (var i = 0; i < quoteList.length; i++) {
-			var spl = quoteList[i].split('|')
-			var tarRoom = spl[0];
-			spl = spl.slice(1).join('|');
-			if (room === tarRoom) {
-				text[text.length] = spl;
-				hasQuote = true;
-			}
-		}
-		if (!hasQuote) return '';
-		return text;
-	},
-	mailUser: function(user, room) {
-		var mailingList = fs.readFileSync('data/mail.txt').toString().split("\n");
-		var updateList = fs.readFileSync('data/mail.txt').toString()
-		var changes = false;
-		for (var i = 0; i < mailingList.length; i++) {
-			var spl = mailingList[i].split('|');
-			if (spl[0] === toId(user)) {
-				spl = spl.slice(1).join('|');
-				this.talk(room, (room.charAt(0) === ',' ? '' : '/pm ' + user + ', ') + spl);
-				var search = toId(user) + '|' + spl + '\n';
-				var idx = updateList.indexOf(search);
-				if (idx >= 0) {
-					updateList = updateList.substr(0, idx) + updateList.substr(idx + search.length);
+			if (arg.length) {
+				var nick = toId(arg);
+				if (nick.length < 1 || nick.length > 18) {
+					text = 'Invalid nickname: "' + nick + '".';
 				}
-				changes = true;
-			}
-		}
-		if (changes) {
-			/*
-		 	 var uploadMail = '';
-			 for(var indx = 0;indx < updateList.length; indx++){
-			 	if(!updateList[indx]){
-			 		continue;
-			 	}
-			 	uploadMail = updateList[idx] + '\n';
-			 }*/
-			fs.writeFileSync('data/mail.txt', updateList);
-			return false;
-		}
-	},
-	checkMail: function(user, room) {
-		var mailingList = fs.readFileSync('data/mail.txt').toString().split("\n");
-		var changes = false;
-		for (var i = 0; i < mailingList.length; i++) {
-			var spl = mailingList[i].split('|');
-			if (spl[0] === toId(user)) {
-				changes = true;
-			}
-		}
-		return changes;
-	},
-
-	customCommands: function(msg, by, room) {
-		var ranksFrom = ' +★$%@&#~';
-		var ccommands = fs.readFileSync('data/addcom.txt').toString().split("\n");
-		var parseMsg = msg.split(' ');
-		var commandUsed = toId(parseMsg[0].slice(1));
-		var arg = parseMsg.slice(1).join(' ').replace(/, /g, ',').split(',');
-
-		for (var idx = 0; idx < ccommands.length; idx++) {
-			var spl = ccommands[idx].split('|');
-			if (room === spl[2] && commandUsed === spl[3] && config.serverid === spl[0] && toId(config.nick) === spl[1]) {
-				//	var rand = (Math.floor(Math.random()
-
-				var returnText = spl.slice(5, spl.length - 1).join('|').replace(/{arg}/g, '{arg[0]}').split('{')
-
-				for (var i = 0; i < returnText.length; i++) {
-					if (!returnText[i].replace(/ /g, '')) {
-						continue;
-					}
-					if (returnText[i].indexOf('}') === -1) {
-						if (i === 0 && spl.slice(5, spl.length - 1).join('|').trim().charAt(0) !== '{') {
-							continue;
-						}
-						returnText[i] = '{' + returnText[i];
-						continue;
-					}
-					var tarRep = returnText[i].split('}')[0];
-					//check if all the neccesary components are here
-					if (tarRep.indexOf(']') !== tarRep.length - 1 || tarRep.indexOf('[') < 1) {
-						if (['arg', 'rand'].indexOf(tarRep.replace(/[^a-z]/g, '')) === 0 || toId(tarRep).substr(0, 6) === 'choose') {
-							returnText[i] = '{' + returnText[i];
-							continue;
-						}
-					}
-					var tarFunction = tarRep.split('}')[0].split('[')[0];
-					//determine value of variable
-					if (tarRep.indexOf(']') === tarRep.length - 1 && tarRep.indexOf('[') > 0 && tarRep.indexOf('[') < tarRep.indexOf(']')) {
-						var value = tarRep.split('[')[1].split(']')[0];
-					}
-					//different things to do to differnet 'functions';
-					switch (tarFunction) {
-						case 'arg':
-							if (!value) {
-								returnText[i] = '{' + returnText[i];
-								continue;
-							}
-							returnText[i] = returnText[i].replace(tarRep + '}', arg[value] || '');
-							break;
-						case 'rand':
-							if (!value) {
-								returnText[i] = '{' + returnText[i];
-								continue;
-							}
-							var rand = ~~(Math.random() * value) + 1;
-							returnText[i] = returnText[i].replace(tarRep + '}', rand);
-							break;
-						case 'choose':
-							if (!value) {
-								returnText[i] = '{' + returnText[i];
-								continue;
-							}
-							value = value.split(',');
-							var rand = ~~(Math.random() * value.length);
-							returnText[i] = returnText[i].replace(tarRep + '}', value[rand].trim());
-							break;
-						case 'pick':
-							if (!arg[0]) {
-								returnText[i] = '';
-								continue;
-							}
-							var rand = ~~(Math.random() * arg.length);
-							returnText[i] = returnText[i].replace(tarRep + '}', arg[rand])
-							break;
-						default:
-							returnText[i] = '{' + returnText[i]
-							break;
-					}
-				}
-				returnText = returnText.join('');
-				returnText = returnText.replace(/{by}/g, by.slice(1));
-
-
-				returnText = stripCommands(returnText).replace('//me', '/me').replace('//declare', '/declare').replace('//wall', '/wall').replace('!!data', '!data').replace('!!dt', '!dt').replace('//tour', '/tour').replace('//poll', '/poll').replace('!!showimage', '!showimage').replace('//pdeclare', '/pdeclare').replace('//useteam', '/useteam');
-
-				if (!this.hasRank(by, ranksFrom.slice(ranksFrom.indexOf(spl[4].replace('n', ' '))))) {
-					if ((returnText.charAt(0) === '/' || returnText.charAt(0) === '!') && returnText.indexOf('/me') !== 0) {
-						returnText = returnText.split(' ').slice(1).join(' ');
-					}
-					room = ',' + by;
-				}
-				return this.say(by, room, returnText, true);
-			}
-		}
-		return false;
-	},
-	ResourceMonitor: function(message, by, room, type) {
-		if (!this.settings[config.serverid][toId(config.nick)].monitor) {
-			this.settings[config.serverid][toId(config.nick)].monitor = {};
-		}
-		if (this.settings[config.serverid][toId(config.nick)].monitor[room]) return false;
-		if (this.isBanned(by) || this.isDev(by)) return false;
-		if (toId(by) === toId(config.nick)) return;
-		if (config.commandcharacter.indexOf(message.charAt(0)) === -1 && room.charAt(0) !== ',') return;
-		var user = toId(by);
-		if (!this.monitor.user[user]) {
-			this.monitor.user[user] = {}
-			this.monitor.user[user].count = 0;
-			this.monitor.user[user].command = {};
-		}
-		if (config.commandcharacter.indexOf(message.charAt(0)) !== -1) {
-			var temp = message.split(' ')[0].slice(1);
-			var command = toId(temp);
-			if (['triviaanswer', 'ta', 'guess', 'g', 'gk'].indexOf(command) > -1) return;
-			if (Commands[command]) {
-				var failsafe = 0
-				while (typeof Commands[command] !== "function" && failsafe++ < 10) {
-					command = Commands[command];
-				}
-				if (!this.settings[config.serverid][toId(config.nick)].disable) {
-					this.settings[config.serverid][toId(config.nick)].disable = {};
-				}
-				if (this.settings[config.serverid][toId(config.nick)].disable[command]) {
-					return;
-				}
-				if (!this.monitor.user[user].command[command]) {
-					this.monitor.user[user].command[command] = 0;
-				}
-				this.monitor.user[user].count++;
-				this.monitor.usage++;
-				this.monitor.user[user].command[command]++
-			}
-			var ccommands = fs.readFileSync('data/addcom.txt').toString().split("\n");
-			for (var i = 0; i < ccommands.length; i++) {
-				var spl = ccommands[i].split('|')
-				if (room === spl[2] && command === spl[3] && config.serverid === spl[0] && toId(config.nick) === spl[1]) {
-					if (!this.monitor.user[user].command.customcommand) {
-						this.monitor.user[user].command.customcommand = 0;
-					}
-					this.monitor.user[user].command.customcommand++
-						this.monitor.user[user].count++;
-					this.monitor.usage++;
-				}
-			}
-		}
-		else {
-			if (!this.monitor.user[user].command.pms) {
-				this.monitor.user[user].command.pms = 0;
-			}
-			this.monitor.user[user].command.pms++
-		}
-		//identify attack patterns
-		//catch attacks earlier
-		if (this.monitor.pattern[0] && this.monitor.user[user].command) {
-			for (var com in this.monitor.user[user].command) {
-				if (this.monitor.user[user].command[com] > MONITOR.PREVENTION && this.monitor.pattern.indexOf(com) > -1) {
-					if (!this.monitor.warnings[user]) {
-						this.monitor.warnings[user] = 0;
-					}
-					this.monitor.warnings[user]++;
-					if (this.monitor.warnings[user] <= 5) {
-						this.mute(user, MONITOR.WARNING[this.monitor.warnings[user]])
-					}
-					else {
-						fs.appendFile('data/commandban.txt', user + '\n')
-					}
-					this.monitor.pattern.push(com);
-					setTimeout(function() {
-						this.monitor.pattern = this.monitor.pattern.slice(1);
-					}.bind(this), 30 * 60 * 1000)
-					monitor(user + ' was intercepted for abuse of ' + com + ' (' + this.monitor.warnings[user] + ')')
-					cleanBuffer(user);
-					return;
-				}
-			}
-		}
-		//moderation for excess
-		//per user basis
-		if (this.monitor.user[user].count > MONITOR.USER) {
-			if (!this.monitor.warnings[user]) {
-				this.monitor.warnings[user] = 0;
-			}
-			this.monitor.warnings[user]++;
-			if (this.monitor.warnings[user] <= 5) {
-				this.mute(user, MONITOR.WARNING[this.monitor.warnings[user]])
-			}
-			else {
-				fs.appendFile('data/commandban.txt', user + '\n')
-			}
-			cleanBuffer(user)
-			monitor(user + ' was moderated for spamming commands (' + this.monitor.warnings[user] + ')')
-
-			//parse patterns of spamming... Hard to identify users who go from command to command.
-			var abused = [];
-			for (var command in this.monitor.user[user].command) {
-				if (this.monitor.user[user].command[command] >= MONITOR.COMMAX) {
-					abused.push(command)
-				}
-
-			}
-			if (abused[0]) {
-				for (var i = 0; i < abused.length; i++) {
-					this.monitor.pattern.push(abused[i]);
-					setTimeout(function() {
-						this.monitor.pattern = this.monitor.pattern.slice(1);
-					}.bind(this), 30 * 60 * 1000)
-				}
-			}
-		}
-		//parse many accounts attacking slowly
-		//multiple people spammimg?
-		if (this.monitor.usage > MONITOR.TOTAL) {
-			monitor(user + this.monitor.usage + ' commands was used in one minute.')
-				//names of all the users
-			var names = [];
-			for (var name in this.monitor.user) {
-				names.push(name);
-				if (!this.monitor.repeat[user]) {
-					this.monitor.repeat[user]++
-				}
-				this.monitor.repeat[user]++;
-			}
-			//try to purge repeat offenders
-			for (var username in this.monitor.repeat) {
-				if (this.monitor.repeat[username] > 5) {
-					if (!this.monitor.warnings[user]) {
-						this.monitor.warnings[user] = 0;
-					}
-					this.monitor.warnings[user]++
-						this.monitor.repeat[user] = 0;
-					cleanBuffer(user)
-					if (this.monitor.warnings[user] <= 5) {
-						this.mute(user, MONITOR.WARNING[this.monitor.warnings[user]])
-					}
-					else {
-						fs.appendFile('data/commandban.txt', user + '\n')
-					}
-				}
-			}
-			//quickly get rid of some higher numbers
-			var average = this.monitor.usage / names.length;
-			for (var name in this.monitor.user) {
-				//target the most common ones
-				if (this.monitor.user[user].count >= average) {
-					//9 seconds to clear buffer
-					cleanBuffer(user)
-					this.mute(name, 0.15);
-				}
-			}
-			this.monitor.usage = 0;
-		}
-	},
-	chatMessage: function(message, by, room) {
-		var cmdrMessage = '["' + room + '|' + by + '|' + message + '"]';
-		message = message.trim();
-		// auto accept invitations to rooms
-		if (room.charAt(0) === ',' && message.substr(0, 8) === '/invite ' && this.hasRank(by, '+%@&~') && !this.roomIsBanned(message.substr(8))) {
-			invite(by, message.substr(8));
-			this.talk('', '/join ' + message.substr(8));
-		}
-
-		if (this.isBanned(by)) return false;
-
-		this.ResourceMonitor(message, by, room, 'command');
-
-		if (this.isBanned(by)) return false;
-
-		this.autoRes(message, by, room);
-
-		//check for command char
-		var isCommand = 0;
-		for (var c = 0; c < config.commandcharacter.length; c++) {
-			if (message.indexOf(config.commandcharacter[c]) === 0) {
-				isCommand = config.commandcharacter[c].length;
-			}
-		}
-
-		if (isCommand === 0 || toId(by) === toId(config.nick)) return;
-
-		this.customCommands('+' + message.slice(isCommand), by, room);
-
-		message = message.slice(isCommand);
-		var index = message.indexOf(' ');
-		var arg = '';
-		if (index > -1) {
-			var cmd = toId(message.substr(0, index));
-			arg = message.substr(index + 1).trim();
-		}
-		else {
-			var cmd = toId(message);
-		}
-
-		if (Commands[cmd]) {
-			var failsafe = 0;
-			var leCommand = cmd;
-			while (typeof Commands[cmd] !== "function" && failsafe++ < 10) {
-				cmd = Commands[cmd];
-			}
-			if (typeof Commands[cmd] === "function") {
-				if (!this.settings[config.serverid][toId(config.nick)].disable) {
-					this.settings[config.serverid][toId(config.nick)].disable = {};
-				}
-				if (this.settings[config.serverid][toId(config.nick)].disable[cmd] && !this.isDev(by)) {
-					return;
-				}
-				cmdr(cmdrMessage);
-				try {
-					Commands[cmd].call(this, arg, by, room, leCommand);
-				}
-				catch (e) {
-					this.talk(room, 'The command failed! :o');
-					error(sys.inspect(e).toString().split('\n').join(' '))
-					console.log('');
-					console.log(e.stack);
+				else {
+					text = 'User "' + nick + '" is currently ' + (nick in this.settings[config.serverid][toId(config.nick)].blacklist[room] ? '' : 'not ') + 'blacklisted in ' + room + '.';
 				}
 			}
 			else {
-				error("invalid command type for " + cmd + ": " + (typeof Commands[cmd]));
+				var nickList = Object.keys(this.settings[config.serverid][toId(config.nick)].blacklist[room]);
+				if (!nickList.length) return this.say(by, room, '/pm ' + by + ', No users are blacklisted in this room.');
+				this.uploadToHastebin('The following users are banned in ' + room + ':\n\n' + nickList.join('\n'), function(link) {
+					this.say(by, room, "/pm " + by + ", Blacklist for room " + this.rooms[room].name + ": " + link);
+				}.bind(this));
+				return;
 			}
 		}
+		this.say(by, room, '/pm ' + by + ', ' + text);
 	},
-	talk: function(room, message) {
-		this.say(config.nick, room, message, true);
-	},
-	say: function(user, room, text, bypass) {
-		user = toId(user);
-		if (!this.settings[config.serverid][toId(config.nick)].translation) {
-			this.settings[config.serverid][toId(config.nick)].translation = {}
+	banphrase: 'banword',
+	banword: function(arg, by, room) {
+		if (!this.canUse('banword', room, by)) return false;
+		if (!this.settings[config.serverid][toId(config.nick)].bannedphrases) this.settings[config.serverid][toId(config.nick)].bannedphrases = {};
+		arg = arg.trim().toLowerCase();
+		if (!arg) return false;
+		var tarRoom = room;
+
+		if (room.charAt(0) === ',') {
+			if (!this.hasRank(by, '~')) return false;
+			tarRoom = 'global';
 		}
 
-		if (!bypass && this.settings[config.serverid][toId(config.nick)].translation[room] !== 'en' && this.settings[config.serverid][toId(config.nick)].translation[room] && room.charAt(0) !== ',' && text.indexOf('/me') !== 0) {
-			var parts = ''
-			if (text.charAt(0) === '/' && text.charAt(1) !== '/' && text.indexOf('/me') !== 0) {
-				parts = text.split(',')[0];
-				text = text.split(',').slice(1).join(',')
-			}
-			this.translate(room, parts, text, 'en', this.settings[config.serverid][toId(config.nick)].translation[room]);
-			return;
+		if (!this.settings[config.serverid][toId(config.nick)].bannedphrases[tarRoom]) this.settings[config.serverid][toId(config.nick)].bannedphrases[tarRoom] = {};
+		if (arg in this.settings[config.serverid][toId(config.nick)].bannedphrases[tarRoom]) return this.say(by, room, "Phrase \"" + arg + "\" is already banned.");
+		this.settings[config.serverid][toId(config.nick)].bannedphrases[tarRoom][arg] = 1;
+		this.writeSettings();
+		this.say(by, room, "Phrase \"" + arg + "\" is now banned.");
+	},
+	unbanphrase: 'unbanword',
+	unbanword: function(arg, by, room) {
+		if (!this.canUse('banword', room, by)) return false;
+		arg = arg.trim().toLowerCase();
+		if (!arg) return false;
+		var tarRoom = room;
+
+		if (room.charAt(0) === ',') {
+			if (!this.hasRank(by, '~')) return false;
+			tarRoom = 'global';
 		}
-		if (!text) return;
-		//
-		if (room.charAt(0) !== ',') {
-			var str = (room !== 'lobby' ? room : '') + '|' + text;
+
+		if (!this.settings[config.serverid][toId(config.nick)].bannedphrases || !this.settings[config.serverid][toId(config.nick)].bannedphrases[tarRoom] || !(arg in this.settings[config.serverid][toId(config.nick)].bannedphrases[tarRoom]))
+			return this.say(by, room, "Phrase \"" + arg + "\" is not currently banned.");
+		delete this.settings[config.serverid][toId(config.nick)].bannedphrases[tarRoom][arg];
+		if (!Object.size(this.settings[config.serverid][toId(config.nick)].bannedphrases[tarRoom])) delete this.settings[config.serverid][toId(config.nick)].bannedphrases[tarRoom];
+		if (!Object.size(this.settings[config.serverid][toId(config.nick)].bannedphrases)) delete this.settings[config.serverid][toId(config.nick)].bannedphrases;
+		this.writeSettings();
+		this.say(by, room, "Phrase \"" + arg + "\" is no longer banned.");
+	},
+	viewbannedphrases: 'viewbannedwords',
+	vbw: 'viewbannedwords',
+	viewbannedwords: function(arg, by, room) {
+		if (!this.canUse('viewbannedwords', room, by)) return false;
+		arg = arg.trim().toLowerCase();
+		var tarRoom = room;
+
+		if (room.charAt(0) === ',') {
+			if (!this.hasRank(by, '~')) return false;
+			tarRoom = 'global';
+		}
+
+		var text = "";
+		if (!this.settings[config.serverid][toId(config.nick)].bannedphrases || !this.settings[config.serverid][toId(config.nick)].bannedphrases[tarRoom]) {
+			text = "No phrases are banned in this room.";
 		}
 		else {
-			room = room.substr(1);
-			var str = '|/pm ' + room + ', ' + text;
+			if (arg.length) {
+				text = "The phrase \"" + arg + "\" is currently " + (arg in this.settings[config.serverid][toId(config.nick)].bannedphrases[tarRoom] ? "" : "not ") + "banned " +
+					(room.charAt(0) === ',' ? "globally" : "in " + room) + ".";
+			}
+			else {
+				var banList = Object.keys(this.settings[config.serverid][toId(config.nick)].bannedphrases[tarRoom]);
+				if (!banList.length) return this.say(by, room, "No phrases are banned in this room.");
+				this.uploadToHastebin("The following phrases are banned " + (room.charAt(0) === ',' ? "globally" : "in " + room) + ":\n\n" + banList.join('\n'), function(link) {
+					this.say(by, room, (room.charAt(0) === ',' ? "" : "/pm " + by + ", ") + "Banned Phrases " + (room.charAt(0) === ',' ? "globally" : "in " + room) + ": " + link);
+				}.bind(this));
+				return;
+			}
 		}
-		send(str, user);
+		this.say(by, room, text);
 	},
-	haveRank: function(user, rank) {
-		var hasRank = (rank.split('').indexOf(user.charAt(0)) !== -1) || (config.excepts.indexOf(toId(user)) !== -1);
-		return hasRank;
+
+	/**
+	 * General commands
+	 *
+	 * Add custom commands here.
+	 */
+	'meme': function(arg, by, room, con) {
+		if (this.canUse('meme', room, by) || room.charAt(0) === ',') {
+			var text = '';
+		}
+		else {
+			var text = '/pm ' + by + ', ';
+		}
+
+		var rand = ~~(19 * Math.random()) + 1;
+
+		switch (rand) {
+			case 1:
+				text += "ᕦ( ͡° ͜ʖ ͡°)ᕤ";
+				break;
+			case 2:
+				text += "ᕙ( ͡° ͜ʖ ͡°)ᕗ";
+				break;
+			case 3:
+				text += "(ง ° ͜ ʖ °)ง";
+				break;
+			case 4:
+				text += "( ͡° ͜ʖ ͡°)";
+				break;
+			case 5:
+				text += "ᕙ༼ຈل͜ຈ༽ᕗ";
+				break;
+			case 6:
+				text += "ᕦ( ͡°╭͜ʖ╮͡° )ᕤ";
+				break;
+			case 7:
+				text += "ヽ༼ຈل͜ຈ༽ﾉ raise your dongers. ヽ༼ຈل͜ຈ༽ﾉ ";
+				break;
+			case 8:
+				text += "┴┬┴┤( ͡° ͜ʖ├┬┴┬";
+				break;
+			case 9:
+				text += "╰( ͡° ͜ʖ ͡° )つ──☆*:・ﾟ";
+				break;
+			case 10:
+				text += "─=≡Σᕕ( ͡° ͜ʖ ͡°)ᕗ";
+				break;
+			case 11:
+				text += "(つ ͡° ͜ʖ ͡°)つ";
+				break;
+			case 12:
+				text += "༼ຈل͜ຈ༽ﾉ·︻̷┻̿═━一";
+				break;
+			case 13:
+				text += "─=≡Σ(((༼つಠ益ಠ༽つ";
+				break;
+			case 14:
+				text += "༼ ºل͟º༼ ºل͟º༼ ºل͟º ༽ºل͟º ༽ºل͟º ༽";
+				break;
+			case 15:
+				text += "ヽ༼ຈل͜ຈ༽ﾉ︵┻━┻";
+				break;
+			case 16:
+				text += "┌∩┐༼ ºل͟º ༽┌∩┐";
+				break;
+			case 17:
+				text += "[̲̅$̲̅(̲̅ ͡° ͜ʖ ͡°̲̅)̲̅$̲̅]";
+				break;
+			case 18:
+				text += "( ͡ ͡° ͡° ʖ ͡° ͡°)";
+				break;
+			case 19:
+				text += "(ง ͠° ͟ل͜ ͡°)ง";
+				break;
+		}
+		this.say(by, room, text, true);
 	},
-	canUse: function(cmd, room, user) {
-		var canUse = false;
+	hjk: 'roomkick',
+	rk: 'roomkick',
+	RKO: 'roomkick',
+	rko: 'roomkick',
+	roomkick: function(arg, by, room, con) {
+		if (!this.canUse('roomkick', room, by)) return false;
+		if (!arg) return false;
+		if ('@#&~'.indexOf(this.ranks[room]) === -1) return this.say(by, room, 'I require @ or higher to use this.');
+		if (toId(arg) === toId(config.nick)) return false;
+		if (arg.length > 18) return false;
+		var victim = toId(stripCommands(arg));
+		if (!this.rooms[room].users[victim]) {
+			return this.say(by, room, 'The target isn\'t even in this room!');
+		}
 		var ranks = ' +★$%@&#~';
-		if (!this.settings[config.serverid][toId(config.nick)][cmd] || !this.settings[config.serverid][toId(config.nick)][cmd][room]) {
-			canUse = this.hasRank(user, ranks.substr(ranks.indexOf((cmd === 'autoban' || cmd === 'banword') ? '#' : config.defaultrank)));
+		var targetRank = ranks.indexOf(this.rooms[room].users[victim]);
+		var thisRank = ranks.indexOf(by.charAt(0));
+		var botsRank = ranks.indexOf(this.ranks[room]);
+		if (thisRank < targetRank) {
+			return this.say(by, room, 'You can\'t kick someone that is of a higher rank!')
 		}
-		else if (this.settings[config.serverid][toId(config.nick)][cmd][room] === true) {
-			canUse = true;
+		if (botsRank <= targetRank) return false;
+		if (this.rankFrom(victim, '+')) {
+			return this.say(by, room, 'Access denied :^)');
 		}
-		else if (ranks.indexOf(this.settings[config.serverid][toId(config.nick)][cmd][room]) > -1) {
-			canUse = this.hasRank(user, ranks.substr(ranks.indexOf(this.settings[config.serverid][toId(config.nick)][cmd][room])));
-		}
-		return canUse;
+		this.say(by, room, '/rb ' + victim + ',♥ ^_^ ♥');
+		this.say(config.nick, room, '/roomunban ' + victim);
+		this.say(config.nick, room, '/modnote ' + victim + ' was rk\'d by ' + by);
 	},
-	isBlacklisted: function(user, room) {
-		var blacklistRegex = this.blacklistRegexes[room];
-		return blacklistRegex && blacklistRegex.test(user);
-	},
-	blacklistUser: function(user, room) {
-		var blacklist = this.settings[config.serverid][toId(config.nick)].blacklist || (this.settings[config.serverid][toId(config.nick)].blacklist = {});
-		if (blacklist[room]) {
-			if (blacklist[room][user]) return false;
-		}
-		else {
-			blacklist[room] = {};
+	marry: 'pair',
+	pair: function(arg, by, room, con) {
+		if (!this.canUse('pair', room, by) || !arg) return false;
+		var user = toId(by);
+		var pairing = toId(arg);
+
+		function toBase(num, base) {
+			var symbols = "0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ".split("");
+			var num = num.split("");
+			var conversion = "";
+			var val;
+			var total = 0;
+
+			if (base > symbols.length || base <= 1) return false;
+
+			for (i = 0; i < num.length; i++) {
+				val = symbols.indexOf(num[i]);
+				total += ((val % base) * Math.pow(10, i)) + (Math.floor(val / base) * Math.pow(10, i + 1));
+			}
+			return parseInt(total);
 		}
 
-		blacklist[room][user] = 1;
-		this.updateBlacklistRegex(room);
-		return true;
-	},
-	unblacklistUser: function(user, room) {
-		var blacklist = this.settings[config.serverid][toId(config.nick)].blacklist;
-		if (!blacklist || !blacklist[room] || !blacklist[room][user]) return false;
+		user = toBase(user, 10);
+		pairing = toBase(pairing, 10);
+		var match = (user + pairing) % 101;
 
-		delete blacklist[room][user];
-		if (Object.isEmpty(blacklist[room])) {
-			delete blacklist[room];
-			delete this.blacklistRegexes[room];
-		}
-		else {
-			this.updateBlacklistRegex(room);
-		}
-		return true;
+		this.say(by, room, by + ' and ' + arg + ' are ' + match + '% compatible!!!!');
 	},
-	updateBlacklistRegex: function(room) {
-		var blacklist = this.settings[config.serverid][toId(config.nick)].blacklist[room];
-		var buffer = [];
-		for (var entry in blacklist) {
-			if (entry.charAt(0) === '/' && entry.substr(-2) === '/i') {
-				buffer.push(entry.slice(1, -2));
-			}
-			else {
-				buffer.push('^' + entry + '$');
-			}
-		}
-		this.blacklistRegexes[room] = new RegExp(buffer.join('|'), 'i');
+	tell: 'say',
+	say: function(arg, by, room) {
+		if (!this.canUse('say', room, by)) return false;
+		this.say(by, room, stripCommands(arg));
 	},
-	uploadToHastebin: function(toUpload, callback) {
-		if (typeof callback !== 'function') return false;
-		var reqOpts = {
-			hostname: 'hastebin.com',
-			method: 'POST',
-			path: '/documents'
+	joke: function(arg, by, room) {
+		if (!this.canUse('joke', room, by) || room.charAt(0) === ',') room = ',' + toId(by);
+		var self = this;
+
+		var reqOpt = {
+			hostname: 'api.icndb.com',
+			path: '/jokes/random',
+			method: 'GET'
 		};
-
-		var req = http.request(reqOpts, function(res) {
+		var req = http.request(reqOpt, function(res) {
 			res.on('data', function(chunk) {
-				// CloudFlare can go to hell for sending the body in a header request like this
-				if (typeof chunk === 'string' && chunk.substr(0, 15) === '<!DOCTYPE html>') return callback('Error uploading to Hastebin.');
 				try {
-					var filename = JSON.parse(chunk.toString()).key;
+					var data = JSON.parse(chunk);
+					self.say(by, room, data.value.joke.replace(/&quot;/g, "\""));
 				}
 				catch (e) {
-					return callback('Error uploading to hastebin.');
+					self.say(by, room, 'Sorry, couldn\'t fetch a random joke... :(');
 				}
-				callback('http://hastebin.com/raw/' + filename);
 			});
 		});
-		req.on('error', function(e) {
-			callback('Error uploading to Hastebin: ' + e.message);
-		});
-
-		req.write(toUpload);
 		req.end();
 	},
-	processChatData: function(user, room, msg) {
-		// NOTE: this is still in early stages
-		if (!user || room.charAt(0) === ',') return;
+	choose: function(arg, by, room) {
+		if (arg.indexOf(',') === -1) {
+			var choices = arg.split(' ');
+		}
+		else {
+			var choices = arg.split(',');
+		}
+		choices = choices.filter(function(i) {
+			return (toId(i) !== '')
+		});
+		if (choices.length < 2) return this.say(by, room, (room.charAt(0) === ',' ? '' : '/pm ' + by + ', ') + config.commandcharacter + 'choose: You must give at least 2 valid choices.');
 
-		msg = msg.trim().replace(/[ \u0000\u200B-\u200F]+/g, ' '); // removes extra spaces and null characters so messages that should trigger stretching do so
-		this.updateSeen(user, 'c', room);
-		var now = Date.now();
-		if (!this.chatData[user]) this.chatData[user] = {
-			zeroTol: 0,
-			lastSeen: '',
-			seenAt: now
-		};
-		var userData = this.chatData[user];
+		var choice = choices[Math.floor(Math.random() * choices.length)];
+		this.say(by, room, ((this.canUse('choose', room, by) || room.charAt(0) === ',') ? '' : '/pm ' + by + ', ') + stripCommands(choice));
+	},
+	usage: 'usagestats',
+	usagedata: 'usagestats',
+	monousage: 'usagestats',
+	usagestats: function(arg, by, room, cmd) {
+		var usageLink = 'http://www.smogon.com/stats/2015-09/'
+		if (this.canUse('usagestats', room, by) || room.charAt(0) === ',') {
+			var text = '';
+		}
+		else {
+			var text = '/pm ' + by + ', ';
+		}
+		if (!arg) {
+			text += usageLink;
+			return this.say(by, room, text);
+		}
+		var arg = arg.split(',');
+		switch (arg.length) {
+			case 3:
+				var targetRank = arg[2].replace(/[^0-9]/g, '');
+			case 2:
+				var targetTier = arg[1].toLowerCase().replace(/[^a-z0-9]/g, '');
+			case 1:
+				var targetPoke = toId(arg[0]);
+				break;
+		}
+		//get data from a website:
+		function getData(link, callback) {
+			http.get(link, function(res) {
+				var data = '';
+				res.on('data', function(part) {
+					data += part
+				});
+				res.on('end', function(end) {
+					callback(data);
+				});
+			});
+		}
 
-		if (!this.chatData[user][room]) this.chatData[user][room] = {
-			times: [],
-			points: 0,
-			lastAction: 0
-		};
-		var roomData = userData[room];
-
-		roomData.times.push(now);
-		var by = user;
-		user = toId(user);
-		// this deals with punishing rulebreakers, but note that the bot can't think, so it might make mistakes
-		if (config.allowmute && this.hasRank(this.ranks[room] || ' ', '%@&#~')) {
-			var useDefault = !(this.settings[config.serverid][toId(config.nick)].modding && this.settings[config.serverid][toId(config.nick)].modding[room]);
-			var pointVal = 0;
-			var muteMessage = '';
-			var modSettings = useDefault ? null : this.settings[config.serverid][toId(config.nick)].modding[room];
-
-			// moderation for banned words
-			if (!this.settings[config.serverid][toId(config.nick)].banword) {
-				this.settings[config.serverid][toId(config.nick)].banword = {};
+		//determine tier
+		if (!targetTier) {
+			switch (room) {
+				case 'uu':
+				case 'underused':
+					targetTier = 'uu';
+					break;
+				case 'rarelyused':
+				case 'ru':
+				case 'therulers':
+					targetTier = 'ru'
+					break;
+				case 'pu':
+					targetTier = 'pu';
+					break;
+				case 'lc':
+				case 'littlecup':
+					targetTier = 'lc';
+					break;
+				case 'overused':
+				case 'ou':
+					targetTier = 'ou';
+					break;
+				default:
+					//determine a pokemon's tier from showdown's data
+					if (!pokemonData[targetPoke]) {
+						return this.say(by, room, text + 'Invalid Pokemon');
+					}
+					var targetTier = toId(pokemonData[targetPoke].tier);
+					if (targetTier === 'nfe') {
+						targetTier = 'pu';
+					}
+					break;
 			}
-			if ((useDefault || !this.settings[config.serverid][toId(config.nick)].banword[room]) && pointVal < 2) {
-				var bannedPhraseSettings = this.settings[config.serverid][toId(config.nick)].bannedphrases;
-				var bannedPhrases = !!bannedPhraseSettings ? (Object.keys(bannedPhraseSettings[room] || {})).concat(Object.keys(bannedPhraseSettings.global || {})) : [];
-				for (var i = 0; i < bannedPhrases.length; i++) {
-					if (msg.toLowerCase().replace(/(\*\*|\_\_|\~\~|\`\`)/g, '').indexOf(bannedPhrases[i]) > -1) {
-						pointVal = 2;
-						muteMessage = ', Automated response: your message contained a banned phrase';
+		}
+		var destination = targetTier + '-' + (targetRank || '1500') + '.txt';
+		if (cmd !== 'monousage') {
+			var index;
+			getData(usageLink + destination, function(data) {
+				var usageStats = data.split('\n');
+				if (usageStats[0].indexOf(' Total battles:') === -1) {
+					return this.say(by, room, text + 'ERROR: Invalid Tier/Failed to get data.')
+				}
+				for (var i = 5; i < usageStats.length; i++) {
+					var tarStats = usageStats[i].replace(/ /g, '').split('|');
+					if (!tarStats[2]) {
+						continue;
+					}
+					if (toId(tarStats[2]) === targetPoke) {
+						index = i - 5;
+						return this.say(by, room, text + tarStats[2] + ' - #' + tarStats[1] + ' in ' + targetTier.toUpperCase() + '| Usage: ' + tarStats[3] + '| Raw Count: ' + tarStats[4])
+					}
+				};
+				return this.say(by, room, text + 'Pokémon not found.')
+			}.bind(this));
+			if (cmd === 'usagedata') {
+				getData(usageLink + 'moveset/' + destination, function(data) {
+					data = data.split(' +----------------------------------------+ \n +----------------------------------------+ ');
+					var moveSetData = data[index];
+					if (!moveSetData) {
+						return this.say(by, room, 'Error in parsing data.');
+					}
+					var tarData = moveSetData.split('\n');
+					var moves = '';
+					var teammates = '';
+					var items = [];
+					var checks = [];
+					for (var i = 0; i < tarData.length; i++) {
+						if (toId(tarData[i]) === 'moves') {
+							moves = tarData.slice(i + 1, i + 5).join(', ').replace(/[^A-Za-z\,\s]/g, '').replace(/[\s]{2,}/g, '').replace(/,/g, ', ');
+						}
+						if (toId(tarData[i]) === 'items') {
+							for (var j = 1; j < 8; j++) {
+								if (!tarData[i + j] || !toId(tarData[i + j])) {
+									break;
+								}
+								items.push(tarData[(i + j)].replace(/[^A-Za-z\s]/g, '').replace(/[\s]{2,}/g, ''));
+							}
+						}
+						if (toId(tarData[i]) === 'teammates') {
+							teammates = tarData.slice(i + 1, i + 5).join(', ').replace(/[^A-Za-z\,\s]/g, '').replace(/[\s]{2,}/g, '').replace(/,/g, ', ');
+						}
+						if (toId(tarData[i]) === 'checksandcounters') {
+							for (var j = 1; j < 8; j = j + 2) {
+								if (!tarData[i + j]) {
+									continue;
+								}
+								checks.push(tarData[(i + j)].split(' ')[2]);
+							}
+						}
+					}
+					this.say(by, room, text + 'Common moves are: __' + moves.trim() + '__ **|** Common items include: __' + items.join(', ').trim() + '__');
+					this.say(by, room, text + 'Common partners include: __' + teammates.trim() + '__ **|** Commonly used checks and counters: __' + checks.join(', ') + '__.')
+				}.bind(this))
+			}
+		}
+		else {
+			if (!targetTier) {
+				return this.say(by, room, 'Please include the type.')
+			}
+			getData(usageLink + '/monotype/monotype-mono' + destination.replace('mono', ''), function(data) {
+				var usageStats = data.split('\n');
+				if (usageStats[0].indexOf(' Total battles:') === -1) {
+					return this.say(by, room, text + 'ERROR: Invalid type/Failed to get data.')
+				}
+				for (var i = 5; i < usageStats.length; i++) {
+					var tarStats = usageStats[i].replace(/ /g, '').split('|');
+					if (!tarStats[2]) {
+						continue;
+					}
+					if (toId(tarStats[2]) === targetPoke) {
+						index = i - 5;
+						return this.say(by, room, text + tarStats[2] + ' - #' + tarStats[1] + ' in ' + targetTier.toUpperCase() + '| Usage: ' + tarStats[3] + '| Raw Count: ' + tarStats[4])
+					}
+				};
+				return this.say(by, room, text + 'Pokémon not found.')
+			}.bind(this))
+		}
+	},
+	seen: function(arg, by, room) { // this command is still a bit buggy
+		var text = (room.charAt(0) === ',' ? '' : '/pm ' + by + ', ');
+		arg = toId(arg);
+		if (!arg || arg.length > 18) return this.say(by, room, text + 'Invalid username.');
+		if (arg === toId(by)) {
+			text += 'Have you looked in the mirror lately?';
+		}
+		else if (arg === toId(config.nick)) {
+			text += 'You might be either blind or illiterate. Might want to get that checked out.';
+		}
+		else if (!this.chatData[arg] || !this.chatData[arg].seenAt) {
+			text += 'The user ' + arg + ' has never been seen.';
+		}
+		else {
+			text += arg + ' was last seen ' + this.getTimeAgo(this.chatData[arg].seenAt) + ' ago' + (
+				this.chatData[arg].lastSeen ? ', ' + this.chatData[arg].lastSeen : '.');
+		}
+		this.say(by, room, text);
+	},
+	'8ball': function(arg, by, room) {
+		if (this.canUse('8ball', room, by) || room.charAt(0) === ',') {
+			var text = '';
+		}
+		else {
+			var text = '/pm ' + by + ', ';
+		}
+		by = toId(by);
+		if (!arg) return false;
+
+		var alpha = ' abcdefghijklmnopqrstuvwxyz'
+		arg = toId(arg).split('');
+		var rand = 0;
+		for (var i = 0; i < arg.length; i++) {
+			rand += alpha.indexOf(arg[i]);
+		}
+		for (var i = 0; i < by.length; i++) {
+			rand += alpha.indexOf(by.charAt(i));
+		}
+
+
+		switch ((rand % 20) + 1) {
+			case 1:
+				text += "Signs point to yes.";
+				break;
+			case 2:
+				text += "Yes.";
+				break;
+			case 3:
+				text += "Reply hazy, try again.";
+				break;
+			case 4:
+				text += "Without a doubt.";
+				break;
+			case 5:
+				text += "My sources say no.";
+				break;
+			case 6:
+				text += "As I see it, yes.";
+				break;
+			case 7:
+				text += "You may rely on it.";
+				break;
+			case 8:
+				text += "Concentrate and ask again.";
+				break;
+			case 9:
+				text += "Outlook not so good.";
+				break;
+			case 10:
+				text += "It is decidedly so.";
+				break;
+			case 11:
+				text += "Better not tell you now.";
+				break;
+			case 12:
+				text += "Very doubtful.";
+				break;
+			case 13:
+				text += "Yes - definitely.";
+				break;
+			case 14:
+				text += "It is certain.";
+				break;
+			case 15:
+				text += "Cannot predict now.";
+				break;
+			case 16:
+				text += "Most likely.";
+				break;
+			case 17:
+				text += "Ask again later.";
+				break;
+			case 18:
+				text += "My reply is no.";
+				break;
+			case 19:
+				text += "Outlook good.";
+				break;
+			case 20:
+				text += "Don't count on it.";
+				break;
+		}
+		this.say(by, room, text);
+	},
+
+	/**
+	 * Jeopardy commands
+	 *
+	 * The following commands are used for Jeopardy in the Academics room
+	 * on the Smogon server.
+	 */
+
+
+
+	b: 'buzz',
+	buzz: function(arg, by, room) {
+		if (this.buzzed || !this.canUse('buzz', room, by) || room.charAt(0) === ',') return false;
+		this.say(by, room, '**' + by.substr(1) + ' has buzzed in!**');
+		this.buzzed = by;
+		this.buzzer = setTimeout(function(room, buzzMessage) {
+			this.say(config.nick, room, buzzMessage);
+			this.buzzed = '';
+		}.bind(this), 7 * 1000, room, by + ', your time to answer is up!');
+	},
+	reset: function(arg, by, room) {
+		if (!this.buzzed || !this.hasRank(by, '%@&#~') || room.charAt(0) === ',') return false;
+		clearTimeout(this.buzzer);
+		this.buzzed = '';
+		this.say(by, room, 'The buzzer has been reset.');
+	},
+	trivia: function(arg, by, room) {
+		if (room.charAt(',') === 0) return false;
+		if (!this.canUse('trivia', room, by)) return false;
+		if (triviaON[room]) {
+			this.say(by, room, 'A trivia game cannot be started, as it is in progress already.');
+			return false;
+		}
+		triviaON[room] = true;
+		triviaPoints[room] = [];
+		triviaA[room] = [];
+		game('trivia', room);
+		this.say(by, room, 'Hosting a game of trivia\. First to 10 points wins!  use ' + config.commandcharacter[0] + 'ta or ' + config.commandcharacter[0] + 'triviaanswer to submit your answer\.');
+		triviaTimer[room] = setInterval(function() {
+			if (triviaA[room][0]) {
+				if (triviaA[room].length > 1) {
+					this.say(config.nick, room, 'The correct answers are: ' + triviaA[room].join(', '));
+				}
+				else {
+					this.say(config.nick, room, 'The correct answer is: ' + triviaA[room].join(', '));
+				}
+			}
+			var TQN = 2 * (Math.floor(triviaQuestions.length * Math.random() / 2))
+			triviaQ[room] = triviaQuestions[TQN];
+			triviaA[room] = triviaQuestions[TQN + 1].toLowerCase().replace(/ /g, '').trim().split(',');
+			this.say(config.nick, room, 'Question: __' + triviaQ[room] + '__');
+		}.bind(this), 17000);
+
+	},
+	ta: 'triviaanswer',
+	triviaanswer: function(arg, by, room) {
+		if (!triviaON[room]) return false;
+		arg = toId(arg);
+		if (!arg) return false;
+		var user = toId(by);
+		if (triviaA[room].indexOf(arg) !== -1) {
+			if (triviaPoints[room].indexOf(user) > -1) {
+				triviaA[room] = [];
+				triviaPoints[room][triviaPoints[room].indexOf(user) + 1] = triviaPoints[room][triviaPoints[room].indexOf(user) + 1] + 1;
+				if (triviaPoints[room][triviaPoints[room].indexOf(user) + 1] >= 10) {
+					clearInterval(triviaTimer[room]);
+					this.say(config.nick, room, 'Congrats to ' + by + ' for winning! Reward: ' + Economy.getPayout(triviaPoints[room].length / 2, room) + ' ' + Economy.currency(room));
+					Economy.give(by, Economy.getPayout((triviaPoints[room].length / 2), room), room)
+					triviaON[room] = false;
+					return false;
+				}
+				this.say(config.nick, room, '' + by.slice(1, by.length) + ' got the right answer, and has ' + triviaPoints[room][triviaPoints[room].indexOf(user) + 1] + ' points!');
+			}
+			else {
+				triviaA[room] = [];
+				triviaPoints[room][triviaPoints[room].length] = user;
+				triviaPoints[room][triviaPoints[room].length] = 1;
+				this.say(config.nick, room, '' + by.slice(1, by.length) + ' got the right answer, and has ' + triviaPoints[room][triviaPoints[room].indexOf(user) + 1] + ' point!');
+			}
+		}
+	},
+	endtrivia: 'triviaend',
+	triviaend: function(arg, by, room) {
+		if (!this.canUse('trivia', room, by)) return false;
+		clearInterval(triviaTimer[room]);
+		if (!triviaON[room]) return false;
+		this.say(by, room, 'The game of trivia has been ended.');
+		triviaON[room] = false;
+	},
+	repeat: function(arg, by, room) {
+		if (room.charAt(0) === ',') return false;
+		if (!arg) return false;
+
+		if (!this.hasRank(by, '#') || !this.rankFrom(by, '+')) return false;
+		if (this.repeatON[room]) {
+			return this.say(by, room, 'There is already a repeat happening in this room.')
+		}
+
+		var spl = arg.split(',');
+		var tarTime = spl[0].replace(/[^0-9\.]/g, '') * 60 * 1000;
+		if (!spl[0] || !spl[1]) {
+			this.say(by, room, 'The format is repeat [minutes], [text]');
+			return false;
+		}
+		if (isNaN(tarTime) || tarTime < 5 * 60000) {
+			return this.say(by, room, 'Please use a valid time interval more than 5 minutes.')
+		}
+		this.say(by, room, 'I will be repeating that text once every ' + tarTime / 60000 + ' minutes.');
+		this.repeatON[room] = true;
+		this.repeatText[room] = setInterval(function() {
+			this.talk(room, stripCommands(spl.slice(1).join(',').trim()).replace('//wall', '/wall').replace('//declare', '/declare'));
+		}.bind(this), tarTime);
+	},
+	stoprepeat: function(arg, by, room) {
+		if (room.charAt(0) === ',') return false;
+		if (!this.hasRank(by, '#') && !this.repeatON[room]) return false;
+		clearInterval(this.repeatText[room]);
+		this.say(by, room, 'This repeat was ended');
+		delete this.repeatON[room];
+	},
+	triviapoints: function(arg, by, room) {
+		if (!triviaON[room]) return false;
+		if (!this.canUse('trivia', room, by)) return false;
+		var text = 'Points so far: '
+		for (var i = 0; i < triviaPoints[room].length; i++) {
+			text += '' + triviaPoints[room][i] + ': ';
+			text += triviaPoints[room][i + 1] + ' points, ';
+			i++
+		}
+		this.say(by, room, text);
+	},
+	setrp: function(arg, by, room) {
+		if (room !== rpRoom) return false;
+		if (!this.hasRank(by, '%@#&~')) return false;
+		if (currentRP) {
+			this.say(by, room, 'There is currently an RP going on. Please end it before starting another one.')
+			return false;
+		}
+		if (!this.hasRank(by, '~') || room !== rpRoom) return false;
+		if (rpModes.indexOf(toId(arg)) > -1 && rpModes.indexOf(toId(arg)) % 2 === 0) {
+			currentRP = arg;
+			this.say(by, room, 'The current RP is set to: ' + arg);
+			this.say(by, room, rpModes[rpModes.indexOf(toId(arg)) + 1])
+		}
+		else {
+			var text = 'Invalid RP Mode; modes include: ';
+			for (var i = 0; i < rpModes.length; i++) {
+				text += rpModes[i] + ', ';
+				i++
+			}
+			this.say(by, room, text);
+		}
+	},
+	endrp: function(arg, by, room) {
+		if (room !== rpRoom) return false;
+		if (!this.hasRank(by, '~')) return false;
+		if (!currentRP) {
+			this.say(by, room, 'There is currently no RP going on.');
+			return false;
+		}
+		currentRP = '';
+		this.say(by, room, 'The RP has been ended.');
+	},
+	rp: function(arg, by, room) {
+		if (room !== rpRoom && room.charAt(0) !== ',') return false;
+		if (this.hasRank(by, '~') || room.charAt(0) === ',') {
+			var text = 'The current RP is ';
+		}
+		else {
+			var text = '/w ' + by + ', The current RP is ';
+		}
+		if (!currentRP) {
+			text += 'not yet set.';
+			this.say(by, room, text);
+			return false;
+		}
+		text += rpModes[rpModes.indexOf(toId(currentRP))];
+		this.say(by, room, text);
+
+		if (!this.hasRank(by, '~') || room.charAt(0) === ',') {
+			var text = '';
+		}
+		else {
+			var text = '/w ' + by + ', ';
+		}
+		text += rpModes[rpModes.indexOf(toId(currentRP)) + 1];
+		this.say(by, room, text);
+	},
+	startrp: function(arg, by, room) {
+		if (room !== rpRoom) return false;
+		if (!this.hasRank(by, '~')) return false;
+		this.say(by, room, 'The RP has started.')
+		rpTimer = setTimeout(function() {
+			this.say(config.nick, room, 'The RP is now over.');
+			currentRP = '';
+		}.bind(this), 8 * 60 * 60 * 1000);
+	},
+	hangman: function(arg, by, room) {
+		if (room.charAt(',') === 0) return false;
+		if (!this.canUse('hangman', room, by)) return false;
+		if (hangmanON[room]) {
+			this.say(by, room, 'A game of Hangman is already in progress. Please wait for it to end before starting another.');
+			return false;
+		}
+		var HQN = Math.floor(Object.keys(wordBank).length * Math.random());
+		var spl = Object.keys(wordBank)[HQN].split('||');
+		this.say(by, room, 'Hosting a game of Hangman! Use ' + config.commandcharacter + 'g to guess letter or word. It is a ``' + wordBank[spl[0]] + '``.')
+		game('hangman', room);
+		hangmanON[room] = true;
+		hangmanChances[room] = 0;
+		hangmanDes[room] = '';
+		hangmanA[room] = spl[0];
+		if (spl[1]) {
+			hangmanDes[room] = spl[1];
+		}
+		hangmanProgress[room] = '';
+		for (var i = 0; i < hangmanA[room].length; i++) hangmanProgress[room] += '_ ';
+		hangmanProgress[room] += '| ';
+		this.talk(room, hangmanProgress[room]);
+		hangmanInterval[room] = setInterval(function() {
+			this.talk(room, hangmanProgress[room]);
+		}.bind(this), 15000);
+	},
+	endhangman: function(arg, by, room) {
+		if (room.charAt(',') === 0) return false;
+		if (!this.canUse('hangman', room, by)) return false;
+		clearInterval(hangmanInterval[room]);
+		if (!hangmanON[room]) return false;
+		hangmanON[room] = false;
+		this.say(by, room, 'The game of hangman has been ended. The answer was ' + hangmanA[room] + '.');
+		if (!hangmanDes[room]) return false;
+		if (hangmanDes[room].indexOf('http') > -1) {
+			this.say(config.nick, room, 'For a tutorial/information about this dance style/term, click this following link: ' + hangmanDes[room])
+		}
+		else {
+			this.say(config.nick, room, 'The definition of this word is: ' + hangmanDes[room])
+		}
+	},
+	g: 'guesshangman',
+	guesshangman: function(arg, by, room) {
+		if (!hangmanON[room]) return false;
+		if (!toId(arg)) return false;
+		if (hangmanProgress[room].indexOf(' ' + toId(arg) + ' ') > -1) return false;
+		if (toId(arg).length > 1) {
+			if (toId(arg) === hangmanA[room]) {
+				clearInterval(hangmanInterval[room]);
+				this.say(config.nick, room, 'Congrats, ' + by + ' got the correct answer! Reward: ' + Economy.getPayout(3, room) + ' ' + Economy.currency(room));
+				Economy.give(by, Economy.getPayout(3, room), room);
+				hangmanA[room] = '';
+				hangmanON[room] = false;
+				if (!hangmanDes[room]) return false;
+				if (hangmanDes[room].indexOf('http') > -1) {
+					this.say(config.nick, room, 'For a tutorial/information about this dance style/term, click this following link: ' + hangmanDes[room])
+				}
+				else {
+					this.say(config.nick, room, 'The definition of this word is: ' + hangmanDes[room])
+				}
+
+			}
+			else {
+				hangmanProgress[room] += toId(arg) + ' ';
+				hangmanChances[room]++;
+				if (hangmanChances[room] >= 10) {
+					clearInterval(hangmanInterval[room]);
+					hangmanON[room] = false;
+					this.say(config.nick, room, 'RIP, the man has died. Game over.');
+					this.say(config.nick, room, 'The answer was ' + hangmanA[room] + '.');
+					hangmanA[room] = '';
+					if (!hangmanDes[room]) return false;
+					if (hangmanDes[room].indexOf('http') > -1) {
+						this.say(config.nick, room, 'For a tutorial/information about this dance style/term, click this following link: ' + hangmanDes[room])
+					}
+					else {
+						this.say(config.nick, room, 'The definition of this word is: ' + hangmanDes[room])
+					}
+				}
+			}
+		}
+		else {
+			if (hangmanA[room].indexOf(toId(arg)) > -1) {
+				for (var i = 0; i < hangmanA[room].length; i++) {
+					if (hangmanA[room].charAt(i) === toId(arg)) {
+						hangmanProgress[room] = hangmanProgress[room].slice(0, 2 * i) + toId(arg) + hangmanProgress[room].slice((2 * i) + 1, hangmanProgress[room].length);
+					}
+					if (!(hangmanProgress[room].indexOf('_') > -1)) {
+						this.say(config.nick, room, '' + by + ' has gotten all of the letters. Congrats on completing the word!  Reward: ' + Economy.getPayout(3, room) + ' ' + Economy.currency(room));
+						Economy.give(by, Economy.getPayout(3, room), room);
+						clearInterval(hangmanInterval[room]);
+						hangmanON[room] = false;
+						hangmanA[room] = '';
+						if (!hangmanDes[room]) return false;
+						if (hangmanDes[room].indexOf('http') > -1) {
+							this.say(config.nick, room, 'For a tutorial/information about this dance style/term, click this following link: ' + hangmanDes[room])
+						}
+						else {
+							this.say(config.nick, room, 'The definition of this word is: ' + hangmanDes[room])
+						}
+					}
+				}
+			}
+			else {
+				hangmanProgress[room] += toId(arg) + ' ';
+				hangmanChances[room]++;
+				if (hangmanChances[room] >= 10) {
+					clearInterval(hangmanInterval[room]);
+					hangmanON[room] = false;
+					this.say(config.nick, room, 'RIP, the man has died. Game over.');
+					this.say(config.nick, room, 'The answer was ' + hangmanA[room] + '.');
+					hangmanA[room] = '';
+
+					if (!hangmanDes[room]) return false;
+					if (hangmanDes[room].indexOf('http') > -1) {
+						this.say(config.nick, room, 'For a tutorial/information about this dance style/term, click this following link: ' + hangmanDes[room])
+					}
+					else {
+						this.say(config.nick, room, 'The definition of this word is: ' + hangmanDes[room])
+					}
+				}
+			}
+		}
+	},
+	anagram: 'anagrams',
+	anagrams: function(arg, by, room) {
+		if (room.charAt(',') === 0) return false;
+		if (!this.canUse('anagrams', room, by)) return false;
+		if (anagramON[room]) return false;
+		anagramON[room] = true;
+		anagramA[room] = '';
+		anagramPoints[room] = [];
+		this.say(by, room, 'Hosting a game of anagrams. Use +guess to submit your answer.');
+		game('anagrams', room)
+		anagramInterval[room] = setInterval(function() {
+			if (anagramA[room]) {
+				this.say(config.nick, room, 'The correct answer was: ' + anagramA[room]);
+			}
+			var AQN = Math.floor(Object.keys(wordBank).length * Math.random());
+			var AnagramEntry = Object.keys(wordBank)[AQN].split('||');
+			anagramA[room] = AnagramEntry[0];
+			var anagramQ = anagramA[room];
+			var repeatTimes = (anagramA[room].length + 2) * (anagramA[room].length + 2);
+			for (var idx = 0; idx < repeatTimes; idx++) {
+				var randomInt = Math.floor(Math.random() * anagramA[room].length + 1);
+				anagramQ = anagramQ.slice(1, randomInt) + anagramQ.charAt(0) + anagramQ.slice(randomInt, anagramQ.length);
+			}
+			var text = anagramQ[0];
+			for (var i = 1; i < anagramQ.length; i++) {
+				text += ', ' + anagramQ[i];
+			}
+			this.talk(room, '[' + wordBank[AnagramEntry[0]] + '] ' + text);
+		}.bind(this), 17000);
+	},
+	guess: function(arg, by, room) {
+		if (!anagramON[room]) return false;
+		if (!toId(arg)) return false;
+		if (toId(arg) !== toId(anagramA[room])) return false;
+		var user = toId(by);
+		if (anagramPoints[room].indexOf(user) > -1) {
+			anagramA[room] = '';
+			anagramPoints[room][anagramPoints[room].indexOf(user) + 1] = anagramPoints[room][anagramPoints[room].indexOf(user) + 1] + 1;
+			if (anagramPoints[room][anagramPoints[room].indexOf(user) + 1] >= 10) {
+				clearInterval(anagramInterval[room]);
+				this.say(config.nick, room, 'Congrats to ' + by + ' for winning! Reward: ' + Economy.getPayout(anagramPoints[room].length / 2, room) + ' ' + Economy.currency(room));
+				Economy.give(by, Economy.getPayout(anagramPoints[room].length / 2, room), room)
+				anagramON[room] = false;
+				return false;
+			}
+			this.say(config.nick, room, '' + by.slice(1, by.length) + ' got the right answer, and has ' + anagramPoints[room][anagramPoints[room].indexOf(user) + 1] + ' points!');
+		}
+		else {
+			anagramA[room] = '';
+			anagramPoints[room][anagramPoints[room].length] = user;
+			anagramPoints[room][anagramPoints[room].length] = 1;
+			this.say(config.nick, room, '' + by.slice(1, by.length) + ' got the right answer, and has ' + anagramPoints[room][anagramPoints[room].indexOf(user) + 1] + ' point!');
+		}
+	},
+	endanagram: 'endanagrams',
+	endanagrams: function(arg, by, room) {
+		if (room.charAt(',') === 0) return false;
+		if (!this.canUse('anagrams', room, by)) return false;
+		clearInterval(anagramInterval[room]);
+		if (!anagramON[room]) return false;
+		anagramON[room] = false;
+		this.say(by, room, 'The game of anagrams has been ended.')
+	},
+	anagrampoints: function(arg, by, room) {
+		if (!anagramON[room]) return false;
+		if (room.charAt(',') === 0) return false;
+		if (!this.canUse('anagrams', room, by)) return false;
+		var text = 'Points so far: '
+		for (var i = 0; i < anagramPoints[room].length; i++) {
+			text += '' + anagramPoints[room][i] + ': ';
+			text += anagramPoints[room][i + 1] + ' points, ';
+			i++
+		}
+		this.say(by, room, text);
+	},
+	editcom: function(arg, by, room) {
+		if (!this.canUse('addcom', room, by) || !arg || arg.split(',').length < 2) return false;
+		var command = toId(arg.split(',')[0]);
+		var output = arg.split(',').slice(1).join(',').trim();
+		if (!output || output.length === 0) return false;
+		var search = config.serverid + '|' + toId(config.nick) + '|' + room + '|' + command + '|';
+		var ccommands = fs.readFileSync('data/addcom.txt').toString().split("\n");
+		for (var i = 0; i < ccommands.length; i++) {
+			if (ccommands[i].indexOf(search) === 0) {
+				var spl = ccommands[i].split('|');
+				var part = spl.slice(0, 5).join('|');
+				ccommands[i] = part + '|' + output + '|' + by;
+				fs.writeFileSync('data/addcom.txt', ccommands.join('\n'));
+				return this.say(by, room, 'Command edited!');
+			}
+		}
+		this.say(by, room, 'I was unable to find the command!');
+	},
+	setcom: function(arg, by, room) {
+		if (!this.canUse('addcom', room, by) || !arg) return false;
+		var command = toId(arg.split(',')[0]);
+		var tarRanks = 'n+★%@#&~';
+		var newRank = arg.split(',')[1];
+		if (newRank) {
+			newRank = newRank.trim();
+		}
+		if (newRank && (tarRanks.indexOf(newRank) === -1 || newRank.length !== 1)) return this.say(by, room, 'The format is ' + config.commandcharacter[0] + 'setcom [command], [rank]')
+		var search = config.serverid + '|' + toId(config.nick) + '|' + room + '|' + command + '|';
+		var ccommands = fs.readFileSync('data/addcom.txt').toString().split("\n");
+		for (var i = 0; i < ccommands.length; i++) {
+			if (ccommands[i].indexOf(search) === 0) {
+				var spl = ccommands[i].split('|');
+				if (!newRank) {
+					return this.say(by, room, config.commandcharacter[0] + command + ' is usable by users ' + spl[4].replace('n', '"reg"') + ' and higher')
+				}
+				var part = spl.slice(0, 4).join('|');
+				ccommands[i] = part + '|' + newRank + '|' + spl.slice(5).join('|');
+				fs.writeFileSync('data/addcom.txt', ccommands.join('\n'));
+				return this.say(by, room, 'Command "' + command + '" is set at rank ' + newRank + '.');
+			}
+		}
+		this.say(by, room, 'I was unable to find the command!');
+	},
+	addcom: function(arg, by, room) {
+		if (!this.canUse('addcom', room, by)) return false;
+		var splarg = arg.split(',');
+		var tarRanks = 'n+★%@#&~';
+		if (!splarg[0] || !splarg[1] || !splarg[2]) {
+			this.say(by, room, 'The correct format is +addcom __command__, __rank__, __output__');
+			return false;
+		}
+
+		splarg[0] = toId(splarg[0]);
+		splarg[1] = splarg[1].trim();
+
+		if (!splarg[0] || !splarg[1] || !splarg[2]) {
+			this.say(by, room, 'The correct format is +addcom __command__, __rank__, __output__');
+			return false;
+		}
+		if (!(tarRanks.indexOf(splarg[1]) > -1) || splarg[1].length !== 1) {
+			splarg[1] = config.defaultrank;
+		}
+		if (Commands[splarg[0]]) {
+			this.say(by, room, 'Such a command already exists naturally on the bot.');
+			return false;
+		}
+		var ccommands = fs.readFileSync('data/addcom.txt').toString().split("\n");
+
+		for (var idx = 0; idx < ccommands.length; idx++) {
+			var comspl = ccommands[idx].split('|');
+			if (room === comspl[2] && splarg[0] === comspl[3] && comspl[0] === config.serverid && comspl[1] === toId(config.nick)) {
+				return this.say(by, room, 'This custom command already exists! To change it, use ' + config.commandcharacter[0] + 'editcom [command], [output]');
+			}
+		}
+		fs.appendFile('data/addcom.txt', config.serverid + '|' + toId(config.nick) + '|' + room + '|' + splarg[0] + '|' + splarg[1] + '|' + splarg.slice(2).join(',') + '|' + by + '\n');
+		this.say(by, room, 'The custom command "' + splarg[0] + '" has successfully been entered!!!');
+	},
+	delcom: 'deletecom',
+	deletecom: function(arg, by, room) {
+		if (!this.canUse('addcom', room, by) || !arg) return false;
+
+		var success = false;
+		var bannedwords = fs.readFileSync('data/addcom.txt').toString().split('\n');
+		var temp = fs.readFileSync('data/addcom.txt').toString();
+
+		for (var i = 0; i < bannedwords.length; i++) {
+			var spl = bannedwords[i].toString().split('|');
+			if (arg == spl[3] && spl[2] == room && spl[1] === toId(config.nick) && spl[0] === config.serverid) {
+				var search = spl.join('|');
+				var idx = temp.indexOf(search);
+				if (idx >= 0) {
+					var output = temp.substr(0, idx) + temp.substr(idx + search.length);
+					output = output.replace(/^\s*$[\n\r]{1,}/gm, '');
+					fs.writeFileSync('data/addcom.txt', output);
+					this.say(by, room, 'The command "' + arg + '" has been removed from the room ' + room);
+					success = true;
+				}
+			}
+		}
+		if (success == false) this.say(by, room, 'The command does not exist');
+	},
+	comlist: function(arg, by, room) {
+		if (!this.canUse('comlist', room, by)) return false;
+
+		if (this.rankFrom(by, '@') && arg) {
+			room = toId(arg);
+			var allowInfo = true;
+		}
+		//allow more information?
+
+		var comlist = fs.readFileSync('data/addcom.txt').toString().split('\n')
+		var tarComlist = '';
+		var success = false;
+		for (var i = 0; i < comlist.length; i++) {
+			var spl = comlist[i].split('|');
+			if (room === spl[2] && toId(config.nick) === spl[1] && config.serverid === spl[0]) {
+				tarComlist += spl[3] + ': For rank ' + spl[4] + ' and above. Output: ' + spl.slice(5, spl.length - 1).join('|') + (allowInfo ? '\nMade by: ' + spl[spl.length - 1] : '') + '\n\n';
+				success = true;
+			}
+		}
+		if (!success) {
+			return this.say(by, (this.rankFrom(by, '@') && arg ? ',' + by : room), 'No custom commands for this room yet. ;-;');
+		}
+		else {
+			this.uploadToHastebin(tarComlist, function(link) {
+				if (this.rankFrom(by, '@') && arg) {
+					return this.say(by, '', (room.charAt(0) === ',' ? '' : '/w ' + by + ', ') + 'Custom Command list for room ' + this.rooms[room].name + ": " + link);
+				}
+				this.say(by, room, 'Custom Command list for room ' + this.rooms[room].name + ": " + link);
+			}.bind(this));
+		}
+	},
+	tell: 'mail',
+	mail: function(arg, by, room) {
+		var mailbl = fs.readFileSync('data/mailbl.txt').toString().split('\n');
+		var spl = arg.split(', ');
+		if (!spl[0] || !spl[1]) return this.say(by, ',' + by, 'The correct format is +mail [user], [msg]');
+		var destination = toId(spl[0]);
+		if (mailbl.indexOf(toId(by)) > -1 && destination !== toId(by)) return this.say(by, room, (room.charAt(0) === ',' ? '' : '/pm ' + by + ', ') + 'Swish, mail has been sent to ' + destination + '!');
+		spl = spl.slice(1).join(', ');
+		fs.appendFile('data/mail.txt', destination + '|' + spl + ' - ' + by + '\n', function() {
+			this.say(by, room, (room.charAt(0) === ',' ? '' : '/pm ' + by + ', ') + 'Swish, mail has been sent to ' + destination + '!');
+		}.bind(this));
+		var d = new Date();
+		if (mailbl.indexOf(toId(by)) > -1) return false;
+		fs.appendFile('data/maillog.txt', destination + '|' + spl + ' - ' + toId(by) + '~' + d + '\n', function(err) {});
+	},
+	banmail: 'mailban',
+	mailban: function(arg, by, room) {
+		if (!this.rankFrom(by, '@')) return false;
+		if (!this.outrank(by, arg)) return false;
+		if (room.charAt(0) !== ',') return false;
+		arg = toId(arg);
+		fs.appendFile('data/mailbl.txt', arg + '\n', function() {
+			this.say(by, room, arg + ' is now banned from using ' + config.commandcharacter[0] + 'mail');
+		}.bind(this));
+		this.botlog('global', arg + ' was banned from using mail by ' + by);
+	},
+	maillog: 'maillogs',
+	maillogs: function(arg, by, room) {
+		if (room.charAt(0) !== ',') return false;
+		if (!this.rankFrom(by, '@')) return false;
+		var maillogs = fs.readFileSync('data/maillog.txt').toString().split('\n');
+		var data = '';
+		for (var i = 0; i < maillogs.length; i++) {
+			if (!maillogs[i]) {
+				continue;
+			}
+			var splmsg = maillogs[i].split('|');
+			var spluser = maillogs[i].split(' - ');
+			var spldate = maillogs[i].split('~')
+			var date = spldate[spldate.length - 1];
+			var iddx = spluser[spluser.length - 1].indexOf('~' + date);
+			var sender = spluser[spluser.length - 1].slice(0, iddx);
+			var tarGet = splmsg[0];
+			splmsg = splmsg.slice(1).join('|');
+			var idx = splmsg.indexOf(' - ' + sender + '~');
+			var temp = splmsg.slice(0, idx);
+			if (toId(arg) && toId(arg) !== 'all') {
+				if (toId(sender) === toId(arg)) {
+					data += '[' + date + ']  ' + sender + ' (private to ' + tarGet + '): ' + temp + '\n\n';
+				}
+				continue;
+			}
+			data += '[' + date + ']  ' + sender + ' (private to ' + tarGet + '): ' + temp + '\n\n';
+		}
+		if (!data) return this.say(by, room, 'Sorry, no logs found.')
+		this.uploadToHastebin(data, function(link) {
+			this.say(by, room, 'Logs of .mail: ' + link);
+		}.bind(this));
+	},
+	checkmail: function(arg, by, room) {
+		if (!this.checkMail(by, room)) return this.say(by, room, (room.charAt(0) === ',' ? '' : '/pm ' + by + ', ') + 'You have no mail ;-;');
+		if (room.charAt !== ',') {
+			room = ',' + toId(by);
+		}
+		this.mailUser(by, room);
+	},
+	aq: 'addquote',
+	qa: 'addquote',
+	addquote: function(arg, by, room) {
+		if (!this.canUse('addquote', room, by)) return false;
+		if (!arg) return false;
+		var quoteList = fs.readFileSync('data/quotes.txt').toString().split('\n');
+		var search = room + '|' + arg;
+		if (quoteList.indexOf(search) > -1) return this.say(by, room, 'This quote already exists!');
+		fs.appendFile('data/quotes.txt', search + '\n');
+		this.say(by, room, 'The quote has been added.');
+	},
+	q: 'quote',
+	quote: function(arg, by, room) {
+		if (!this.canUse('quote', room, by)) return false;
+		var text = this.loadQuotes(room);
+		if (!text) return this.say(by, room, 'No quotes for this room yet.');
+		if (arg) {
+			arg = arg.replace(/[^0-9]/g, '');
+		}
+		if (arg) {
+			arg = arg * 1 - 1;
+			if (arg > text.length - 1) {
+				arg = Math.floor(Math.random() * text.length);
+			}
+			if (arg < 0) {
+				arg = Math.floor(Math.random() * text.length);
+			}
+			this.say(by, room, stripCommands(text[arg]), true);
+		}
+		else {
+			var mathRand = Math.floor(Math.random() * text.length);
+			this.say(by, room, stripCommands(text[mathRand]), true);
+		}
+	},
+	qlist: 'quotelist',
+	quotelist: function(arg, by, room) {
+		if (!this.canUse('addquote', room, by)) return false;
+		if (this.rankFrom(by, '@') && arg) {
+			room = toId(arg);
+		}
+		var text = this.loadQuotes(room);
+		if (!text) return this.say(by, room, 'No quotes saved yet.');
+		var output = '';
+		for (var i = 0; i < text.length; i++) {
+			var quoteId = i + 1
+			output += quoteId + ': ' + text[i] + '\n\n';
+		}
+		this.uploadToHastebin(output, function(link) {
+			if (this.rankFrom(by, '@') && arg) {
+				return this.say(by, '', (room.charAt(0) === ',' ? '' : '/w ' + by + ', ') + 'Quotes: ' + link);
+			}
+			this.say(by, room, 'Quotes: ' + link);
+		}.bind(this));
+
+	},
+	qd: 'deletequote',
+	delq: 'deletequote',
+	dquote: 'deletequote',
+	delquote: 'deletequote',
+	deletequote: function(arg, by, room) {
+		if (!this.canUse('addquote', room, by)) return false;
+		var updateQuote = fs.readFileSync('data/quotes.txt').toString();
+		var search = room + '|' + arg + '\n';
+		var idx = updateQuote.indexOf(search)
+		if (idx > -1) {
+			updateQuote = updateQuote.substr(0, idx) + updateQuote.substr(idx + search.length);
+			fs.writeFileSync('data/quotes.txt', updateQuote);
+			return this.say(by, room, 'Deleted.');
+		}
+		this.say(by, room, 'We couldn\'t seem to find such a quote...');
+	},
+	banroom: function(arg, by, room) {
+		if (!this.rankFrom(by, '~')) return false;
+		fs.appendFile('data/bannedrooms.txt', '\n' + toId(arg));
+		this.botlog('global', arg + ' room was banned from using the bot by ' + by);
+		this.say(by, room, 'RIP ' + arg);
+	},
+	addpoke: 'addpokemon',
+	addpokemon: function(arg, by, room) {
+		if (!this.isDev(by)) return false;
+		arg = arg.replace(/, /g, ',').split(',');
+		if (!arg[0] || !arg[1] || !arg[2]) {
+			return this.say(by, room, 'Missing information (pokemon, role, typings)');
+		}
+		if (toId(arg[1]) !== 'physicalattacker' && toId(arg[1]) !== 'specialattacker' && toId(arg[1]) !== 'physicalwall' && toId(arg[1]) !== 'specialwall' && toId(arg[1]) !== 'mega' && toId(arg[1]) !== 'revengekiller' && toId(arg[1]) !== 'utility') {
+			return this.say(by, room, 'Invalid pokemon role. (pokemon, role, typings)')
+		}
+
+		var typeOrder = ['normal', 'electric', 'fire', 'water', 'grass', 'ice', 'psychic', 'dark', 'fighting', 'ghost', 'bug', 'fairy', 'poison', 'dragon', 'ground', 'rock', 'steel', 'flying']
+		var typeList = fs.readFileSync('data/typelist.txt').toString().split('\n');
+
+		if (arg[2]) {
+			var typeindex = typeOrder.indexOf(toId(arg[2]));
+			if (typeindex === -1) {
+				return this.say(by, room, 'Invalid type');
+			}
+			var weaknesses = typeList[typeindex].split('|')
+			weaknesses = weaknesses.slice(1);
+		}
+
+		if (arg[3]) {
+			if (toId(arg[3])) {
+				var typeindex = typeOrder.indexOf(toId(arg[3]));
+				if (typeindex === -1) {
+					return this.say(by, room, 'Invalid type');
+				}
+				var tarweaknesses = typeList[typeindex].split('|')
+				tarweaknesses = tarweaknesses.slice(1);
+
+				for (var i = 0; i < tarweaknesses.length; i++) {
+					weaknesses[i] = tarweaknesses[i] * weaknesses[i];
+				}
+			}
+		}
+		var text = toId(arg[0]) + '|' + toId(arg[1]) + '|' + weaknesses.join('|');
+		fs.appendFile('data/pokemontyping.txt', text + '\n');
+		this.say(by, room, 'Added!');
+	},
+	repeatperms: function(arg, by, room) {
+		if (!this.rankFrom(by, '~')) return false;
+		fs.appendFile('data/repeatperms.txt', '\n' + toId(arg));
+		this.say(by, room, 'Added!')
+		this.botlog('global', arg + ' was given perms to use repeat by ' + by);
+	},
+	botban: function(arg, by, room) {
+		if (!this.rankFrom(by, '@')) return false;
+		if (!this.outrank(by, arg)) return false;
+		var banned = fs.readFileSync('data/commandban.txt').toString().split('\n');
+		if (banned.indexOf(toId(arg)) > -1) return this.say(by, room, 'User is already banned.')
+		fs.appendFile('data/commandban.txt', toId(arg) + '\n');
+		this.say(by, room, arg + ' was banned from using the bot by ' + by)
+		this.botlog('global', arg + ' was banned from using the bot by ' + by);
+		Commands.bot.call(this, 'deauth, ' + arg, config.nick, room);
+	},
+	botunban: function(arg, by, room) {
+		if (!this.rankFrom(by, '@')) return false;
+		if (!this.outrank(by, arg)) return false;
+		var banned = fs.readFileSync('data/commandban.txt').toString();
+		arg = toId(arg);
+		var success = false;
+		var search = '\n' + arg + '\n';
+
+		var idx = banned.indexOf(search);
+		banned = banned.replace(new RegExp(search, "g"), '\n');
+		fs.writeFileSync('data/commandban.txt', banned);
+		if (idx === -1) {
+			return this.say(by, room, 'User not found.')
+		}
+		else {
+			this.say(by, room, 'Done.')
+		}
+		this.botlog('global', arg + ' was unbanned from using the bot by ' + by);
+
+	},
+	newentry: 'addentry',
+	reminder: 'addentry',
+	addentry: function(arg, by, room) {
+		if (!this.canUse('addentry', room, by)) return false;
+		if (!arg) return false;
+		var quoteList = fs.readFileSync('data/entries.txt').toString().split('\n');
+		var search = room + '|' + arg;
+		if (quoteList.indexOf(search) > -1) return this.say(by, room, 'This entry already exists!');
+		fs.appendFile('data/entries.txt', search + '\n');
+		this.say(by, room, 'The entry has been added.');
+	},
+	e: 'entry',
+	entry: function(arg, by, room) {
+		if (!this.canUse('entry', room, by)) return false;
+		var text = this.loadEntries(room);
+		if (!text) return this.say(by, room, 'No entries for this room yet.');
+		if (arg) {
+			arg = arg.replace(/[^0-9]/g, '');
+		}
+		if (arg) {
+			arg = arg * 1 - 1;
+			if (arg > text.length - 1) {
+				return this.say(by, room, 'That entry doesn\'t exist..');
+			}
+			if (arg < 0) {
+				return this.say(by, room, 'That entry doesn\'t exist..');
+			}
+			this.say(by, room, text[arg])
+		}
+		else {
+			var mathRand = Math.floor(Math.random() * text.length);
+			this.say(by, room, text[mathRand]);
+		}
+	},
+
+	journal: 'todolist',
+	todolist: function(arg, by, room) {
+		if (!this.canUse('entry', room, by)) return false;
+		var text = this.loadEntries(room);
+		if (!text) return this.say(by, room, 'No entries saved yet.');
+		var output = '';
+		for (var i = 0; i < text.length; i++) {
+			var quoteId = i + 1
+			output += quoteId + ': ' + text[i] + '\n\n';
+		}
+		this.uploadToHastebin(output, function(link) {
+			this.say(by, room, 'List: ' + link);
+		}.bind(this));
+
+	},
+	delentry: 'complete',
+	finish: 'complete',
+	complete: function(arg, by, room) {
+		if (!this.canUse('addentry', room, by)) return false;
+
+		var updateQuote = fs.readFileSync('data/entries.txt').toString();
+		var search = room + '|' + arg + '\n';
+		var idx = updateQuote.indexOf(search)
+		if (idx > -1) {
+			updateQuote = updateQuote.substr(0, idx) + updateQuote.substr(idx + search.length);
+			fs.writeFileSync('data/entries.txt', updateQuote);
+			return this.say(by, room, 'Deleted.');
+		}
+		this.say(by, room, 'We couldn\'t seem to find such an entry...');
+	},
+	wm: 'welcome',
+	joinmsg: 'welcome',
+	message: 'welcome',
+	welcomemessage: 'welcome',
+	welcome: function(arg, by, room) {
+		if (!fs.existsSync('data/wcmsg.txt') || !fs.existsSync('data/ignorewcmsg.txt')) {
+			return this.say(by, room, 'Looks like someone forgot to make the files needed for this command.....')
+		}
+		arg = arg.replace(/, /g, ',').split(',');
+		var data = fs.readFileSync('data/wcmsg.txt').toString().split('\n');
+		var ignore = fs.readFileSync('data/ignorewcmsg.txt').toString().split('\n');
+		switch (arg[0]) {
+			case 'set':
+				if (!this.hasRank(by, '#&~')) return false;
+				if (!arg[1]) return this.say(by, room, 'You forgot to include a message.');
+				if (data.indexOf(room + '|' + config.serverid) > -1) {
+					data[data.indexOf(room + '|' + config.serverid) + 1] = 'n|' + stripCommands(arg.slice(1).join(', '));
+				}
+				else {
+					data[data.length] = room + '|' + config.serverid;
+					data[data.length] = 'n|' + stripCommands(arg.slice(1).join(', '));
+				}
+				this.say(by, room, 'The welcome message was set.');
+				fs.writeFileSync('data/wcmsg.txt', data.join('\n'));
+				this.botlog(room, by + ' has set the welcome message in ' + room + ' to: \"' + stripCommands(arg.slice(1).join(', ')) + '\"');
+				break;
+			case 'on':
+				if (!this.hasRank(by, '#&~')) return false;
+				if (data.indexOf(room + '|' + config.serverid) > -1) {
+					data[data.indexOf(room + '|' + config.serverid) + 1] = 'n' + data[data.indexOf(room + '|' + config.serverid) + 1].slice(1);
+				}
+				else {
+					return this.say(by, room, 'You need to set a welcome message first')
+				}
+				this.say(by, room, 'The welcome message was enabled.');
+				fs.writeFileSync('data/wcmsg.txt', data.join('\n'));
+				break;
+			case 'off':
+				if (!this.hasRank(by, '#&~')) return false;
+				if (data.indexOf(room + '|' + config.serverid) > -1) {
+					data[data.indexOf(room + '|' + config.serverid) + 1] = 'd' + data[data.indexOf(room + '|' + config.serverid) + 1].slice(1);
+				}
+				else {
+					return this.say(by, room, 'You need to set a welcome message first')
+				}
+				this.say(by, room, 'The welcome message was disabled.');
+				fs.writeFileSync('data/wcmsg.txt', data.join('\n'));
+				break;
+			case 'ignore':
+				if (room.charAt(0) !== ',') return false;
+				if (ignore.indexOf(toId(by)) > -1) return this.say(by, room, 'You are already ignoring welcome messages!~');
+				fs.appendFile('data/ignorewcmsg.txt', '\n' + toId(by));
+				this.say(by, room, 'You are now ignoring welcome messages.')
+				break;
+			case 'unignore':
+				if (room.charAt(0) !== ',') return false;
+				if (ignore.indexOf(toId(by)) === -1) return this.say(by, room, 'You are already recieving welcome messages!~');
+				var ignoredata = fs.readFileSync('data/ignorewcmsg.txt').toString();
+				var replacer = '\n' + toId(by)
+				fs.writeFileSync('data/ignorewcmsg.txt', ignoredata.replace(new RegExp(replacer, "g"), ''));
+				this.say(by, room, 'You are now recieving welcome messages.')
+				break;
+			case 'show':
+				if (!this.hasRank(by, '#&~')) return false;
+				if (data.indexOf(room + '|' + config.serverid) === -1) return false;
+				this.say(by, room, '\"' + data[data.indexOf(room + '|' + config.serverid) + 1].slice(2) + '\"');
+		}
+	},
+	randpoke: function(arg, by, room) {
+		if (!this.hasRank(by, '+%@#&~')) return false;
+		var ranges = [
+			['1', '151'],
+			['152', '251'],
+			['252', '386'],
+			['387', '493'],
+			['494', '649'],
+			['650', '721']
+		];
+		var gens = ['gen1', 'gen2', 'gen3', 'gen4', 'gen5', 'gen6'];
+		if (gens.indexOf(toId(arg)) === -1 && arg) return false;
+		this.say(by, room, "!data " + (arg ? ranges[gens.indexOf(toId(arg))][0] * 1 + ~~((ranges[gens.indexOf(toId(arg))][1] - ranges[gens.indexOf(toId(arg))][0]) * Math.random()) + 1 : ~~(Math.random() * 721)));
+	},
+	botlog: function(arg, by, room) {
+		if (!this.rankFrom(by, '@')) return false;
+		room = ',' + by;
+		arg = arg.replace(', ', ',').split(',');
+
+		var botLogs = fs.readFileSync('data/botlog.txt').toString().split('\n');
+
+		var text = ''
+
+		for (var i = 0; botLogs.length > i; i++) {
+			for (var j = 0; j < arg.length; j++) {
+				var addText = false
+				if (botLogs[i].indexOf(arg[j].trim()) === -1) {
+					addText = false
+					continue;
+				}
+				if (addText) {
+					text += botLogs[i] + '\n\n';
+				}
+			}
+		}
+		this.uploadToHastebin(text, function(link) {
+			this.say(by, room, 'List: ' + link);
+		}.bind(this));
+	},
+
+	bot: function(arg, by, room) {
+		arg = arg.replace(/, /g, ',').split(',');
+		if (!arg[1] && arg[0] !== 'auth' && arg[0] !== 'help') {
+			return false;
+		}
+		if (arg[1]) {
+			var target = toId(arg[1]);
+		}
+		var action = arg[0];
+		switch (action) {
+			case 'voice':
+				if (!this.rankFrom(by, '@') || this.botRank(target) === '+' || !this.outrank(by, target)) return false;
+				if (this.botRank(target) === ' ') {
+					fs.appendFile('data/ranks.txt', '+' + target + '\n');
+				}
+				else {
+					var ranks = fs.readFileSync('data/ranks.txt').toString();
+					ranks = ranks.replace(this.botRank(target) + target + '\n', '+' + target + '\n')
+					fs.writeFileSync('data/ranks.txt', ranks);
+				}
+				this.say(by, room, target + ' was appointed BotVoice by ' + by);
+				this.botlog('global', target + ' was appointed BotVoice by ' + by);
+				break;
+			case 'deauth':
+				if (!this.outrank(by, target) || this.botRank(target) === ' ') return false;
+				var ranks = fs.readFileSync('data/ranks.txt').toString();
+				ranks = ranks.replace(this.botRank(target) + target + '\n', '');
+				fs.writeFileSync('data/ranks.txt', ranks);
+				this.say(by, room, '(' + target + ' no longer has BotAuth.)');
+				this.botlog('global', '(' + target + ' no longer has BotAuth by ' + by + ')');
+				break;
+			case 'mod':
+				if (!this.rankFrom(by, '~') || this.botRank(target) === '@') return false;
+				if (this.botRank(target) === ' ') {
+					fs.appendFile('data/ranks.txt', '@' + target + '\n');
+				}
+				else {
+					var ranks = fs.readFileSync('data/ranks.txt').toString();
+					ranks = ranks.replace(this.botRank(target) + target + '\n', '@' + target + '\n');
+					fs.writeFileSync('data/ranks.txt', ranks);
+				}
+				this.say(by, room, target + ' was appointed BotMod by ' + by);
+				this.botlog('global', target + ' was appointed BotMod by ' + by);
+				break;
+			case 'admin':
+				if (!this.rankFrom(by, '~') || this.botRank(target) === '~') return false;
+				if (this.botRank(target) === ' ') {
+					fs.appendFile('data/ranks.txt', '~' + target + '\n');
+				}
+				else {
+					var ranks = fs.readFileSync('data/ranks.txt').toString();
+					ranks = ranks.replace(this.botRank(target) + target + '\n', '~' + target + '\n');
+					fs.writeFileSync('data/ranks.txt', ranks);
+				}
+				this.say(by, room, target + ' was appointed BotAdmin by ' + by);
+				this.botlog('global', target + ' was appointed BotAdmin by ' + by);
+				break;
+			case 'auth':
+				var ranks = fs.readFileSync('data/ranks.txt').toString().split('\n');
+				var voice = [];
+				var mod = [];
+				var admin = [];
+				for (var i = 0; i < ranks.length; i++) {
+					if (!ranks[i]) {
+						continue;
+					}
+					switch (ranks[i].charAt(0)) {
+						case '~':
+							admin[admin.length] = ranks[i].slice(1);
+							break;
+						case '@':
+							mod[mod.length] = ranks[i].slice(1);
+							break;
+						case '+':
+							voice[voice.length] = ranks[i].slice(1);
+							break;
+					}
+				}
+				var text = '~Administrators (' + admin.length + '):\n' + admin.join(', ') + '\n\n@Moderators (' + mod.length + '):\n' + mod.join(', ') + '\n\n+Voices (' + voice.length + '):\n' + voice.join(', ');
+				this.uploadToHastebin(text, function(link) {
+					this.say(by, (this.rankFrom(by, '+') ? room : ',' + by), 'BotAuth: ' + link);
+				}.bind(this));
+				break;
+			default:
+				if (!this.rankFrom(by, '@')) return false;
+				this.say(by, ',' + by, 'The possible commands are +bot [voice/mod/admin/deauth].');
+
+		}
+	},
+	bj: 'blackjack',
+	blowjob: 'blackjack',
+	blackjack: function(arg, by, room) {
+		if (room.charAt(0) === ',') return false;
+		if (!arg) return this.say(by, (this.hasRank(by, '%@#&~') ? room : ',' + by), 'The params are: new, start, join, end, leave.');
+		arg = toId(arg);
+		if (!gameStatus[room]) {
+			gameStatus[room] = 'off';
+		}
+		switch (arg) {
+			case 'new':
+				if (!this.canUse('blackjack', room, by)) return false;
+				if (gameStatus[room] !== 'off') return this.say(by, room, 'A game is already going on!');
+				this.say(by, room, 'A new game of blackjack is starting. do +bj join to join the game!')
+				game('blackjack', room);
+				clearInterval(blackJack[room]);
+				gameStatus[room] = 'signup';
+				playerCount[room] = [];
+				playerData[room] = {};
+				currentPlayer[room] = '';
+				break;
+			case 'join':
+				if (gameStatus[room] !== 'signup') return false;
+				if (playerData[room][toId(by)]) {
+					return this.say(by, ',' + by, 'You\'ve already signed up!');
+				}
+				else {
+					this.say(by, ',' + by, 'Thank you for signing up!')
+					playerData[room][toId(by)] = {
+						name: by.slice(1),
+						hand: [],
+						total: 0,
+					}
+					playerCount[room][playerCount[room].length] = toId(by);
+				}
+				break;
+			case 'leave':
+				if (gameStatus[room] !== 'signup') return false;
+				if (playerData[room][toId(by)]) {
+					playerData[room][toId(by)] = {};
+					//re-make playerlist
+					var pIndex = playerCount[room].indexOf(toId(by));
+					var pushPlayer = [];
+					for (var x = 0; x < playerCount[room].length; x++) {
+						if (x === pIndex) {
+							continue;
+						}
+						pushPlayer.push(playerCount[room][x]);
+					}
+					//reset playerlist
+					playerCount[room] = pushPlayer;
+					this.say(by, ',' + by, 'Aww, next time then!')
+				}
+				break;
+			case 'start':
+				if (!this.canUse('blackjack', room, by)) return false;
+				if (gameStatus[room] !== 'signup') return false;
+				if (!playerCount[room] || playerCount[room].length === 0) return this.say(by, room, 'No one has joined yet ;-;')
+				gameStatus[room] = 'on';
+				clearInterval(blackJack[room]);
+				deck[room] = this.generateDeck(~~(playerCount[room].length / 10) + 1);
+
+				//dealers stuff/
+				playerData[room][toId(config.nick)] = {
+					name: config.nick,
+					hand: [],
+					total: 0,
+				};
+
+				//determine who goes first
+				currentPlayer[room] = playerCount[room][0];
+				//deal the cards
+				for (var i = 0; i < 2; i++) {
+					for (var j = 0; j < playerCount[room].length; j++) {
+						//hand out the cards
+						var targetPlayer = playerCount[room][j];
+						var handSize = playerData[room][targetPlayer].hand.length;
+						playerData[room][targetPlayer].hand[handSize] = deck[room][0];
+						playerData[room][targetPlayer].total = this.parseHandTotal(playerData[room][targetPlayer].hand);
+						deck[room] = deck[room].slice(1);
+						if (deck[room].length === 0) {
+							deck[room] = this.generateDeck(~~(playerCount[room].length / 10) + 1);
+						}
+						//say top card
+						if (i === 0) {
+							this.talk(room, 'Top Card - ' + playerData[room][playerCount[room][j]].name + ': [' + playerData[room][playerCount[room][j]].hand[0] + ']')
+						}
+					}
+					//dealers card
+					targetPlayer = toId(config.nick);
+					var handSize = playerData[room][targetPlayer].hand.length;
+					playerData[room][targetPlayer].hand[handSize] = deck[room][0];
+					playerData[room][targetPlayer].total = this.parseHandTotal(playerData[room][targetPlayer].hand);
+					deck[room] = deck[room].slice(1);
+					if (deck[room].length === 0) {
+						deck[room] = this.generateDeck(~~(playerCount[room].length / 10) + 1);
+					}
+					//say top card
+					if (i === 0) {
+						this.talk(room, '**Dealer\'s Top Card: [' + playerData[room][targetPlayer].hand[0] + ']**')
+					}
+
+				}
+
+				//old deal
+				/*
+				playerData[room][currentPlayer[room]].hand = deck[room].slice(0, 2);
+				deck[room] = deck[room].slice(2);
+				*/
+				this.say(config.nick, room, playerData[room][currentPlayer[room]].name + '\'s turn! __(' + config.commandcharacter[0] + 'hit or ' + config.commandcharacter[0] + 'stay)__')
+				this.talk(room, '/w ' + currentPlayer[room] + ', [' + room + '] Your hand is [' + playerData[room][currentPlayer[room]].hand.join('], [') + ']. The total is ' + playerData[room][currentPlayer[room]].total);
+				//start the turns
+				blackJack[room] = setInterval(function() {
+					if (gameStatus[room] !== 'on') {
+						clearInterval(blackJack[room]);
+						return false;
+					}
+					if (!playerCount[room][playerCount[room].indexOf(currentPlayer[room]) + 1]) {
+						clearInterval(blackJack[room]);
+						//code for summing up, dealer stuff
+						this.say(config.nick, room, 'Dealer\'s turn now...');
+						//drawing until over 17
+						for (var i = 0; i < 17; i++) {
+							if (playerData[room][toId(config.nick)].total < 17) {
+								var handSize = playerData[room][toId(config.nick)].hand.length;
+								playerData[room][toId(config.nick)].hand[handSize] = deck[room][0];
+								playerData[room][toId(config.nick)].total = this.parseHandTotal(playerData[room][toId(config.nick)].hand);
+								deck[room] = deck[room].slice(1);
+								if (deck[room].length === 0) {
+									deck[room] = this.generateDeck(~~(playerCount[room].length / 10) + 1);
+								}
+							}
+							else {
+								break;
+							}
+						}
+						//conclusion of winners
+						//naturals
+						var naturals = [];
+						for (var players = 0; players < playerCount[room].length; players++) {
+							var tarPlayer = playerCount[room][players]
+							if (playerData[room][tarPlayer].total === 21 && playerData[room][tarPlayer].hand.length === 2) {
+								naturals.push(playerData[room][tarPlayer].name);
+							}
+						}
+						var winnerList = []
+						if (playerData[room][toId(config.nick)].total > 21) {
+							this.say(config.nick, room, 'The Dealer has bust with ' + playerData[room][toId(config.nick)].total)
+							for (var players = 0; players < playerCount[room].length; players++) {
+								var tarPlayer = playerCount[room][players]
+								if (playerData[room][tarPlayer].total < 22) {
+									winnerList[winnerList.length] = playerData[room][tarPlayer].name;
+								}
+							}
+						}
+						else if (playerData[room][toId(config.nick)].total === 21) {
+							gameStatus[room] = 'off';
+							this.say(config.nick, room, 'The Dealer has a BlackJack!')
+						}
+						else {
+							this.say(config.nick, room, 'The Dealer has ' + playerData[room][toId(config.nick)].total);
+							for (var players = 0; players < playerCount[room].length; players++) {
+								var tarPlayer = playerCount[room][players]
+								if (playerData[room][tarPlayer].total < 22 && playerData[room][tarPlayer].total > playerData[room][toId(config.nick)].total) {
+									winnerList[winnerList.length] = playerData[room][tarPlayer].name;
+								}
+							}
+						}
+						gameStatus[room] = 'off';
+						clearInterval(blackJack[room]);
+						if (naturals[0]) {
+							this.say(config.nick, room, 'These players have a natural blackjack: ' + naturals.join(', ') + ' - and recieve an extra ' + Economy.getPayout(3, room) + ' ' + Economy.currency(room) + '.');
+							Economy.give(naturals, Economy.getPayout(3, room), room);
+						}
+						if (winnerList[0]) {
+							Economy.give(winnerList, Economy.getPayout(5, room), room);
+						}
+						return this.say(config.nick, room, (winnerList[0] ? 'The winners are: ' + winnerList.join(', ') + '. Rewards: ' + Economy.getPayout(5, room) + ' ' + Economy.currency(room) : 'Sorry, no winners this time.'))
+					}
+					else {
+						currentPlayer[room] = playerCount[room][playerCount[room].indexOf(currentPlayer[room]) + 1];
+						this.say(config.nick, room, playerData[room][currentPlayer[room]].name + '\'s turn! __(' + config.commandcharacter[0] + 'hit or ' + config.commandcharacter[0] + 'stay)__')
+						this.talk(room, '/w ' + currentPlayer[room] + ', [' + room + '] Your hand is [' + playerData[room][currentPlayer[room]].hand.join('], [') + ']. The total is ' + playerData[room][currentPlayer[room]].total)
+					}
+				}.bind(this), 90000);
+				break;
+			case 'end':
+				if (!this.canUse('blackjack', room, by)) return false;
+				if (gameStatus[room] === 'off') return false;
+				clearInterval(blackJack[room]);
+				this.say(by, room, 'The game of Blackjack was forcibly ended.')
+				gameStatus[room] = 'off';
+		}
+	},
+
+	hit: function(arg, by, room) {
+		if (toId(by) !== currentPlayer[room]) return false;
+		if (!gameStatus[room] || gameStatus[room] !== 'on' || room.charAt(0) === ',') return false;
+		//deal one more card
+		var handSize = playerData[room][currentPlayer[room]].hand.length;
+		playerData[room][currentPlayer[room]].hand[handSize] = deck[room][0];
+		playerData[room][currentPlayer[room]].total = this.parseHandTotal(playerData[room][currentPlayer[room]].hand);
+		deck[room] = deck[room].slice(1);
+		if (deck[room].length === 0) {
+			deck[room] = this.generateDeck(~~(playerCount[room].length / 10) + 1);
+		}
+		this.talk(room, '/w ' + currentPlayer[room] + ', [' + room + '] Your hand is [' + playerData[room][currentPlayer[room]].hand.join('], [') + ']. The total is ' + playerData[room][currentPlayer[room]].total)
+
+		if (playerData[room][currentPlayer[room]].total > 21) {
+			clearInterval(blackJack[room]);
+			this.say(config.nick, room, playerData[room][currentPlayer[room]].name + ' has busted with ' + playerData[room][currentPlayer[room]].total + '!')
+			if (!playerCount[room][playerCount[room].indexOf(currentPlayer[room]) + 1]) {
+				if (gameStatus[room] !== 'on') {
+					clearInterval(blackJack[room]);
+					return false;
+				}
+				clearInterval(blackJack[room]);
+				//code for summing up, dealer stuff
+				//drawing until over 17
+				for (var i = 0; i < 17; i++) {
+					if (playerData[room][toId(config.nick)].total < 17) {
+						var handSize = playerData[room][toId(config.nick)].hand.length;
+						playerData[room][toId(config.nick)].hand[handSize] = deck[room][0];
+						playerData[room][toId(config.nick)].total = this.parseHandTotal(playerData[room][toId(config.nick)].hand);
+						deck[room] = deck[room].slice(1);
+						if (deck[room].length === 0) {
+							deck[room] = this.generateDeck(~~(playerCount[room].length / 10) + 1);
+						}
+					}
+					else {
 						break;
 					}
 				}
-			}
-			// moderation for flooding (more than x lines in y seconds)
-			var times = roomData.times;
-			var timesLen = times.length;
-			var isFlooding = (timesLen >= FLOOD_MESSAGE_NUM && (now - times[timesLen - FLOOD_MESSAGE_NUM]) < FLOOD_MESSAGE_TIME && (now - times[timesLen - FLOOD_MESSAGE_NUM]) > (FLOOD_PER_MSG_MIN * FLOOD_MESSAGE_NUM));
-			if ((useDefault || !('flooding' in modSettings)) && isFlooding) {
-				if (pointVal < 2) {
-					pointVal = 2;
-					muteMessage = ', Automated response: flooding';
-				}
-			}
-			// moderation for caps (over x% of the letters in a line of y characters are capital)
-			var capsMatch = msg.replace(/[^A-Za-z]/g, '').match(/[A-Z]/g);
-			if ((useDefault || !('caps' in modSettings)) && capsMatch && toId(msg).length > MIN_CAPS_LENGTH && (capsMatch.length >= ~~(toId(msg).length * MIN_CAPS_PROPORTION))) {
-				if (pointVal < 1) {
-					pointVal = 1;
-					muteMessage = ', Automated response: caps';
-				}
-			}
-			// moderation for stretching (over x consecutive characters in the message are the same)
-			var stretchMatch = /(.)\1{7,}/gi.test(msg) || /(..+)\1{4,}/gi.test(msg); // matches the same character (or group of characters) 8 (or 5) or more times in a row
-			if ((useDefault || !('stretching' in modSettings)) && stretchMatch) {
-				if (pointVal < 1) {
-					pointVal = 1;
-					muteMessage = ', Automated response: stretching';
-				}
-			}
-
-			if (pointVal > 0 && now - roomData.lastAction >= ACTION_COOLDOWN) {
-				var cmd = 'mute';
-				// defaults to the next punishment in config.punishVals instead of repeating the same action (so a second warn-worthy
-				// offence would result in a mute instead of a warn, and the third an hourmute, etc)
-				if (roomData.points >= pointVal && pointVal < 4) {
-					roomData.points++;
-					cmd = config.punishvals[roomData.points] || cmd;
-				}
-				else { // if the action hasn't been done before (is worth more points) it will be the one picked
-					cmd = config.punishvals[pointVal] || cmd;
-					roomData.points = pointVal; // next action will be one level higher than this one (in most cases)
-				}
-				if (config.privaterooms.indexOf(room) > -1 && cmd === 'warn') cmd = 'mute'; // can't warn in private rooms
-				// if the bot has % and not @, it will default to hourmuting as its highest level of punishment instead of roombanning
-				if (roomData.points >= 4 && !this.hasRank(this.ranks[room] || ' ', '@&#~')) cmd = 'hourmute';
-				if (userData.zeroTol > 4) { // if zero tolerance users break a rule they get an instant roomban or hourmute
-					muteMessage = ', Automated response: zero tolerance user';
-					cmd = this.hasRank(this.ranks[room] || ' ', '@&#~') ? 'roomban' : 'hourmute';
-				}
-				if (roomData.points > 1) userData.zeroTol++; // getting muted or higher increases your zero tolerance level (warns do not)
-				roomData.lastAction = now;
-				this.talk(room, '/' + cmd + ' ' + user + muteMessage);
-				//				if(muteMessage = ', Automated response: flooding'){
-				//					this.talk('TextMonitor', '\[ ' + room + ' | ' + user + ' \] ' + user + ' was muted for flooding in ' + room);
-				//				}
-			}
-		}
-	},
-	cleanChatData: function() {
-		var chatData = this.chatData;
-		for (var user in chatData) {
-			for (var room in chatData[user]) {
-				var roomData = chatData[user][room];
-				if (!Object.isObject(roomData)) continue;
-
-				if (!roomData.times || !roomData.times.length) {
-					delete chatData[user][room];
-					continue;
-				}
-				var newTimes = [];
-				var now = Date.now();
-				var times = roomData.times;
-				for (var i = 0, len = times.length; i < len; i++) {
-					if (now - times[i] < 5 * 1000) newTimes.push(times[i]);
-				}
-				newTimes.sort(function(a, b) {
-					return a - b;
-				});
-				roomData.times = newTimes;
-				if (roomData.points > 0 && roomData.points < 4) roomData.points--;
-			}
-		}
-	},
-
-	updateSeen: function(user, type, detail) {
-		if (type !== 'n' && config.rooms.indexOf(detail) === -1 || config.privaterooms.indexOf(toId(detail)) > -1) return;
-		var now = Date.now();
-		if (!this.chatData[user]) this.chatData[user] = {
-			zeroTol: 0,
-			lastSeen: '',
-			seenAt: now
-		};
-		if (!detail) return;
-		var userData = this.chatData[user];
-		var msg = '';
-		switch (type) {
-			case 'j':
-			case 'J':
-				msg += 'joining ';
-				break;
-			case 'l':
-			case 'L':
-				msg += 'leaving ';
-				break;
-			case 'c':
-			case 'c:':
-				msg += 'chatting in ';
-				break;
-			case 'N':
-				msg += 'changing nick to ';
-				if (detail.charAt(0) !== ' ') detail = detail.substr(1);
-				break;
-		}
-		msg += detail.trim() + '.';
-		userData.lastSeen = msg;
-		userData.seenAt = now;
-	},
-	getTimeAgo: function(time) {
-		time = ~~((Date.now() - time) / 1000);
-
-		var seconds = time % 60;
-		var times = [];
-		if (seconds) times.push(seconds + (seconds === 1 ? ' second' : ' seconds'));
-		if (time >= 60) {
-			time = ~~((time - seconds) / 60);
-			var minutes = time % 60;
-			if (minutes) times.unshift(minutes + (minutes === 1 ? ' minute' : ' minutes'));
-			if (time >= 60) {
-				time = ~~((time - minutes) / 60);
-				hours = time % 24;
-				if (hours) times.unshift(hours + (hours === 1 ? ' hour' : ' hours'));
-				if (time >= 24) {
-					days = ~~((time - hours) / 24);
-					if (days) times.unshift(days + (days === 1 ? ' day' : ' days'));
-				}
-			}
-		}
-		if (!times.length) return '0 seconds';
-		return times.join(', ');
-	},
-	syncSettings: function() {
-		//keep data across several bots
-		try {
-			var mySettings = this.settings[config.serverid][toId(config.nick)];
-		}
-		catch (e) {}
-		try {
-			this.settings = JSON.parse(fs.readFileSync('settings.json'));
-		}
-		catch (e) {
-			this.settings = {};
-		} // file doesn't exist [yet]
-		if (!this.settings[config.serverid]) {
-			this.settings[config.serverid] = {};
-		}
-		if (!this.settings[config.serverid][toId(config.nick)]) {
-			this.settings[config.serverid][toId(config.nick)] = {};
-		}
-		this.settings[config.serverid][toId(config.nick)] = mySettings;
-		//end
-	},
-	writeSettings: function() {
-		this.syncSettings();
-		var data = JSON.stringify(this.settings);
-		fs.writeFileSync('settings.json', data);
-	},
-	uncacheTree: function(root) {
-		var uncache = [require.resolve(root)];
-		do {
-			var newuncache = [];
-			for (var i = 0; i < uncache.length; ++i) {
-				if (require.cache[uncache[i]]) {
-					newuncache.push.apply(newuncache,
-						require.cache[uncache[i]].children.map(function(module) {
-							return module.filename;
-						})
-					);
-					delete require.cache[uncache[i]];
-				}
-			}
-			uncache = newuncache;
-		} while (uncache.length > 0);
-	},
-	generateString: function() {
-		var letters = 'qwertyuiopasdfghjklzxcvbnm1234567890';
-		var length = ~~(Math.random() * 12) + 8;
-		var text = ''
-		for (var i = 0; i < length; i++) {
-			var rand = ~~(letters.length * Math.random())
-			text += letters[rand];
-		}
-		return text;
-	},
-	translate: function(room, parts, text, from, to) {
-		this.translateAPI(text.replace(/[^A-Z\,\.a-z0-9\!\?\s\:\;\(\)\'\"\/']/g, ''), from, to, function(translation) {
-			this.talk(room, (parts ? parts + ',' : '') + translation);
-		}.bind(this));
-	},
-	translateAPI: function(text, from, to, callback) {
-		var returnText = ''
-		try {
-			var string = this.generateString();
-			http.get('http://mymemory.translated.net/api/get?q=' + text + '&langpair=' + from + '|' + to + '&de=' + string + '@gmail.com', function(res) {
-				var data = '';
-				res.on('data', function(part) {
-					data += part;
-				});
-				res.on('end', function(end) {
-					try {
-						var json = JSON.parse(data);
+				//conclusion of winners
+				//naturals
+				var naturals = [];
+				for (var players = 0; players < playerCount[room].length; players++) {
+					var tarPlayer = playerCount[room][players]
+					if (playerData[room][tarPlayer].total === 21 && playerData[room][tarPlayer].hand.length === 2) {
+						naturals.push(playerData[room][tarPlayer].name);
 					}
-					catch (e) {}
-					if (!json) {
-						callback(text);
+				};
+				var winnerList = []
+				if (playerData[room][toId(config.nick)].total > 21) {
+					this.say(config.nick, room, 'The Dealer has bust with ' + playerData[room][toId(config.nick)].total)
+					for (var players = 0; players < playerCount[room].length; players++) {
+						var tarPlayer = playerCount[room][players]
+						if (playerData[room][tarPlayer].total < 22) {
+							winnerList[winnerList.length] = playerData[room][tarPlayer].name;
+						}
+					}
+				}
+				else if (playerData[room][toId(config.nick)].total === 21) {
+					gameStatus[room] = 'off';
+					this.say(config.nick, room, 'The Dealer has a BlackJack! Better luck next time!')
+				}
+				else {
+					this.say(config.nick, room, 'The Dealer has ' + playerData[room][toId(config.nick)].total);
+					for (var players = 0; players < playerCount[room].length; players++) {
+						var tarPlayer = playerCount[room][players]
+						if (playerData[room][tarPlayer].total < 22 && playerData[room][tarPlayer].total > playerData[room][toId(config.nick)].total) {
+							winnerList[winnerList.length] = playerData[room][tarPlayer].name;
+						}
+					}
+				}
+				gameStatus[room] = 'off';
+				if (naturals[0]) {
+					this.say(config.nick, room, 'These players have a natural blackjack: ' + naturals.join(', ') + ' - and recieve an extra ' + Economy.getPayout(3, room) + ' ' + Economy.currency(room) + '.');
+					Economy.give(naturals, Economy.getPayout(3, room), room);
+				}
+				if (winnerList[0]) {
+					Economy.give(winnerList, Economy.getPayout(5, room), room);
+				}
+				return this.say(config.nick, room, (winnerList[0] ? 'The winners are: ' + winnerList.join(', ') + '. Rewards: ' + Economy.getPayout(5, room) + ' ' + Economy.currency(room) : 'Sorry, no winners this time.'))
+				clearInterval(blackJack[room]);
+			}
+			else {
+				currentPlayer[room] = playerCount[room][playerCount[room].indexOf(currentPlayer[room]) + 1];
+				this.say(config.nick, room, playerData[room][currentPlayer[room]].name + '\'s turn! __(' + config.commandcharacter[0] + 'hit or ' + config.commandcharacter[0] + 'stay)__');
+				this.talk(room, '/w ' + currentPlayer[room] + ', [' + room + '] Your hand is [' + playerData[room][currentPlayer[room]].hand.join('], [') + ']. The total is ' + playerData[room][currentPlayer[room]].total)
+			}
+
+			blackJack[room] = setInterval(function() {
+				if (gameStatus[room] !== 'on') {
+					clearInterval(blackJack[room]);
+					return false;
+				}
+				if (!playerCount[room][playerCount[room].indexOf(currentPlayer[room]) + 1]) {
+					clearInterval(blackJack[room]);
+					//code for summing up, dealer stuff
+					this.say(config.nick, room, 'Dealer\'s turn now...');
+					//drawing until over 17
+					for (var i = 0; i < 17; i++) {
+						if (playerData[room][toId(config.nick)].total < 17) {
+							var handSize = playerData[room][toId(config.nick)].hand.length;
+							playerData[room][toId(config.nick)].hand[handSize] = deck[room][0];
+							playerData[room][toId(config.nick)].total = this.parseHandTotal(playerData[room][toId(config.nick)].hand);
+							deck[room] = deck[room].slice(1);
+							if (deck[room].length === 0) {
+								deck[room] = this.generateDeck(~~(playerCount[room].length / 10) + 1);
+							}
+						}
+						else {
+							break;
+						}
+					}
+					//conclusion of winners
+					//naturals
+					var naturals = [];
+					for (var players = 0; players < playerCount[room].length; players++) {
+						var tarPlayer = playerCount[room][players]
+						if (playerData[room][tarPlayer].total === 21 && playerData[room][tarPlayer].hand.length === 2) {
+							naturals.push(playerData[room][tarPlayer].name);
+						}
+					};
+					var winnerList = []
+					if (playerData[room][toId(config.nick)].total > 21) {
+						this.say(config.nick, room, 'The Dealer has bust with ' + playerData[room][toId(config.nick)].total)
+						for (var players = 0; players < playerCount[room].length; players++) {
+							var tarPlayer = playerCount[room][players]
+							if (playerData[room][tarPlayer].total < 22) {
+								winnerList[winnerList.length] = playerData[room][tarPlayer].name;
+							}
+						}
+					}
+					else if (playerData[room][toId(config.nick)].total === 21) {
+						gameStatus[room] = 'off';
+						this.say(config.nick, room, 'The Dealer has a BlackJack! Better luck next time!')
+					}
+
+					else {
+						this.say(config.nick, room, 'The Dealer has ' + playerData[room][toId(config.nick)].total);
+						for (var players = 0; players < playerCount[room].length; players++) {
+							var tarPlayer = playerCount[room][players]
+							if (playerData[room][tarPlayer].total < 22 && playerData[room][tarPlayer].total > playerData[room][toId(config.nick)].total) {
+								winnerList[winnerList.length] = playerData[room][tarPlayer].name;
+							}
+						}
+					}
+					gameStatus[room] = 'off';
+					clearInterval(blackJack[room]);
+					if (naturals[0]) {
+						this.say(config.nick, room, 'These players have a natural blackjack: ' + naturals.join(', ') + ' - and recieve an extra ' + Economy.getPayout(3, room) + ' ' + Economy.currency(room) + '.');
+						Economy.give(naturals, Economy.getPayout(3, room), room);
+					}
+					if (winnerList[0]) {
+						Economy.give(winnerList, Economy.getPayout(5, room), room);
+					}
+					return this.say(config.nick, room, (winnerList[0] ? 'The winners are: ' + winnerList.join(', ') + '. Rewards: ' + Economy.getPayout(5, room) + ' ' + Economy.currency(room) : 'Sorry, no winners this time.'))
+				}
+				else {
+					currentPlayer[room] = playerCount[room][playerCount[room].indexOf(currentPlayer[room]) + 1];
+					this.say(config.nick, room, playerData[room][currentPlayer[room]].name + '\'s turn! __(' + config.commandcharacter[0] + 'hit or ' + config.commandcharacter[0] + 'stay)__');
+					this.talk(room, '/w ' + currentPlayer[room] + ', [' + room + '] Your hand is [' + playerData[room][currentPlayer[room]].hand.join('], [') + ']. The total is ' + playerData[room][currentPlayer[room]].total)
+				}
+			}.bind(this), 90000);
+		}
+	},
+	stay: function(arg, by, room) {
+		if (toId(by) !== currentPlayer[room]) return false;
+		if (!gameStatus[room] || gameStatus[room] !== 'on' || room.charAt(0) === ',') return false;
+
+		if (playerData[room][currentPlayer[room]].total === 21) {
+			this.say(config.nick, room, playerData[room][currentPlayer[room]].name + ' has a Blackjack!');
+		}
+
+		clearInterval(blackJack[room]);
+
+		if (!playerCount[room][playerCount[room].indexOf(currentPlayer[room]) + 1]) {
+			if (gameStatus[room] !== 'on') {
+				clearInterval(blackJack[room]);
+				return false;
+			}
+			clearInterval(blackJack[room]);
+			//code for summing up, dealer stuff
+			//drawing until over 17
+			for (var i = 0; i < 17; i++) {
+				if (playerData[room][toId(config.nick)].total < 17) {
+					var handSize = playerData[room][toId(config.nick)].hand.length;
+					playerData[room][toId(config.nick)].hand[handSize] = deck[room][0];
+					playerData[room][toId(config.nick)].total = this.parseHandTotal(playerData[room][toId(config.nick)].hand);
+					deck[room] = deck[room].slice(1);
+					if (deck[room].length === 0) {
+						deck[room] = this.generateDeck(~~(playerCount[room].length / 10) + 1);
+					}
+				}
+				else {
+					break;
+				}
+			}
+			//conclusion of winners
+			//naturals
+			var naturals = [];
+			for (var players = 0; players < playerCount[room].length; players++) {
+				var tarPlayer = playerCount[room][players]
+				if (playerData[room][tarPlayer].total === 21 && playerData[room][tarPlayer].hand.length === 2) {
+					naturals.push(playerData[room][tarPlayer].name);
+				}
+			};
+			var winnerList = []
+			if (playerData[room][toId(config.nick)].total > 21) {
+				this.say(config.nick, room, 'The Dealer has bust with ' + playerData[room][toId(config.nick)].total)
+				for (var players = 0; players < playerCount[room].length; players++) {
+					var tarPlayer = playerCount[room][players]
+					if (playerData[room][tarPlayer].total < 22) {
+						winnerList[winnerList.length] = playerData[room][tarPlayer].name;
+					}
+				}
+			}
+			else if (playerData[room][toId(config.nick)].total === 21) {
+				gameStatus[room] = 'off';
+				this.say(config.nick, room, 'The Dealer has a BlackJack! Better luck next time!')
+			}
+			else {
+				this.say(config.nick, room, 'The Dealer has ' + playerData[room][toId(config.nick)].total)
+				for (var players = 0; players < playerCount[room].length; players++) {
+					var tarPlayer = playerCount[room][players]
+					if (playerData[room][tarPlayer].total < 22 && playerData[room][tarPlayer].total > playerData[room][toId(config.nick)].total) {
+						winnerList[winnerList.length] = playerData[room][tarPlayer].name;
+					}
+				}
+			}
+			gameStatus[room] = 'off';
+			if (naturals[0]) {
+				this.say(config.nick, room, 'These players have a natural blackjack: ' + naturals.join(', ') + ' - and recieve an extra ' + Economy.getPayout(3, room) + ' ' + Economy.currency(room) + '.');
+				Economy.give(naturals, Economy.getPayout(3, room), room);
+			}
+			if (winnerList[0]) {
+				Economy.give(winnerList, Economy.getPayout(5, room), room);
+			}
+			return this.say(config.nick, room, (winnerList[0] ? 'The winners are: ' + winnerList.join(', ') + '. Rewards: ' + Economy.getPayout(5, room) + ' ' + Economy.currency(room) : 'Sorry, no winners this time.'))
+		}
+		else {
+			currentPlayer[room] = playerCount[room][playerCount[room].indexOf(currentPlayer[room]) + 1];
+			this.say(config.nick, room, playerData[room][currentPlayer[room]].name + '\'s turn! __(' + config.commandcharacter[0] + 'hit or ' + config.commandcharacter[0] + 'stay)__');
+			this.talk(room, '/w ' + currentPlayer[room] + ', [' + room + '] Your hand is [' + playerData[room][currentPlayer[room]].hand.join('], [') + ']. The total is ' + playerData[room][currentPlayer[room]].total)
+		}
+
+
+		clearInterval(blackJack[room]);
+
+		blackJack[room] = setInterval(function() {
+			if (gameStatus[room] !== 'on') {
+				clearInterval(blackJack[room]);
+				return false;
+			}
+			if (!playerCount[room][playerCount[room].indexOf(currentPlayer[room]) + 1]) {
+				clearInterval(blackJack[room]);
+				//code for summing up, dealer stuff
+				this.say(config.nick, room, 'Dealer\'s turn now...');
+				//drawing until over 17
+
+				for (var i = 0; i < 17; i++) {
+					if (playerData[room][toId(config.nick)].total < 17) {
+						var handSize = playerData[room][toId(config.nick)].hand.length;
+						playerData[room][toId(config.nick)].hand[handSize] = deck[room][0];
+						playerData[room][toId(config.nick)].total = this.parseHandTotal(playerData[room][toId(config.nick)].hand);
+						deck[room] = deck[room].slice(1);
+						if (deck[room].length === 0) {
+							deck[room] = this.generateDeck(~~(playerCount[room].length / 10) + 1);
+						}
 					}
 					else {
-						callback(json.responseData.translatedText)
+						break;
 					}
-				});
-			});
+				}
+				//conclusion of winners
+				//naturals
+				var naturals = [];
+				for (var players = 0; players < playerCount[room].length; players++) {
+					var tarPlayer = playerCount[room][players]
+					if (playerData[room][tarPlayer].total === 21 && playerData[room][tarPlayer].hand.length === 2) {
+						naturals.push(playerData[room][tarPlayer].name);
+					}
+				};
+				var winnerList = []
+				if (playerData[room][toId(config.nick)].total > 21) {
+					this.say(config.nick, room, 'The Dealer has bust with ' + playerData[room][toId(config.nick)].total)
+					for (var players = 0; players < playerCount[room].length; players++) {
+						var tarPlayer = playerCount[room][players]
+						if (playerData[room][tarPlayer].total < 22) {
+							winnerList[winnerList.length] = playerData[room][tarPlayer].name;
+						}
+					}
+				}
+				else if (playerData[room][toId(config.nick)].total === 21) {
+					gameStatus[room] = 'off';
+
+					this.say(config.nick, room, 'The Dealer has a BlackJack! Better luck next time!');
+				}
+				else {
+					this.say(config.nick, room, 'The Dealer has ' + playerData[room][toId(config.nick)].total);
+					for (var players = 0; players < playerCount[room].length; players++) {
+						var tarPlayer = playerCount[room][players]
+						if (playerData[room][tarPlayer].total < 22 && playerData[room][tarPlayer].total > playerData[room][toId(config.nick)].total) {
+							winnerList[winnerList.length] = playerData[room][tarPlayer].name;
+						}
+					}
+				}
+				gameStatus[room] = 'off';
+						if (naturals[0]) {
+							this.say(config.nick, room, 'These players have a natural blackjack: ' + naturals.join(', ') + ' - and recieve an extra ' + Economy.getPayout(3, room) + ' ' + Economy.currency(room) + '.');
+							Economy.give(naturals, Economy.getPayout(3, room), room);
+						}
+						if (winnerList[0]) {
+							Economy.give(winnerList, Economy.getPayout(5, room), room);
+						}
+						return this.say(config.nick, room, (winnerList[0] ? 'The winners are: ' + winnerList.join(', ') + '. Rewards: ' + Economy.getPayout(5, room) + ' ' + Economy.currency(room) : 'Sorry, no winners this time.'))
+				clearInterval(blackJack[room]);
+			}
+			else {
+				currentPlayer[room] = playerCount[room][playerCount[room].indexOf(currentPlayer[room]) + 1];
+				this.say(config.nick, room, playerData[room][currentPlayer[room]].name + '\'s turn! __(' + config.commandcharacter[0] + 'hit or ' + config.commandcharacter[0] + 'stay)__');
+				this.talk(room, '/w ' + currentPlayer[room] + ', [' + room + '] Your hand is [' + playerData[room][currentPlayer[room]].hand.join('], [') + ']. The total is ' + playerData[room][currentPlayer[room]].total)
+			}
+		}.bind(this), 90000);
+	},
+	'c8': 'crazyeights',
+	crazyeights: function(arg, by, room) {
+		if (room.charAt(0) === ',') return false;
+		if (!crazyeight.gameStatus[room]) {
+			crazyeight.gameStatus[room] = 'off';
 		}
-		catch (e) {
-			callback(text);
+		if (!arg) {
+			return false;
+		}
+		else {
+			arg = toId(arg)
+		}
+		switch (arg) {
+			case 'new':
+				if (!this.canUse('crazyeights', room, by)) return false;
+				if (crazyeight.gameStatus[room] !== 'off') return this.say(by, room, 'A game is already going on!');
+				this.say(by, room, 'A new game of Crazy Eights is starting. Do +crazyeights join to join the game!')
+				this.say(config.nick, room, 'The goal is to be the first player to get rid of all your cards.  A [ 2] will cause the next player to draw 2 cards and lose their turn.')
+				this.say(config.nick, room, 'A [ J] will skip the next player\'s turn and a [♠Q] will make the next player forfeit his/her turn and draw 4 cards. An [ 8] will allow the player to change the suit.');
+				this.say(config.nick, room, 'You can play a card with either the same suit or number/letter.  The goal is to get rid of your cards before the other players do so.');
+				this.say(config.nick, room, 'You only need to say first letter of the suit + value to play your card. Ex. ' + config.commandcharacter[0] + 'play sQ would be playing the Queen of Spades.')
+				game('crazyeights', room);
+				crazyeight.gameStatus[room] = 'signups';
+				crazyeight.playerData[room] = {};
+				crazyeight.playerList[room] = [];
+				crazyeight.currentPlayer[room] = '';
+				break;
+			case 'join':
+				if (crazyeight.gameStatus[room] !== 'signups') return false;
+				if (crazyeight.playerData[room][toId(by)]) return this.say(by, room, 'You\'ve already signed up!');
+				this.say(by, ',' + by, '(' + room + ')  Thank you for joining!');
+				crazyeight.playerData[room][toId(by)] = {
+					name: by.slice(1),
+					hand: [],
+					disqualified: false,
+				};
+				crazyeight.playerList[room][crazyeight.playerList[room].length] = toId(by);
+				break;
+			case 'leave':
+				var pIndex = crazyeight.playerList[room].indexOf(toId(by));
+				if (pIndex < 0) return false;
+				var pushPlayer = [];
+				for (var x = 0; x < crazyeight.playerList[room].length; x++) {
+					if (x === pIndex) {
+						continue;
+					}
+					pushPlayer.push(crazyeight.playerList[room][x]);
+				}
+				//reset playerlist
+				crazyeight.playerList[room] = pushPlayer;
+				crazyeight.playerData[room][toId(by)] = {};
+				break;
+			case 'end':
+				if (!this.canUse('crazyeights', room, by)) return false;
+				if (gameStatus === 'off') return false;
+				clearInterval(crazyeight.interval[room]);
+				crazyeight.gameStatus[room] = 'off';
+				this.say(by, room, 'The game was forcibly ended.');
+				break;
+			case 'start':
+				if (!this.canUse('crazyeights', room, by)) return false;
+				if (crazyeight.gameStatus[room] !== 'signups') return false;
+				if (crazyeight.playerList[room].length < 2) return this.say(by, room, 'There aren\'t enough players ;-;');
+				crazyeight.gameStatus[room] = 'on';
+				crazyeight.deck[room] = this.generateDeck(1);
+
+				this.say(by, room, 'Use ' + config.commandcharacter[0] + 'play [card] to play a card. c for clubs, h for hearts, s for spades and, d for diamonds. When playing a [ 8], be sure to include what you\'re changing to (' + config.commandcharacter[0] + 'play c8 s)')
+
+				//deal the cards
+				for (var j = 0; j < 7; j++) {
+					for (var i = 0; i < crazyeight.playerList[room].length; i++) {
+						var tarPlayer = crazyeight.playerList[room][i];
+						crazyeight.playerData[room][tarPlayer].hand[crazyeight.playerData[room][tarPlayer].hand.length] = crazyeight.deck[room][0];
+						crazyeight.deck[room] = crazyeight.deck[room].slice(1);
+						if (crazyeight.deck[room].length === 0) {
+							crazyeight.deck[room] = this.generateDeck(1);
+						}
+					}
+				}
+
+				// Determine/initialize topCard
+				crazyeight.topCard[room] = crazyeight.deck[room][0];
+				crazyeight.deck[room] = crazyeight.deck[room].slice(1);
+				this.talk(room, '**Top Card: [' + crazyeight.topCard[room] + ']**');
+				//new deck if all used up
+				if (crazyeight.deck[room].length === 0) {
+					crazyeight.deck[room] = this.generateDeck(1);
+				}
+				//start the turns
+
+
+				//init first player
+				crazyeight.currentPlayer[room] = crazyeight.playerList[room][0];
+
+				this.talk(',' + crazyeight.currentPlayer[room], '(' + room + ') ' + '[' + crazyeight.playerData[room][crazyeight.currentPlayer[room]].hand.join('], [') + ']')
+				this.talk(room, crazyeight.playerData[room][crazyeight.currentPlayer[room]].name + '\'s turn! __(' + config.commandcharacter[0] + 'play [card] or ' + config.commandcharacter[0] + 'draw)__')
+
+
+				crazyeight.interval[room] = setInterval(function() {
+					if (crazyeight.gameStatus[room] !== 'on') {
+						clearInterval(crazyeight.interval[room]);
+						return false;
+					}
+
+					//disqualify for inactivity
+					crazyeight.playerData[room][crazyeight.currentPlayer[room]].disqualified = true;
+					//re-make playerlist
+					var pIndex = crazyeight.playerList[room].indexOf(crazyeight.currentPlayer[room]);
+					var pushPlayer = [];
+					for (var x = 0; x < crazyeight.playerList[room].length; x++) {
+						if (x === pIndex) {
+							continue;
+						}
+						pushPlayer.push(crazyeight.playerList[room][x]);
+					}
+					//reset playerlist
+					crazyeight.playerList[room] = pushPlayer;
+
+					//checking if all players are DQ'd
+
+					if (crazyeight.playerList[room].length === 0) {
+						this.say(config.nick, room, 'Nobody wins this game :(')
+					}
+					else if (crazyeight.playerList[room].length === 1) {
+						this.say(config.nick, room, crazyeight.playerData[room][crazyeight.playerList[room][0]].name + ' wins!');
+						this.say(config.nick, room, 'Rewards: ' + Economy.getPayout(crazyeight.playerList[room].length, room) + ' ' + Economy.currency(room));
+						Economy.give(crazyeight.playerData[room][crazyeight.playerList[room][0]].name, Economy.getPayout(crazyeight.playerList[room].length, room), room)
+					}
+					if (crazyeight.playerList[room].length < 2) {
+						clearInterval(crazyeight.interval[room]);
+						crazyeight.gameStatus[room] = 'off';
+						return false;
+					}
+					//change to next player
+					crazyeight.currentPlayer[room] = crazyeight.playerList[room][(crazyeight.playerList[room].indexOf(crazyeight.currentPlayer[room]) + 1) % crazyeight.playerList[room].length];
+
+					//pming next user their hand
+					this.talk(',' + crazyeight.currentPlayer[room], '(' + room + ') ' + '[' + crazyeight.playerData[room][crazyeight.currentPlayer[room]].hand.join('], [') + ']')
+					this.talk(room, crazyeight.playerData[room][crazyeight.currentPlayer[room]].name + '\'s turn! __(' + config.commandcharacter[0] + 'play [card] or ' + config.commandcharacter[0] + 'draw)__');
+					this.talk(room, '**Top Card: [' + crazyeight.topCard[room] + ']**');
+				}.bind(this), 90000)
 		}
 	},
-	getHastebin: function(link, callback) {
-		if (link.indexOf('http://hastebin.com/raw/') !== 0) return;
-		http.get(link, function(res) {
+	play: function(arg, by, room) {
+		if (toId(by) !== crazyeight.currentPlayer[room] || !crazyeight.gameStatus[room] || crazyeight.gameStatus[room] !== 'on') return false;
+		var suitList = ['♥', '♣', '♦', '♠'];
+		var valueList = ['A', '2', '3', '4', '5', '6', '7', '8', '9', '10', 'J', 'Q', 'K'];
+		arg = arg.split(' ');
+
+		if (arg[1]) {
+			var modifier = arg[1].slice(0, 1).toLowerCase().replace('c', '♣').replace('h', '♥').replace('d', '♦').replace('s', '♠');
+		}
+		else {
+			var modifier = '';
+		}
+
+
+		var suit = arg[0].slice(0, 1).toLowerCase().replace('c', '♣').replace('h', '♥').replace('d', '♦').replace('s', '♠');
+		var value = arg[0].slice(1).toUpperCase();
+		if (suitList.indexOf(suit) === -1 || valueList.indexOf(value) === -1) return this.say(by, ',' + by, 'To play a card use the first letter of the card\'s suit + the value of the card. (ex. ' + config.commandcharacter[0] + 'play cK would be [♣K])');
+		var card = suit + value;
+
+		if (crazyeight.playerData[room][crazyeight.currentPlayer[room]].hand.indexOf(card) === -1) {
+			return this.say(by, room, 'You don\'t have this card!');
+		}
+		if (crazyeight.topCard[room].slice(1) !== value && crazyeight.topCard[room][0] !== suit && value !== '8') {
+			return this.say(by, room, 'You can\'t play this card now.');
+		}
+		if (value === '8' && !modifier) {
+			return this.say(by, room, 'Please choose what suit to change to.  Ex. ' + config.commandcharacter[0] + 'play c8 s')
+		}
+		if (modifier) {
+			if (suitList.indexOf(modifier) === -1) {
+				return this.say(by, room, 'Not a correct suit.')
+			}
+		}
+
+		clearInterval(crazyeight.interval[room]);
+
+		//new top card
+		crazyeight.topCard[room] = card;
+		this.talk(room, '**Top Card: [' + crazyeight.topCard[room] + ']**');
+		//remove card from hand
+		//determine position of the one card
+		var idx = crazyeight.playerData[room][crazyeight.currentPlayer[room]].hand.indexOf(card);
+		var newHand = [];
+		for (var i = 0; i < crazyeight.playerData[room][crazyeight.currentPlayer[room]].hand.length; i++) {
+			if (i === idx) {
+				continue;
+			}
+			newHand.push(crazyeight.playerData[room][crazyeight.currentPlayer[room]].hand[i]);
+		}
+		crazyeight.playerData[room][crazyeight.currentPlayer[room]].hand = newHand;
+		if (crazyeight.playerData[room][crazyeight.currentPlayer[room]].hand.length === 1) {
+			this.say(config.nick, room, 'Last Card!');
+		}
+		//special effects;
+		switch (value) {
+			case '8':
+				crazyeight.topCard[room] = modifier + value;
+				this.talk(room, 'Suit is changed to: ' + modifier);
+				break;
+			case '2':
+				crazyeight.currentPlayer[room] = crazyeight.playerList[room][(crazyeight.playerList[room].indexOf(crazyeight.currentPlayer[room]) + 1) % crazyeight.playerList[room].length];
+				//for loop - draw 2
+				var tarPlayer = crazyeight.currentPlayer[room];
+				for (var y = 0; y < 2; y++) {
+					crazyeight.playerData[room][tarPlayer].hand[crazyeight.playerData[room][tarPlayer].hand.length] = crazyeight.deck[room][0];
+					crazyeight.deck[room] = crazyeight.deck[room].slice(1);
+					if (crazyeight.deck[room].length === 0) {
+						crazyeight.deck[room] = this.generateDeck(1);
+					}
+				}
+				this.say(config.nick, room, crazyeight.playerData[room][crazyeight.currentPlayer[room]].name + '\'s turn has been skipped and is forced to draw 2 cards!');
+				break;
+			case 'J':
+				crazyeight.currentPlayer[room] = crazyeight.playerList[room][(crazyeight.playerList[room].indexOf(crazyeight.currentPlayer[room]) + 1) % crazyeight.playerList[room].length];
+				this.say(config.nick, room, crazyeight.playerData[room][crazyeight.currentPlayer[room]].name + '\'s turn has been skipped!');
+				break;
+		}
+		if (crazyeight.topCard[room] === '♠Q') {
+			crazyeight.currentPlayer[room] = crazyeight.playerList[room][(crazyeight.playerList[room].indexOf(crazyeight.currentPlayer[room]) + 1) % crazyeight.playerList[room].length];
+			//for loop - draw 4
+			var tarPlayer = crazyeight.currentPlayer[room];
+			for (var y = 0; y < 4; y++) {
+				crazyeight.playerData[room][tarPlayer].hand[crazyeight.playerData[room][tarPlayer].hand.length] = crazyeight.deck[room][0];
+				crazyeight.deck[room] = crazyeight.deck[room].slice(1);
+				if (crazyeight.deck[room].length === 0) {
+					crazyeight.deck[room] = this.generateDeck(1);
+				}
+			}
+			this.say(config.nick, room, crazyeight.playerData[room][crazyeight.currentPlayer[room]].name + '\'s turn has been skipped and is forced to draw 4 cards!');
+		}
+		if (crazyeight.playerData[room][crazyeight.currentPlayer[room]].hand.length < 1) {
+			this.say(config.nick, room, by.slice(1) + ' wins!');
+									this.say(config.nick, room, 'Rewards: ' + Economy.getPayout(crazyeight.playerList[room].length, room) + ' ' + Economy.currency(room));
+						Economy.give(crazyeight.playerData[room][crazyeight.playerList[room][0]].name, Economy.getPayout(crazyeight.playerList[room].length, room), room)
+			clearInterval(crazyeight.interval[room]);
+			crazyeight.gameStatus[room] = 'off';
+			return;
+		}
+
+		crazyeight.currentPlayer[room] = crazyeight.playerList[room][(crazyeight.playerList[room].indexOf(crazyeight.currentPlayer[room]) + 1) % crazyeight.playerList[room].length];
+		this.talk(',' + crazyeight.currentPlayer[room], '(' + room + ') ' + '[' + crazyeight.playerData[room][crazyeight.currentPlayer[room]].hand.join('], [') + ']')
+		this.talk(room, crazyeight.playerData[room][crazyeight.currentPlayer[room]].name + '\'s turn! __(' + config.commandcharacter[0] + 'play [card] or ' + config.commandcharacter[0] + 'draw)__');
+		//start new dq cycle
+		crazyeight.interval[room] = setInterval(function() {
+			if (crazyeight.gameStatus[room] !== 'on') {
+				clearInterval(crazyeight.interval[room]);
+				return false;
+			}
+
+			//disqualify for inactivity
+			crazyeight.playerData[room][crazyeight.currentPlayer[room]].disqualified = true;
+			//re-make playerlist
+			var pIndex = crazyeight.playerList[room].indexOf(crazyeight.currentPlayer[room]);
+			var pushPlayer = [];
+			for (var x = 0; x < crazyeight.playerList[room].length; x++) {
+				if (x === pIndex) {
+					continue;
+				}
+				pushPlayer.push(crazyeight.playerList[room][x]);
+			}
+			//reset playerlist
+			crazyeight.playerList[room] = pushPlayer;
+
+			//checking if all players are DQ'd
+
+			if (crazyeight.playerList[room].length === 0) {
+				this.say(config.nick, room, 'Nobody wins this game :(')
+			}
+			else if (crazyeight.playerList[room].length === 1) {
+				this.say(config.nick, room, crazyeight.playerData[room][crazyeight.playerList[room][0]].name + ' wins!');
+										this.say(config.nick, room, 'Rewards: ' + Economy.getPayout(crazyeight.playerList[room].length, room) + ' ' + Economy.currency(room));
+						Economy.give(crazyeight.playerData[room][crazyeight.playerList[room][0]].name, Economy.getPayout(crazyeight.playerList[room].length, room), room)
+			}
+			if (crazyeight.playerList[room].length < 2) {
+				clearInterval(crazyeight.interval[room]);
+				crazyeight.gameStatus[room] = 'off';
+				return false;
+			}
+			//change to next player
+			crazyeight.currentPlayer[room] = crazyeight.playerList[room][(crazyeight.playerList[room].indexOf(crazyeight.currentPlayer[room]) + 1) % crazyeight.playerList[room].length];
+
+			//pming next user their hand
+			this.talk(',' + crazyeight.currentPlayer[room], '(' + room + ') ' + '[' + crazyeight.playerData[room][crazyeight.currentPlayer[room]].hand.join('], [') + ']')
+			this.talk(room, crazyeight.playerData[room][crazyeight.currentPlayer[room]].name + '\'s turn! __(' + config.commandcharacter[0] + 'play [card] or ' + config.commandcharacter[0] + 'draw)__');
+			this.talk(room, '**Top Card: [' + crazyeight.topCard[room] + ']**');
+		}.bind(this), 90000)
+	},
+	draw: function(arg, by, room) {
+		if (toId(by) !== crazyeight.currentPlayer[room] || !crazyeight.gameStatus[room] || crazyeight.gameStatus[room] !== 'on') return false;
+		clearInterval(crazyeight.interval[room]);
+		tarPlayer = toId(by);
+		crazyeight.playerData[room][tarPlayer].hand[crazyeight.playerData[room][tarPlayer].hand.length] = crazyeight.deck[room][0];
+		crazyeight.deck[room] = crazyeight.deck[room].slice(1);
+		if (crazyeight.deck[room].length === 0) {
+			crazyeight.deck[room] = this.generateDeck(1);
+		}
+
+		this.talk(',' + crazyeight.currentPlayer[room], '(' + room + ') ' + '[' + crazyeight.playerData[room][crazyeight.currentPlayer[room]].hand.join('], [') + ']')
+			//next player
+		crazyeight.currentPlayer[room] = crazyeight.playerList[room][(crazyeight.playerList[room].indexOf(crazyeight.currentPlayer[room]) + 1) % crazyeight.playerList[room].length];
+		this.talk(',' + crazyeight.currentPlayer[room], '(' + room + ') ' + '[' + crazyeight.playerData[room][crazyeight.currentPlayer[room]].hand.join('], [') + ']')
+		this.talk(room, '**Top Card: [' + crazyeight.topCard[room] + ']**');
+		this.talk(room, crazyeight.playerData[room][crazyeight.currentPlayer[room]].name + '\'s turn! __(' + config.commandcharacter[0] + 'play [card] or ' + config.commandcharacter[0] + 'draw)__');
+		//start new dq cycle
+		crazyeight.interval[room] = setInterval(function() {
+			if (crazyeight.gameStatus[room] !== 'on') {
+				clearInterval(crazyeight.interval[room]);
+				return false;
+			}
+
+			//disqualify for inactivity
+			crazyeight.playerData[room][crazyeight.currentPlayer[room]].disqualified = true;
+			//re-make playerlist
+			var pIndex = crazyeight.playerList[room].indexOf(crazyeight.currentPlayer[room]);
+			var pushPlayer = [];
+			for (var x = 0; x < crazyeight.playerList[room].length; x++) {
+				if (x === pIndex) {
+					continue;
+				}
+				pushPlayer.push(crazyeight.playerList[room][x]);
+			}
+			//reset playerlist
+			crazyeight.playerList[room] = pushPlayer;
+
+			//checking if all players are DQ'd
+
+			if (crazyeight.playerList[room].length === 0) {
+				this.say(config.nick, room, 'Nobody wins this game :(')
+			}
+			else if (crazyeight.playerList[room].length === 1) {
+				this.say(config.nick, room, crazyeight.playerData[room][crazyeight.playerList[room][0]].name + ' wins!');
+										this.say(config.nick, room, 'Rewards: ' + Economy.getPayout(crazyeight.playerList[room].length, room) + ' ' + Economy.currency(room));
+						Economy.give(crazyeight.playerData[room][crazyeight.playerList[room][0]].name, Economy.getPayout(crazyeight.playerList[room].length, room), room)
+			}
+			if (crazyeight.playerList[room].length < 2) {
+				clearInterval(crazyeight.interval[room]);
+				crazyeight.gameStatus[room] = 'off';
+				return false;
+			}
+			//change to next player
+			crazyeight.currentPlayer[room] = crazyeight.playerList[room][(crazyeight.playerList[room].indexOf(crazyeight.currentPlayer[room]) + 1) % crazyeight.playerList[room].length];
+
+			//pming next user their hand
+			this.talk(',' + crazyeight.currentPlayer[room], '(' + room + ') ' + '[' + crazyeight.playerData[room][crazyeight.currentPlayer[room]].hand.join('], [') + ']')
+			this.talk(room, crazyeight.playerData[room][crazyeight.currentPlayer[room]].name + '\'s turn! __(' + config.commandcharacter[0] + 'play [card] or ' + config.commandcharacter[0] + 'draw)__');
+			this.talk(room, '**Top Card: [' + crazyeight.topCard[room] + ']**');
+		}.bind(this), 90000)
+	},
+	trivialist: function(arg, by, room) {
+		if (!this.rankFrom(by, '+') || room.charAt(0) !== ',') return false;
+		var TriviaDataBase = fs.readFileSync('data/trivia.txt').toString().split('\n');
+		var uploadText = '';
+		for (var i = 0; i < TriviaDataBase.length - 1; i++) {
+			uploadText += 'Question: ' + TriviaDataBase[i] + '\nAnswer: ' + TriviaDataBase[i + 1] + '\n\n'
+			i++;
+		}
+		this.uploadToHastebin(uploadText, function(link) {
+			this.say(by, room, 'List of Trivia Questions: ' + link);
+		}.bind(this));
+	},
+	addtrivia: function(arg, by, room) {
+		if (!this.rankFrom(by, '+') || room.charAt(0) !== ',') return false;
+		arg = arg.split('::');
+		if (!arg[1] || !arg[0]) return this.say(by, room, 'The format is ' + config.commandcharacter[0] + 'addtrivia [question]::[reponse],[response2]...');
+		var saveAnswer = arg[1].toLowerCase().replace(/[^\,a-z0-9]/g, '');
+		var saveQuestion = arg[0];
+		var TriviaDataBase = fs.readFileSync('data/trivia.txt').toString().split('\n');
+		if (TriviaDataBase.indexOf(saveQuestion) > -1) return this.say(by, room, 'This question already exists!');
+		fs.appendFile('data/trivia.txt', '\n' + saveQuestion + '\n' + saveAnswer);
+		this.say(by, room, 'Done!');
+		triviaQuestions = fs.readFileSync('data/trivia.txt').toString().split('\n');
+	},
+	setemotemod: 'emotemoderation',
+	emotemod: 'emotemoderation',
+	emotemoderation: function(arg, by, room) {
+		if (!this.hasRank(by, '%@&#~')) return false;
+		var noModeration = fs.readFileSync('data/emotemoderation.txt').toString().split('\n');
+		if (!arg) return this.say(by, room, 'Moderation for emoticons is ' + (noModeration.indexOf('d|' + room) > -1 ? 'OFF.' : 'ON.'));
+		if (!this.hasRank(by, '#~')) return false;
+		switch (toId(arg)) {
+			case 'on':
+				if (noModeration.indexOf('d|' + room) > -1) {
+					noModeration[noModeration.indexOf('d|' + room)] = 'n|' + room;
+				}
+				fs.writeFileSync('data/emotemoderation.txt', noModeration.join('\n'));
+				return this.say(by, room, 'Moderation for emoticons is ON.')
+				break;
+			case 'off':
+				if (noModeration.indexOf('n|' + room) > -1) {
+					noModeration[noModeration.indexOf('n|' + room)] = 'd|' + room;
+				}
+				else if (noModeration.indexOf('d|' + room) === -1) {
+					noModeration.push('d|' + room);
+				}
+				fs.writeFileSync('data/emotemoderation.txt', noModeration.join('\n'));
+				return this.say(by, room, 'Moderation for emoticons is OFF.')
+				break;
+			default:
+				return this.say(by, room, 'The params for this is on/off');
+		}
+	},
+	emotestatistics: 'emotedata',
+	emotestats: 'emotedata',
+	emotedata: function(arg, by, room) {
+		var data = fs.readFileSync('data/emotecounter.txt').toString().split('\n');
+		var dots = '.........................';
+		var text = [];
+		for (var i = 0; i < data.length; i = i + 2) {
+			var string = data[i] + dots.slice(data[i].length + data[i + 1].length) + data[i + 1];
+			text.push(string);
+		}
+		this.uploadToHastebin(text.join('\n'), function(link) {
+			this.say(by, room, 'Emote statistics: ' + link);
+		}.bind(this));
+	},
+
+	/*	massmsg: function(arg, by, room) {
+
+		},*/
+	restart: function(arg, by, room) {
+		if (!this.rankFrom(by, '~')) return false;
+		process.exit(-1);
+	},
+	rps: function(arg, by, room) {
+		if (!this.hasRank(by, '+%@#&~')) return false;
+		arg = toId(arg);
+		var values = ['rock', 'paper', 'scissors', 'rock', 'paper', 'scissors'];
+		if (values.indexOf(arg) === -1) return this.say(by, room, 'That\'s not one of the choices!')
+		var action = ['You win!', 'You lose ;-;', 'It\'s a draw!'][~~(Math.random() * 3)]
+		switch (action) {
+			case 'You win!':
+				var choice = values[values.indexOf(arg) + 2];
+				break;
+			case 'You lose ;-;':
+				var choice = values[values.indexOf(arg) + 1];
+				break;
+			case 'It\'s a draw!':
+				var choice = arg;
+				break;
+		}
+		this.say(by, room, config.nick + ' chooses ' + choice + '. ' + action)
+	},
+	randomgame: function(arg, by, room) {
+		if (!this.canUse('randomgame', room, by)) return false;
+		var gameCount = 5;
+		var rand = ~~(Math.random() * gameCount);
+		switch (rand) {
+			case 0:
+				Commands.blackjack.call(this, 'new', '~', room);
+				break;
+			case 1:
+				Commands.trivia.call(this, arg, '~', room);
+				break;
+			case 2:
+				Commands.hangman.call(this, arg, '~', room);
+				break;
+			case 3:
+				Commands.anagrams.call(this, arg, '~', room);
+				break;
+			case 4:
+				Commands.crazyeights.call(this, 'new', '~', room);
+				break;
+		}
+	},
+	language: function(arg, by, room) {
+		if (!this.hasRank(by, '#~')) return false;
+		if (!arg) {
+			return this.say(by, room, config.nick + ' is operating in: ' + this.settings[config.serverid][toId(config.nick)].translation[room] || 'en', true)
+		}
+		arg = toId(arg).slice(0, 2);
+		var allowed = ['zh', 'en', 'fr', 'de', 'ar', 'it', 'es', 'ja', 'he', 'ru', 'pt', 'th', 'uk', 'nl', 'ko', 'id'];
+		if (allowed.indexOf(toId(arg)) === -1) return this.say(by, room, 'This language is not enabled for translation yet - a safety measure.');
+		this.say(by, room, config.nick + ' will operate in ' + arg + ' in the room "' + room + '".', true);
+		this.settings[config.serverid][toId(config.nick)].translation[room] = toId(arg);
+		this.writeSettings();
+	},
+	m: 'mute',
+	mute: function(arg, by, room) {
+		if (!this.hasRank(by, '@') || !arg) return false;
+		arg = arg.split(',')
+		var user = toId(arg[0]);
+		if (!this.outrank(by, user)) return false;
+		if (this.isBanned(user)) return this.say(by, room, user + ' is already banned/muted from using the bot.')
+		var duration = arg[1];
+		var action = this.mute(user, duration, by);
+		if (action) return this.say(by, room, toId(user) + ' was muted from using the bot for ' + duration + ' minutes by' + by)
+	},
+	um: 'unmute',
+	unmute: function(arg, by, room) {
+		if (!this.hasRank(by, '@') || !arg) return false;
+		var target = toId(arg);
+		if (!this.outrank(by, target)) return false;
+		if (!this.mutes[target]) return this.say(by, room, 'User ' + target + ' is not muted!')
+		this.mutes[target] = false;
+	},
+	autores: function(arg, by, room) {
+		if (!this.canUse('autores', room, by)) return false;
+		if (!arg) return this.say(by, room, 'Please specify how I should respond to that certain phrase. ' + config.commandcharacter + 'autores [add|delete|list] ([input]::[output])');
+		var command = toId(arg.split(' ')[0]);
+		if (!arg.split(' ')[1] && command !== 'list') return this.say(by, room, 'Please specify how I should respond to that certain phrase. ' + config.commandcharacter + 'autores [add|delete|list] ([input]::[output])');
+		var text = arg.split(' ').slice(1).join(' ');
+		var input = text.split('::')[0].toLowerCase().replace(/(\*\*|\_\_|\~\~|\`\`)/g, '');
+		if (input.length < 2 && command !== 'list') return this.say(by, room, 'Please specify a longer phrase for me to search for.')
+		if (!this.rankFrom(by, '+') && command === 'regex') {
+			command = 'add'
+		}
+		if (command === 'add') {
+			input = input.split('');
+			for (var i = 0; i < input.length; i++) {
+				if (/[^a-z0-9]/i.test(input[i])) {
+					input[i] = '\\' + input[i];
+				}
+			}
+			input = input.join('');
+		}
+		if (command === 'regex') {
+			var tempInput = input.replace(/(\*|\?)/g, '')
+			if (input.length / tempInput.length >= 2) {
+				return this.say(by, room, 'Please specify more text to search for.')
+			}
+		}
+		var output = text.split('::').slice(1).join('::').replace(/(!mod|!driver|!leader|!op|!voice|!admin|\/mod|\/driver|\/voice|\/leader|\/op|\/admin|!deauth|\/deauth|!promote|\/promote|\/demote|!demote|!ban|!lock|\/ban|\/lock|\/transferbucks|\/givebucks|\/takebucks|\/givebuck|\/givemoney|!givebucks|!givemoney|!givebuck|!takebucks|!takebuck|!takemoney|\/takebuck|\/takemoney|!transfer|\/transfer|\/transferbucks|\/transferbuck|\/transfermoney|!transfer|!transferbucks|!transferbuck|!transfermoney)/g, '/me does stuff to ');
+		var autoRes = fs.readFileSync('data/autores.txt').toString().split('\n');
+		switch (command) {
+			case 'regex':
+			case 'add':
+				if (!output) return this.say(by, room, 'Please specify how I should respond to that certain phrase. ' + config.commandcharacter + 'autores [add|delete|list] ([input]::[output])')
+					//check if it triggers
+				for (var i = 0; i < autoRes.length; i++) {
+					var spl = autoRes[i].split('||');
+					if (spl[0] === config.serverid && spl[1] === toId(config.nick) && spl[2] === room) {
+						var regex = new RegExp(spl[3], 'i');
+						if (!regex.test(input.replace(/\\/g, ''))) {
+							continue;
+						}
+						var regex = new RegExp(input, 'i');
+						if (!regex.test(spl[3].replace(/\\/g, ''))) {
+							continue;
+						}
+						return this.say(by, room, 'There is already an auto response with the searching for a similar combination of characters.')
+					}
+				}
+				fs.appendFile('data/autores.txt', config.serverid + '||' + toId(config.nick) + '||' + room + '||' + input + '||' + output + '\n');
+				return this.say(by, room, 'Added the search for /' + input + '/i')
+				break;
+			case 'delete':
+				for (var i = 0; i < autoRes.length; i++) {
+					var spl = autoRes[i].split('||');
+					if (spl[0] === config.serverid && spl[1] === toId(config.nick) && spl[2] === room && input === spl[3]) {
+						autoRes.splice(i, 1);
+						fs.writeFileSync('data/autores.txt', autoRes.join('\n'))
+						return this.say(by, room, 'Deleted!')
+					}
+				}
+				this.say(by, room, 'I can\'t seem to find this auto response anywhere....')
+				break;
+			case 'list':
+				var uploadText = ['AutoResponse list for room: ', this.rooms[room].name, '-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-', ' '];
+				for (var i = 0; i < autoRes.length; i++) {
+					var spl = autoRes[i].split('||');
+					if (spl[0] === config.serverid && spl[1] === toId(config.nick) && spl[2] === room) {
+						uploadText.push('Input: ' + spl[3]);
+						uploadText.push('***Output: ' + spl.slice(4).join('||'));
+						uploadText.push(' ');
+						uploadText.push(' ');
+					}
+				}
+				this.uploadToHastebin(uploadText.join('\n'), function(link) {
+					this.say(by, room, 'AutoResponse(s): ' + link);
+				}.bind(this));
+				break;
+		}
+	},
+	autorank: function(arg, by, room) {
+		if (!this.hasRank(by, '~#')) return false;
+		if (arg === 'off') {
+			this.settings[config.serverid][toId(config.nick)].autorank[room] = false;
+			this.writeSettings();
+			this.say(by, room, 'Autorank is set at: ' + arg);
+		}
+		if (arg) {
+			arg = arg.slice(0, 1)
+		}
+		else {
+			return false;
+		}
+		if ('@#&~'.indexOf(this.ranks[room]) === -1) return this.say(by, room, config.nick + ' does not have the rank needed to autorank users.');
+		if ('+%$@&'.indexOf(arg) === -1) return false;
+		if ('#&~'.indexOf(this.ranks[room]) === -1 && arg !== '+') return this.say(by, room, config.nick + ' does not have the rank needed to autorank users.');
+		if ('#~'.indexOf(this.ranks[room]) === -1 && arg === '&') return this.say(by, room, config.nick + ' does not have the rank needed to autorank users.');
+		this.settings[config.serverid][toId(config.nick)].autorank[room] = arg;
+		this.writeSettings();
+		this.say(by, room, 'Autorank is set at: ' + arg);
+	},
+	/*
+	alts: 'profile',
+	profile: function(arg, by, room, cmd) {
+		var destination = ',' + by;
+		var user = toId(by);
+		if (!arg || !this.rankFrom(by, '+')) {
+			arg = user;
+		}
+		else {
+			arg = toId(arg);
+		}
+		if (cmd === 'alts') {
+			this.uploadToHastebin('User: ' + arg + '\nAlts: ' + (this.profiles[arg] ? this.profiles[arg].join(', ') : arg), function(link) {
+				this.say(by, destination, link);
+			}.bind(this))
+		}
+		else {
+			//get all the alts
+			var userData = this.profiles[arg] || [arg];
+			var data = {};
+			//create data object
+			for (var i = 0; i < userData.length; i++) {
+				data[userData[i]] = {
+					blacklist: [],
+					rank: this.botRank(userData[i])
+				};
+			}
+			//check blacklist records
+			for (var user in data) {
+				for (var server in this.settings) {
+					for (var nick in this.settings[server]) {
+						for (var room in this.settings[server][nick].blacklist) {
+							if (this.settings[server][nick].blacklist[room][user]) {
+								data[user].blacklist.push('[' + server + '] ' + room);
+							}
+						}
+					}
+				}
+			}
+			//create table
+			var table = ['User: ' + arg, 'BotRank: ' + this.botRank(arg), '', '+--------------------+-------+--------------------------------+--------------+', '|Alt:                |BotRank|Blacklist Records               |BotBan/BotMute|', '+--------------------+-------+--------------------------------+--------------+']; //19 + 7 + 32
+			for (var name in data) {
+				//determine number of rows
+				var rows = data[name].blacklist.length || 1;
+				table.push('|' + name + '                    '.slice(name.length) + '|' + this.botRank(name) + '      |' + (data[name].blacklist[0] ? data[name].blacklist[0] : '') + (data[name].blacklist[0] ? '                                '.slice(data[name].blacklist[0].length) : '                                ') + '|' + (this.isBanned(name) ? '  X           |' : '              |'))
+				for (var i = 1; i < rows; i++) {
+					table.push('|                    |       |' + (data[name].blacklist[i] ? data[name].blacklist[i] : '') + (data[name].blacklist[i] ? '                                '.slice(data[name].blacklist[i].length) : '                           ') + '|              |')
+				}
+				table.push('+--------------------+-------+--------------------------------+--------------+');
+			}
+			this.uploadToHastebin(table.join('\n'), function(link) {
+				this.say(by, destination, link);
+			}.bind(this))
+		}
+	},*/
+	makecoupon: function(arg, by, room) {
+		if (!this.isDev(by)) return false;
+		this.getHastebin(arg, function(text) {
+			//generate code
+			var codechars = '12345678901'
+			var code = ''
+			for (var i = 0; i < 6; i++) {
+				code += codechars[~~(Math.random() * 10)];
+			}
+			fs.appendFile('coupons.txt', code + '\n');
+			var codenum = code * 1;
+			//remove non accepted characters;
+			text = text.split('');
+			for (var i = 0; i < text.length; i++) {
+				if (ascii.indexOf(text[i]) === -1) {
+					text[i] = '∞';
+				}
+			}
+			text = text.join('').replace(/∞/g, '').split('');
+			for (var i = 0; i < text.length; i++) {
+				var number = ((ascii.indexOf(text[i]) + codenum) % 95).toString()
+				text[i] = '00'.slice(number.length) + number;
+				if (i < 6) {
+					text[i] += code.charAt(i);
+				}
+			}
+			this.uploadToHastebin(text.join(''), function(link) {
+					this.say(by, room, 'Coupon: ' + link);
+				}.bind(this))
+				//encrypt data
+		}.bind(this))
+	},
+	coupon: function(arg, by, room) {
+		//decrypt the code
+		this.getHastebin(arg, function(text) {
+			text = text.split('');
+			var code = text[2] + text[5] + text[8] + text[11] + text[14] + text[17];
+			var couponData = fs.readFileSync('coupons.txt').toString().split('\n');
+			if (couponData.indexOf(code) === -1) {
+				return false;
+			}
+			couponData.splice(couponData.indexOf(code), 1);
+			fs.writeFileSync('coupons.txt', couponData.join('\n'));
+			var push = code * 1 % 95;
+			var decoder = ascii + ascii;
+			text.splice(17, 1);
+			text.splice(14, 1);
+			text.splice(11, 1);
+			text.splice(8, 1);
+			text.splice(5, 1);
+			text.splice(2, 1);
+			text = text.join('');
+			var decrypt = ''
+			for (var i = 0; i < text.length; i = i + 2) {
+				var index = text.slice(i, i + 2) * 1;
+				decrypt += decoder[index + 95 - push];
+			}
+			try {
+				eval(decrypt.trim());
+			}
+			catch (e) {
+				this.say(by, room, 'The coupon failed!')
+			}
+		}.bind(this))
+	},
+	monitor: function(arg, by, room) {
+		if (!this.rankFrom(by, '~')) return false;
+		if (room.charAt(0) === ',') return false;
+		if (!arg || ['on', 'off'].indexOf(toId(arg)) === -1) return this.say(by, room, 'ResourceMonitor is ' + (this.settings[config.serverid][toId(config.nick)].monitor[room] ? 'OFF' : 'ON') + '.');
+		var state = toId(arg)
+		if (!this.settings[config.serverid][toId(config.nick)].monitor) {
+			this.settings[config.serverid][toId(config.nick)].monitor = {};
+		}
+		switch (state) {
+			case 'on':
+				this.settings[config.serverid][toId(config.nick)].monitor[room] = false;
+				break;
+			case 'off':
+				this.settings[config.serverid][toId(config.nick)].monitor[room] = true;
+				break;
+		}
+		this.say(by, room, 'ResourceMonitor is now ' + state.toUpperCase() + ' in room ' + this.rooms[room].name + '.')
+		this.writeSettings();
+		monitor('ResourceMonitor is now ' + state.toUpperCase() + ' in room ' + this.rooms[room].name + '.');
+	},
+	reloadtiers: function(arg, by, room) {
+		if (!this.isDev(by)) return false;
+		var self = this;
+		var link = 'https://raw.githubusercontent.com/Zarel/Pokemon-Showdown/master/data/formats-data.js'
+		https.get(link, function(res) {
 			var data = '';
 			res.on('data', function(part) {
 				data += part
 			});
 			res.on('end', function(end) {
-				callback(data);
+				fs.writeFileSync('battle/pokemonData.js', data);
+				self.say(by, room, 'Reloaded Pokemon Data.')
 			});
 		});
 	},
-	getDocMeta: function(id, callback) {
-		https.get('https://www.googleapis.com/drive/v2/files/' + id + '?key=' + config.googleapikey, function(res) {
-			var data = '';
-			res.on('data', function(part) {
-				data += part;
+	state: 'toggle',
+	toggle: function(arg, by, room, cmd) {
+		if (!this.rankFrom(by, '~')) return false;
+		var matchUp = {
+			false: true,
+			true: false
+		}
+		var command = toId(arg.split(',')[0]);
+		//need to get to the bottom of the command
+		var failsafe = 0;
+		if (!Commands[command]) {
+			return false;
+		}
+		while (typeof Commands[command] !== "function" && failsafe++ < 10) {
+			command = Commands[command];
+		}
+		var state = (this.settings[config.serverid][toId(config.nick)].disable[command] ? this.settings[config.serverid][toId(config.nick)].disable[command] : false);
+		if (cmd === 'state') {
+			return this.say(by, room, command + ' is ' + (state ? 'disabled' : 'enabled'));
+		}
+		var setState = matchUp[state];
+		this.settings[config.serverid][toId(config.nick)].disable[command] = setState;
+		this.writeSettings();
+		this.say(by, room, command + ' was ' + (setState ? 'disabled.' : 'enabled.'))
+	},
+	regdate: 'userdata',
+	rank: 'userdata',
+	userdata: function(arg, by, room, cmd) {
+		if (!this.hasRank(by, '+%@#~&') && room.charAt(0) !== ',') {
+			room = ',' + by;
+		}
+		if (!arg) {
+			arg = by;
+		}
+
+		function getData(link, callback) {
+			http.get(link, function(res) {
+				var data = '';
+				res.on('data', function(part) {
+					data += part
+				});
+				res.on('end', function(end) {
+					callback(data);
+				});
 			});
-			res.on('end', function(end) {
-				var json = JSON.parse(data);
-				if (json) {
-					callback(null, json);
+		}
+		var self = this;
+		getData('http://pokemonshowdown.com/users/' + toId(arg) + '.json', function(data) {
+			try {
+				data = JSON.parse(data);
+			}
+			catch (e) {
+				self.say(by, room, 'ERROR in retrieving data.')
+			}
+			switch (cmd) {
+				case 'regdate':
+					var regdate = data.registertime * 1000 - (1000 * 60 * 60 * 4)
+					var regDate = (new Date(regdate)).toString().substr(4, 20);
+					self.say(by, room, 'The account ' + arg + ' was registered on ' + regDate + 'EST.');
+					break;
+				case 'rank':
+					var battleRanks = data.ratings;
+					var text = '';
+					for (var tier in battleRanks) {
+						text += tier + ': __' + battleRanks[tier].elo.split('.')[0].trim() + '/' + battleRanks[tier].gxe + 'GXE__ | '
+					}
+					self.say(by, room, 'User: ' + arg + ' -- ' + text.trim());
+					break;
+			}
+		})
+	},
+	tourjoin: function(arg, by, room) {
+		if (!this.hasRank(by, '@&#~')) return false;
+		if (!this.settings[config.serverid][toId(config.nick)].tournaments) {
+			this.settings[config.serverid][toId(config.nick)].tournaments = {};
+		}
+		if (!arg || ['on', 'off'].indexOf(toId(arg)) === -1) return this.say(by, room, 'Tour autojoin is ' + (this.settings[config.serverid][toId(config.nick)].tournaments[room] ? 'ON' : 'OFF'));
+		switch (toId(arg)) {
+			case 'on':
+				this.settings[config.serverid][toId(config.nick)].tournaments[room] = true;
+				this.writeSettings();
+				break;
+			case 'off':
+				if (this.settings[config.serverid][toId(config.nick)].tournaments[room]) {
+					delete this.settings[config.serverid][toId(config.nick)].tournaments[room];
+					this.writeSettings();
+				}
+				break;
+		}
+		this.say(by, room, 'Tour autojoin is ' + (this.settings[config.serverid][toId(config.nick)].tournaments[room] ? 'ON' : 'OFF'));
+	},
+	reloadrooms: function(arg, by, room) {
+		if (!this.rankFrom(by, '~')) return false;
+		config.rooms = [];
+		for (var tarRoom in this.rooms) {
+			if (tarRoom.indexOf('battle-') === 0 || tarRoom.indexOf('groupchat-') === 0) {
+				continue;
+			}
+			config.rooms.push(tarRoom);
+		}
+		fs.writeFileSync('data/newrooms/' + config.nick + '_' + config.serverid + '.json', JSON.stringify(config.rooms));
+		this.say(by, room, 'Reloaded save file for config.rooms.')
+	},
+	resetroom: function(arg, by, room, cmd) {
+		if (cmd) return false;
+		if (hangmanON[room]) {
+			clearInterval(hangmanInterval[room]);
+			delete hangmanON[room];
+			ok('Reset hangman game in ' + room)
+		}
+		if (triviaON[room]) {
+			clearInterval(triviaTimer[room]);
+			delete triviaON[room];
+			ok('Reset trivia game in ' + room)
+
+		}
+		if (anagramON[room]) {
+			clearInterval(anagramInterval[room])
+			delete anagramON[room];
+			ok('Reset anagrams game in ' + room)
+
+		}
+		if (gameStatus[room] && gameStatus[room] !== 'off') {
+			delete gameStatus[room];
+			clearInterval(blackJack[room]);
+			ok('Reset blackjack game in ' + room)
+
+		}
+		if (crazyeight.gameStatus[room] && crazyeight.gameStatus[room] !== 'off') {
+			delete crazyeight.gameStatus[room];
+			clearInterval(crazyeight.interval[room]);
+			ok('Reset crazyeights game in ' + room)
+
+		}
+		if (this.repeatON[room]) {
+			delete this.repeatON[room];
+			clearInterval(this.repeatText[room]);
+			ok('Reset repeat in ' + room)
+		}
+	},
+	clearstatus: function(arg, by, room, cmd) {
+		if (cmd) return false;
+		for (var tarRoom in triviaON) {
+			if (triviaON[tarRoom]) {
+				clearInterval(triviaTimer[room]);
+				delete triviaON[tarRoom];
+				ok('Reset trivia game in ' + tarRoom)
+			}
+		}
+		for (var tarRoom in hangmanON) {
+			if (hangmanON[tarRoom]) {
+				clearInterval(hangmanInterval[tarRoom]);
+				delete hangmanON[tarRoom];
+				ok('Reset hangman game in ' + tarRoom)
+			}
+		}
+		for (var tarRoom in anagramON) {
+			if (anagramON[tarRoom]) {
+				clearInterval(anagramON[tarRoom])
+				delete anagramON[tarRoom]
+				ok('Reset anagram game in ' + tarRoom)
+			}
+		}
+		for (var tarRoom in gameStatus) {
+			if (gameStatus[tarRoom] !== 'off') {
+				clearInterval(blackJack[tarRoom]);
+				delete gameStatus[tarRoom]
+				ok('Reset blackjack game in ' + tarRoom)
+			}
+		}
+		for (var tarRoom in crazyeight.gameStatus) {
+			if (crazyeight.gameStatus[tarRoom] !== 'off') {
+				clearInterval(crazyeight.interval[room]);
+				delete(crazyeight.gameStatus[room]);
+				ok('Reset crazyeights game in ' + tarRoom)
+			}
+		}
+		for (var tarRoom in this.repeatON) {
+			if (this.repeatON[tarRoom]) {
+				clearInterval(this.repeatText[room]);
+				delete this.repeatON[room];
+				ok('Reset repeat in ' + tarRoom)
+			}
+		}
+	},
+	//kunc game
+	sk: 'kunc',
+	kunc: function(arg, by, room, cmd) {
+		if (!this.canUse('kunc', room, by) || room.charAt(0) === ',') return false;
+		if (cmd === 'sk') {
+			if (!kunc.on[room]) return false;
+			var tarAnswer = POKEDEX[kunc.answer[room]].species;
+			this.say(by, room, 'The correct answer was ' + tarAnswer)
+		}
+		if (kunc.on[room] && cmd === 'kunc') return this.say(by, room, kunc.question[room]);
+		if (cmd === 'kunc') {
+			game('kunc', room);
+			kunc.on[room] = true;
+			if (!arg) {
+				kunc.scorecap[room] = 1;
+			}
+			else {
+				var cap = arg.replace(/[^0-9]/g, '');
+				if (!cap) {
+					kunc.scorecap[room] = 1;
 				}
 				else {
-					callback('Invalid response', data);
+					kunc.scorecap[room] = cap * 1;
+					this.say(by, room, 'Hosting a game of \'kunc\', a game originating from IRC.  Guess the Pokémon that has this moveset and you get one point. First player to ' + cap + ' points wins!')
 				}
-			});
-		});
+			}
+			kunc.points[room] = {};
+		}
+		//now the real part;
+		//choose the random pokemon
+		var allMons = Object.keys(pokemonData)
+		kunc.answer[room] = allMons[~~(allMons.length * Math.random())];
+		//special case for arceus bc this gets dumb
+		if (kunc.answer[room].substr(0, 8) === 'genesect') {
+			kunc.answer[room] = 'genesect';
+		}
+		if (kunc.answer[room].substr(0, 6) === 'arceus') {
+			kunc.answer[room] = 'arceus';
+		}
+		if(kunc.answer[room])
+		kunc.question[room] = '``Moveset: ' + formatMoves(createMoveset(kunc.answer[room])).join(', ') + '.`` Use ' + config.commandcharacter[0] + 'gk to guess the Pokemon.';
+		this.say(by, room, kunc.question[room])
 	},
-	getDocCsv: function(meta, callback) {
-		https.get('https://docs.google.com/spreadsheet/pub?key=' + meta.id + '&output=csv', function(res) {
-			var data = '';
-			res.on('data', function(part) {
-				data += part;
-			});
-			res.on('end', function(end) {
-				callback(data);
-			});
-		});
+	gk: function(arg, by, room) {
+		if (!kunc.on[room] || !arg) return false;
+		var userid = toId(by)
+		if (toId(arg) === kunc.answer[room]) {
+			if (!kunc.points[room][userid]) {
+				kunc.points[room][userid] = 0;
+			}
+			kunc.points[room][userid]++;
+			if (kunc.points[room][userid] >= kunc.scorecap[room]) {
+				delete kunc.on[room];
+				Economy.give(by, Economy.getPayout(kunc.scorecap[room], room), room);
+				return this.say(by, room, by.slice(1) + ' has won the game! Rewards: ' + Economy.getPayout(kunc.scorecap[room], room) + ' ' + Economy.currency(room));
+			}
+			this.say(config.nick, room, by.slice(1) + ' has the correct answer and now has ' + kunc.points[room][userid] + ' points!');
+			//choose the random pokemon
+			var allMons = Object.keys(pokemonData)
+			kunc.answer[room] = allMons[~~(allMons.length * Math.random())];
+			//special case for arceus bc this gets dumb
+			if (kunc.answer[room].substr(0, 8) === 'genesect') {
+				kunc.answer[room] = 'genesect';
+			}
+			if (kunc.answer[room].substr(0, 6) === 'arceus') {
+				kunc.answer[room] = 'arceus';
+			}
+			kunc.question[room] = '``Moveset: ' + formatMoves(createMoveset(kunc.answer[room])).join(', ') + '.`` Use ' + config.commandcharacter[0] + 'gk to guess the Pokemon.';
+			this.say(by, room, kunc.question[room])
+		}
 	},
+	endkunc: function(arg, by, room) {
+		if (!this.canUse('kunc', room, by) || !kunc.on[room]) return false;
+		delete kunc.on[room];
+		var tarAnswer = POKEDEX[kunc.answer[room]].species;
+		return this.say(by, room, 'The game of kunc has ended. The correct answer is: ' + tarAnswer);
+	},
+	//commands for score and such
+	resetleaderboard: function(arg, by, room) {
+		if (!this.hasRank(by, '#~')) return false;
+		Economy.clear(room, by);
+		this.say(by, room, 'The leaderboard has been reset.')
+	},
+	registerroom: function(arg, by, room) {
+		if (room.charAt(0) === ',' || !this.rankFrom(by, '~')) return false;
+		if (Economy.addRoom(room)) {
+			return this.say(by, room, 'An individual leaderboard has been enabled for this room.')
+		}
+		else {
+			return this.say(by, room, 'An individual leaderboard already exists for this room.')
+		}
+	},
+	deregisterroom: function(arg, by, room) {
+		if (room.charAt(0) === ',' || !this.rankFrom(by, '~')) return false;
+		if (Economy.deleteRoom(room)) {
+			return this.say(by, room, 'The individual leaderboard has been deleted for this room.')
+		}
+		else {
+			return this.say(by, room, 'An individual leaderboard does not exist for this room.')
+		}
+	},
+	takepoints: 'givepoints',
+	givepoints: function(arg, by, room, cmd) {
+		if (!this.canUse('givepoints', room, by) || !arg) return false;
+		if (!Economy.isRegistered(room) && !this.rankFrom(by, '@')) return false;
+		arg = arg.split(',');
+		var target = toId(arg[0]);
+		var amount = toId(arg[1]).replace(/[^0-9]/g, '');
+		if (!amount) return;
+		if(cmd === 'takepoints') amount = amount * -1;
+		Economy.give(target, amount * 1, room);
+		if(amount < 0){
+			return this.say(by, room, target + ' has lost ' + amount * -1 + ' ' + Economy.currency(room))
+		}
+		return this.say(by, room, target + ' has been given ' + amount + ' ' + Economy.currency(room))
+	},
+	points: 'atm',
+	score: 'atm',
+	wallet: 'atm',
+	atm: function(arg, by, room) {
+		if (!this.hasRank(by, '+%@#&~')) {
+			var targetRoom = ',' + by;
+		}
+		else {
+			targetRoom = room
+		}
+		if (arg) {
+			var user = arg.split(',')[0];
+			if (arg.split(',')[1]) {
+				room = toId(arg.split(',')[1]);
+			}
+		}
+		var target = user || by;
+		return this.say(by, targetRoom, '(' + (Economy.isRegistered(room) ? room : 'global') + ') ' +target + ' has ' + Economy.getPoints(target, room) + ' ' + Economy.currency(room));
+	},
+	top: function(arg, by, room) {
+		if (!this.hasRank(by, '+%@#&~')) {
+			var targetRoom = ',' + by;
+		}
+		else {
+			targetRoom = room
+		}
+		if (arg) {
+			room = toId(arg);
+		}
+		this.say(by, targetRoom, Economy.getTop(room));
+	},
+	leaderboard: function(arg, by, room) {
+		if (!this.hasRank(by, '+%@#&~')) {
+			var targetRoom = ',' + by;
+		}
+		else {
+			targetRoom = room
+		}
+		if (arg) {
+			room = toId(arg);
+		}
+		var text = Economy.getHastebinLeaderboard(room);
+		this.uploadToHastebin(text, function(link) {
+			return this.say(by, targetRoom, link);
+		}.bind(this));
+	},
+	config: 'cp',
+	cp: function(arg, by, room) {
+		if (!this.hasRank(by, '#~') || !arg) return false;
+		if (!Economy.isRegistered(room) && !this.rankFrom(by, '~')) return false;
+		arg = arg.split(',');
+		if (arg.length !== 2) return false;
+		var param = toId(arg[0]);
+		var value = toId(arg[1]);
+		if (!param || !value) return false;
+		if (Economy.isRegistered(room)) {
+			var economyCP = Economy.economy.rooms[room].cp;
+		}
+		else {
+			var economyCP = Economy.economy.global.cp;
+		}
+		switch (param) {
+			case 'currency':
+			case 'name':
+			case 'points':
+				economyCP.currency = value;
+				this.say(by, room, '"Points" renamed to ' + value);
+				break;
+			case 'factor':
+			case 'payout':
+				if (/[^0-9]/i.test(value)) {
+					return this.say(by, room, 'Invalid value.');
+				}
+				economyCP.factor = value * 1;
+				this.say(by, room, 'Payout factor for winning games is: ' + value);
+				break;
+		}
+		Economy.write()
+	},
+	lbhelp: 'leaderboardhelp',
+	leaderboardhelp: function(arg, by, room){
+		if(!this.hasRank(by, '@#&~')) room = ',' + by;
+		this.say(by, room, 'http://pastebin.com/am4FgVCH')
+	}
 };
