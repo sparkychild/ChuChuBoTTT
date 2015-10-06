@@ -234,6 +234,9 @@ exports.commands = {
 				return this.say(by, room, 'C8 game going on.')
 			}
 		}
+		if(Object.keys(kunc.on).length !== 0){
+			return this.say(by, room, 'Kunc game going on.')
+		}
 		try {
 			this.uncacheTree('./commands.js');
 			Commands = require('./commands.js').commands;
@@ -3682,6 +3685,7 @@ exports.commands = {
 			return this.say(by, targetRoom, link);
 		}.bind(this));
 	},
+	config: 'cp',
 	cp: function(arg, by, room) {
 		if (!this.hasRank(by, '#~') || !arg) return false;
 		if (!Economy.isRegistered(room) && !this.rankFrom(by, '~')) return false;
@@ -3713,5 +3717,10 @@ exports.commands = {
 				break;
 		}
 		Economy.write()
+	},
+	lbhelp: 'leaderboardhelp',
+	leaderboardhelp: function(arg, by, room){
+		if(!this.hasRank(by, '@#&~')) room = ',' + by;
+		this.say(by, room, 'http://pastebin.com/am4FgVCH')
 	}
 };
