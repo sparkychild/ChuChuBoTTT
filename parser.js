@@ -825,6 +825,7 @@ exports.parse = {
 		var d = new Date();
 		var date = d.valueOf();
 		this.mutes[user] = date + duration * 1000 * 60;
+		return true;
 	},
 	isBanned: function(by) {
 		var commandban = fs.readFileSync('data/commandban.txt').toString().split('\n');
