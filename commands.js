@@ -234,7 +234,7 @@ exports.commands = {
 				return this.say(by, room, 'C8 game going on.')
 			}
 		}
-		if(Object.keys(kunc.on).length !== 0){
+		if (Object.keys(kunc.on).length !== 0) {
 			return this.say(by, room, 'Kunc game going on.')
 		}
 		try {
@@ -801,6 +801,7 @@ exports.commands = {
 	usage: 'usagestats',
 	usagedata: 'usagestats',
 	monousage: 'usagestats',
+	monousagedata: 'usagestats',
 	usagestats: function(arg, by, room, cmd) {
 		var usageLink = 'http://www.smogon.com/stats/2015-09/'
 		if (this.canUse('usagestats', room, by) || room.charAt(0) === ',') {
@@ -859,6 +860,9 @@ exports.commands = {
 				case 'ou':
 					targetTier = 'ou';
 					break;
+				case 'doubles':
+					targetTier = 'doublesou';
+					break;
 				default:
 					//determine a pokemon's tier from showdown's data
 					if (!pokemonData[targetPoke]) {
@@ -872,7 +876,7 @@ exports.commands = {
 			}
 		}
 		var destination = targetTier + '-' + (targetRank || '1500') + '.txt';
-		if (cmd !== 'monousage') {
+		if (cmd !== 'monousage' && cmd !== 'monousagedata') {
 			var index;
 			getData(usageLink + destination, function(data) {
 				var usageStats = data.split('\n');
@@ -908,7 +912,7 @@ exports.commands = {
 							moves = tarData.slice(i + 1, i + 5).join(', ').replace(/[^A-Za-z\,\s]/g, '').replace(/[\s]{2,}/g, '').replace(/,/g, ', ');
 						}
 						if (toId(tarData[i]) === 'items') {
-							for (var j = 1; j < 8; j++) {
+							for (var j = 1; j < 5; j++) {
 								if (!tarData[i + j] || !toId(tarData[i + j])) {
 									break;
 								}
@@ -952,6 +956,43 @@ exports.commands = {
 					}
 				};
 				return this.say(by, room, text + 'Pokémon not found.')
+			}.bind(this))
+		}
+		if (cmd === 'monousagedata') {
+			getData(usageLink + '/monotype/moveset/monotype-mono' + destination, function(data) {
+				data = data.split(' +----------------------------------------+ \n +----------------------------------------+ ');
+				var moveSetData = data[index];
+				if (!moveSetData) {
+					return this.say(by, room, 'Error in parsing data.');
+				}
+				var tarData = moveSetData.split('\n');
+				var moves = '';
+				var teammates = [];
+				var items = [];
+				var checks = [];
+				for (var i = 0; i < tarData.length; i++) {
+					if (toId(tarData[i]) === 'moves') {
+						moves = tarData.slice(i + 1, i + 5).join(', ').replace(/[^A-Za-z\,\s]/g, '').replace(/[\s]{2,}/g, '').replace(/,/g, ', ');
+					}
+					if (toId(tarData[i]) === 'items') {
+						for (var j = 1; j < 5; j++) {
+							if (!tarData[i + j] || !toId(tarData[i + j])) {
+								break;
+							}
+							items.push(tarData[(i + j)].replace(/[^A-Za-z\s]/g, '').replace(/[\s]{2,}/g, ''));
+						}
+					}
+					if (toId(tarData[i]) === 'teammates') {
+						for (var j = 1; j < 5; j++) {
+							if (!tarData[i + j] || !toId(tarData[i + j])) {
+								break;
+							}
+							teammates.push(tarData[(i + j)].replace(/[^A-Za-z\s]/g, '').replace(/[\s]{2,}/g, ''));
+						}
+					}
+				}
+				this.say(by, room, text + 'Common moves are: __' + moves.trim() + '__ **|** Common items include: __' + items.join(', ').trim() + '__');
+				this.say(by, room, text + 'Common partners include: __' + teammates.join(', ').trim() + '__.')
 			}.bind(this))
 		}
 	},
@@ -2569,14 +2610,14 @@ exports.commands = {
 					}
 				}
 				gameStatus[room] = 'off';
-						if (naturals[0]) {
-							this.say(config.nick, room, 'These players have a natural blackjack: ' + naturals.join(', ') + ' - and recieve an extra ' + Economy.getPayout(3, room) + ' ' + Economy.currency(room) + '.');
-							Economy.give(naturals, Economy.getPayout(3, room), room);
-						}
-						if (winnerList[0]) {
-							Economy.give(winnerList, Economy.getPayout(5, room), room);
-						}
-						return this.say(config.nick, room, (winnerList[0] ? 'The winners are: ' + winnerList.join(', ') + '. Rewards: ' + Economy.getPayout(5, room) + ' ' + Economy.currency(room) : 'Sorry, no winners this time.'))
+				if (naturals[0]) {
+					this.say(config.nick, room, 'These players have a natural blackjack: ' + naturals.join(', ') + ' - and recieve an extra ' + Economy.getPayout(3, room) + ' ' + Economy.currency(room) + '.');
+					Economy.give(naturals, Economy.getPayout(3, room), room);
+				}
+				if (winnerList[0]) {
+					Economy.give(winnerList, Economy.getPayout(5, room), room);
+				}
+				return this.say(config.nick, room, (winnerList[0] ? 'The winners are: ' + winnerList.join(', ') + '. Rewards: ' + Economy.getPayout(5, room) + ' ' + Economy.currency(room) : 'Sorry, no winners this time.'))
 				clearInterval(blackJack[room]);
 			}
 			else {
@@ -2821,8 +2862,8 @@ exports.commands = {
 		}
 		if (crazyeight.playerData[room][crazyeight.currentPlayer[room]].hand.length < 1) {
 			this.say(config.nick, room, by.slice(1) + ' wins!');
-									this.say(config.nick, room, 'Rewards: ' + Economy.getPayout(crazyeight.playerList[room].length, room) + ' ' + Economy.currency(room));
-						Economy.give(crazyeight.playerData[room][crazyeight.playerList[room][0]].name, Economy.getPayout(crazyeight.playerList[room].length, room), room)
+			this.say(config.nick, room, 'Rewards: ' + Economy.getPayout(crazyeight.playerList[room].length, room) + ' ' + Economy.currency(room));
+			Economy.give(crazyeight.playerData[room][crazyeight.playerList[room][0]].name, Economy.getPayout(crazyeight.playerList[room].length, room), room)
 			clearInterval(crazyeight.interval[room]);
 			crazyeight.gameStatus[room] = 'off';
 			return;
@@ -2859,8 +2900,8 @@ exports.commands = {
 			}
 			else if (crazyeight.playerList[room].length === 1) {
 				this.say(config.nick, room, crazyeight.playerData[room][crazyeight.playerList[room][0]].name + ' wins!');
-										this.say(config.nick, room, 'Rewards: ' + Economy.getPayout(crazyeight.playerList[room].length, room) + ' ' + Economy.currency(room));
-						Economy.give(crazyeight.playerData[room][crazyeight.playerList[room][0]].name, Economy.getPayout(crazyeight.playerList[room].length, room), room)
+				this.say(config.nick, room, 'Rewards: ' + Economy.getPayout(crazyeight.playerList[room].length, room) + ' ' + Economy.currency(room));
+				Economy.give(crazyeight.playerData[room][crazyeight.playerList[room][0]].name, Economy.getPayout(crazyeight.playerList[room].length, room), room)
 			}
 			if (crazyeight.playerList[room].length < 2) {
 				clearInterval(crazyeight.interval[room]);
@@ -2920,8 +2961,8 @@ exports.commands = {
 			}
 			else if (crazyeight.playerList[room].length === 1) {
 				this.say(config.nick, room, crazyeight.playerData[room][crazyeight.playerList[room][0]].name + ' wins!');
-										this.say(config.nick, room, 'Rewards: ' + Economy.getPayout(crazyeight.playerList[room].length, room) + ' ' + Economy.currency(room));
-						Economy.give(crazyeight.playerData[room][crazyeight.playerList[room][0]].name, Economy.getPayout(crazyeight.playerList[room].length, room), room)
+				this.say(config.nick, room, 'Rewards: ' + Economy.getPayout(crazyeight.playerList[room].length, room) + ' ' + Economy.currency(room));
+				Economy.give(crazyeight.playerData[room][crazyeight.playerList[room][0]].name, Economy.getPayout(crazyeight.playerList[room].length, room), room)
 			}
 			if (crazyeight.playerList[room].length < 2) {
 				clearInterval(crazyeight.interval[room]);
@@ -3394,9 +3435,12 @@ exports.commands = {
 			}
 			switch (cmd) {
 				case 'regdate':
+					if (data.registertime === 0) {
+						return self.say(by, room, 'The account ' + arg + ' is not registered.')
+					}
 					var regdate = data.registertime * 1000 - (1000 * 60 * 60 * 4)
 					var regDate = (new Date(regdate)).toString().substr(4, 20);
-					self.say(by, room, 'The account ' + arg + ' was registered on ' + regDate + 'EST.');
+					self.say(by, room, 'The account ' + arg + ' was registered on ' + regDate + ' (EST).');
 					break;
 				case 'rank':
 					var battleRanks = data.ratings;
@@ -3562,8 +3606,14 @@ exports.commands = {
 		if (kunc.answer[room].substr(0, 6) === 'arceus') {
 			kunc.answer[room] = 'arceus';
 		}
-		if(kunc.answer[room])
-		kunc.question[room] = '``Moveset: ' + formatMoves(createMoveset(kunc.answer[room])).join(', ') + '.`` Use ' + config.commandcharacter[0] + 'gk to guess the Pokemon.';
+		do {
+			try {
+				kunc.question[room] = '``Moveset: ' + formatMoves(createMoveset(kunc.answer[room])).join(', ') + '.`` Use ' + config.commandcharacter[0] + 'gk to guess the Pokemon.';
+			}
+			catch (e) {
+				kunc.question[room] = '';
+			}
+		} while (!kunc.question[room]);
 		this.say(by, room, kunc.question[room])
 	},
 	gk: function(arg, by, room) {
@@ -3590,7 +3640,14 @@ exports.commands = {
 			if (kunc.answer[room].substr(0, 6) === 'arceus') {
 				kunc.answer[room] = 'arceus';
 			}
-			kunc.question[room] = '``Moveset: ' + formatMoves(createMoveset(kunc.answer[room])).join(', ') + '.`` Use ' + config.commandcharacter[0] + 'gk to guess the Pokemon.';
+			do {
+				try {
+					kunc.question[room] = '``Moveset: ' + formatMoves(createMoveset(kunc.answer[room])).join(', ') + '.`` Use ' + config.commandcharacter[0] + 'gk to guess the Pokemon.';
+				}
+				catch (e) {
+					kunc.question[room] = '';
+				}
+			} while (!kunc.question[room]);
 			this.say(by, room, kunc.question[room])
 		}
 	},
@@ -3632,9 +3689,9 @@ exports.commands = {
 		var target = toId(arg[0]);
 		var amount = toId(arg[1]).replace(/[^0-9]/g, '');
 		if (!amount) return;
-		if(cmd === 'takepoints') amount = amount * -1;
+		if (cmd === 'takepoints') amount = amount * -1;
 		Economy.give(target, amount * 1, room);
-		if(amount < 0){
+		if (amount < 0) {
 			return this.say(by, room, target + ' has lost ' + amount * -1 + ' ' + Economy.currency(room))
 		}
 		return this.say(by, room, target + ' has been given ' + amount + ' ' + Economy.currency(room))
@@ -3656,7 +3713,7 @@ exports.commands = {
 			}
 		}
 		var target = user || by;
-		return this.say(by, targetRoom, '(' + (Economy.isRegistered(room) ? room : 'global') + ') ' +target + ' has ' + Economy.getPoints(target, room) + ' ' + Economy.currency(room));
+		return this.say(by, targetRoom, '(' + (Economy.isRegistered(room) ? room : 'global') + ') ' + target + ' has ' + Economy.getPoints(target, room) + ' ' + Economy.currency(room));
 	},
 	top: function(arg, by, room) {
 		if (!this.hasRank(by, '+%@#&~')) {
@@ -3719,8 +3776,8 @@ exports.commands = {
 		Economy.write()
 	},
 	lbhelp: 'leaderboardhelp',
-	leaderboardhelp: function(arg, by, room){
-		if(!this.hasRank(by, '@#&~')) room = ',' + by;
+	leaderboardhelp: function(arg, by, room) {
+		if (!this.hasRank(by, '@#&~')) room = ',' + by;
 		this.say(by, room, 'http://pastebin.com/am4FgVCH')
 	}
 };
