@@ -140,7 +140,9 @@ var settings;
 try {
 	settings = JSON.parse(fs.readFileSync('settings.json'));
 }
-catch (e) {} // file doesn't exist [yet]
+catch (e) {
+	process.exit(-1)
+} // file doesn't exist [yet]
 
 if (!Object.isObject(settings)) settings = {};
 /*
@@ -215,15 +217,20 @@ exports.parse = {
 	},
 	splitMessage: function(message) {
 		if (!message) return;
+		var changes = false;
 		if (!this.settings[config.serverid]) {
 			this.settings[config.serverid] = {};
 			console.log('Created subsettings: serverid')
+			changes = true;
 		}
 		if (!this.settings[config.serverid][toId(config.nick)]) {
 			this.settings[config.serverid][toId(config.nick)] = {};
-			console.log('Created subsettings: nick')
+			console.log('Created subsettings: nick');
+			changes = true;
 		}
-		this.writeSettings();
+		if (changes) {
+			this.writeSettings();
+		}
 		var room = 'lobby';
 		if (message.indexOf('\n') < 0) return this.message(message, room);
 
@@ -1657,7 +1664,7 @@ exports.parse = {
 			this.settings = JSON.parse(fs.readFileSync('settings.json'));
 		}
 		catch (e) {
-			this.settings = {};
+			return false;
 		} // file doesn't exist [yet]
 		if (!this.settings[config.serverid]) {
 			this.settings[config.serverid] = {};
@@ -1667,11 +1674,17 @@ exports.parse = {
 		}
 		this.settings[config.serverid][toId(config.nick)] = mySettings;
 		//end
+		return true;
 	},
 	writeSettings: function() {
-		this.syncSettings();
+		var overWriteCatch = this.syncSettings();
+		if (!overWriteCatch) {
+			console.log('writeSettings: failed')
+			return;
+		}
 		var data = JSON.stringify(this.settings);
 		fs.writeFileSync('settings.json', data);
+		console.log('writeSettings: success')
 	},
 	uncacheTree: function(root) {
 		var uncache = [require.resolve(root)];

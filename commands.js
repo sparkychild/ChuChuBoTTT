@@ -105,11 +105,50 @@ function createMoveset(target) {
 	}
 	var selectedMoves = [];
 	var damagingTypes = [];
+	var boostingMove = 0;
+	//search boosting move
+	function sum(array) {
+		var total = 0;
+		for (var i = 0; i < array.length; i++) {
+			total += array[i];
+		}
+		return total;
+	}
+
+	function isBoostingMove(move) {
+		if (Movedex[move].boosts && sum(Object.values(Movedex[move].boosts)) >= 2) {
+			return true;
+		}
+		return false;
+	}
 	for (var i = 0; i < allMoves.length; i++) {
-		if (selectedMoves.length >= 2) break;
+		if (isBoostingMove(allMoves[i])) {
+			var rand = Math.random()
+			if (rand >= 0.7) {
+				break;
+			}
+			selectedMoves.push(allMoves[i]);
+			boostingMove = 1;
+			break;
+		}
+	}
+	for (var i = 0; i < allMoves.length; i++) {
+		if (boostingMove) {
+			if (selectedMoves.length >= 4) {
+				break;
+			}
+		}
+		else {
+			if (selectedMoves.length >= 2) {
+				break;
+			}
+		}
 		var tarMove = allMoves[i];
 		var tarType = Movedex[tarMove].type;
 		if (Movedex[tarMove].basePower === 0) {
+			continue;
+		}
+		if (selectedMoves.indexOf(allMoves[i]) > -1) {
 			continue;
 		}
 		if (selectedMoves.join('').indexOf('hiddenpower') > -1 && tarMove.substr(0, 11) === 'hiddenpower') {
@@ -1166,8 +1205,8 @@ exports.commands = {
 				triviaPoints[room][triviaPoints[room].indexOf(user) + 1] = triviaPoints[room][triviaPoints[room].indexOf(user) + 1] + 1;
 				if (triviaPoints[room][triviaPoints[room].indexOf(user) + 1] >= 10) {
 					clearInterval(triviaTimer[room]);
-					this.say(config.nick, room, 'Congrats to ' + by + ' for winning! Reward: ' + Economy.getPayout(triviaPoints[room].length / 2, room) + ' ' + Economy.currency(room));
-					Economy.give(by, Economy.getPayout((triviaPoints[room].length / 2), room), room)
+					this.say(config.nick, room, 'Congrats to ' + by + ' for winning! Reward: ' + Economy.getPayout(triviaPoints[room].length, room) + ' ' + Economy.currency(room));
+					Economy.give(by, Economy.getPayout((triviaPoints[room].length), room), room)
 					triviaON[room] = false;
 					return false;
 				}
@@ -1461,8 +1500,8 @@ exports.commands = {
 			anagramPoints[room][anagramPoints[room].indexOf(user) + 1] = anagramPoints[room][anagramPoints[room].indexOf(user) + 1] + 1;
 			if (anagramPoints[room][anagramPoints[room].indexOf(user) + 1] >= 10) {
 				clearInterval(anagramInterval[room]);
-				this.say(config.nick, room, 'Congrats to ' + by + ' for winning! Reward: ' + Economy.getPayout(anagramPoints[room].length / 2, room) + ' ' + Economy.currency(room));
-				Economy.give(by, Economy.getPayout(anagramPoints[room].length / 2, room), room)
+				this.say(config.nick, room, 'Congrats to ' + by + ' for winning! Reward: ' + Economy.getPayout(anagramPoints[room].length, room) + ' ' + Economy.currency(room));
+				Economy.give(by, Economy.getPayout(anagramPoints[room].length, room), room)
 				anagramON[room] = false;
 				return false;
 			}
@@ -3123,7 +3162,8 @@ exports.commands = {
 		var target = toId(arg);
 		if (!this.outrank(by, target)) return false;
 		if (!this.mutes[target]) return this.say(by, room, 'User ' + target + ' is not muted!')
-		this.mutes[target] = false;
+		delete this.mutes[target]
+		this.say(by, room, target + ' has been unmuted.')
 	},
 	autores: function(arg, by, room) {
 		if (!this.canUse('autores', room, by)) return false;
@@ -3598,7 +3638,17 @@ exports.commands = {
 		//now the real part;
 		//choose the random pokemon
 		var allMons = Object.keys(pokemonData)
-		kunc.answer[room] = allMons[~~(allMons.length * Math.random())];
+
+		kunc.question[room] = '';
+		while (!kunc.question[room]) {
+			kunc.answer[room] = allMons[~~(allMons.length * Math.random())];
+			try {
+				kunc.question[room] = '``Moveset: ' + formatMoves(createMoveset(kunc.answer[room])).join(', ') + '.`` Use ' + config.commandcharacter[0] + 'gk to guess the Pokemon.';
+			}
+			catch (e) {
+				console.log('failed to generate kunc moveset.')
+			}
+		}
 		//special case for arceus bc this gets dumb
 		if (kunc.answer[room].substr(0, 8) === 'genesect') {
 			kunc.answer[room] = 'genesect';
@@ -3606,14 +3656,6 @@ exports.commands = {
 		if (kunc.answer[room].substr(0, 6) === 'arceus') {
 			kunc.answer[room] = 'arceus';
 		}
-		do {
-			try {
-				kunc.question[room] = '``Moveset: ' + formatMoves(createMoveset(kunc.answer[room])).join(', ') + '.`` Use ' + config.commandcharacter[0] + 'gk to guess the Pokemon.';
-			}
-			catch (e) {
-				kunc.question[room] = '';
-			}
-		} while (!kunc.question[room]);
 		this.say(by, room, kunc.question[room])
 	},
 	gk: function(arg, by, room) {
@@ -3632,7 +3674,17 @@ exports.commands = {
 			this.say(config.nick, room, by.slice(1) + ' has the correct answer and now has ' + kunc.points[room][userid] + ' points!');
 			//choose the random pokemon
 			var allMons = Object.keys(pokemonData)
-			kunc.answer[room] = allMons[~~(allMons.length * Math.random())];
+
+			kunc.question[room] = '';
+			while (!kunc.question[room]) {
+				kunc.answer[room] = allMons[~~(allMons.length * Math.random())];
+				try {
+					kunc.question[room] = '``Moveset: ' + formatMoves(createMoveset(kunc.answer[room])).join(', ') + '.`` Use ' + config.commandcharacter[0] + 'gk to guess the Pokemon.';
+				}
+				catch (e) {
+					console.log('failed to generate kunc moveset.')
+				}
+			}
 			//special case for arceus bc this gets dumb
 			if (kunc.answer[room].substr(0, 8) === 'genesect') {
 				kunc.answer[room] = 'genesect';
@@ -3640,14 +3692,6 @@ exports.commands = {
 			if (kunc.answer[room].substr(0, 6) === 'arceus') {
 				kunc.answer[room] = 'arceus';
 			}
-			do {
-				try {
-					kunc.question[room] = '``Moveset: ' + formatMoves(createMoveset(kunc.answer[room])).join(', ') + '.`` Use ' + config.commandcharacter[0] + 'gk to guess the Pokemon.';
-				}
-				catch (e) {
-					kunc.question[room] = '';
-				}
-			} while (!kunc.question[room]);
 			this.say(by, room, kunc.question[room])
 		}
 	},
@@ -3749,7 +3793,7 @@ exports.commands = {
 		arg = arg.split(',');
 		if (arg.length !== 2) return false;
 		var param = toId(arg[0]);
-		var value = toId(arg[1]);
+		var value = arg[1].trim();
 		if (!param || !value) return false;
 		if (Economy.isRegistered(room)) {
 			var economyCP = Economy.economy.rooms[room].cp;
@@ -3766,6 +3810,7 @@ exports.commands = {
 				break;
 			case 'factor':
 			case 'payout':
+				value = toId(value);
 				if (/[^0-9]/i.test(value)) {
 					return this.say(by, room, 'Invalid value.');
 				}

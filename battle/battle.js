@@ -250,7 +250,7 @@ function bestMove(moves, user, target, room, extras) {
                 score = 0;
             }
         }
-        if(move === 'healbell' || move === 'aromatherapy' && Object.keys(Battles[room].bot.status).length > 0){
+        if (move === 'healbell' || move === 'aromatherapy' && Object.keys(Battles[room].bot.status).length > 0) {
             score = (Object.keys(Battles[room].bot.status).length * 50) + 100;
         }
         //check for hazards
@@ -524,16 +524,16 @@ function choose(room) {
     else {
         megaWeakness = false;
     }
-    
+
     var canSwitch = false;
     if (Battles[room].bot.team.length > 1) {
         var possibleSwitch = tarSwitchIn(Battles[room].bot.currentMon.species, Battles[room].bot.team, Battles[room].opponent.currentMon.species);
         canSwitch = true;
     }
-    if(possibleSwitch && weakness(possibleSwitch, Battles[room].opponent.currentMon.species) > 1){
+    if (possibleSwitch && weakness(possibleSwitch, Battles[room].opponent.currentMon.species) > 1) {
         canSwitch = false;
     }
-    
+
     if (canSwitch && ((weakness(Battles[room].bot.currentMon.species, Battles[room].opponent.currentMon.species) > 1 || megaWeakness) && bestMove(Battles[room].bot.currentMon.moves, Battles[room].bot.currentMon.species, Battles[room].opponent.currentMon.species, room, true) < 160 && Movedex[Battles[room].bot.currentMon.allMoves[bestMove(Battles[room].bot.currentMon.moves, Battles[room].bot.currentMon.species, Battles[room].opponent.currentMon.species, room) - 1]].basePower !== 0) /* Add an extra check for whether or not it wants it's best switch anyways */ || (bestMove(Battles[room].bot.currentMon.moves, Battles[room].bot.currentMon.species, Battles[room].opponent.currentMon.species, room, true) < 80 && Battles[room].bot.currentMon.item.substr(0, 6) === 'choice')) {
         //choose to switch
         debug('{choose: unfavourable}')
@@ -892,7 +892,7 @@ exports.battleParser = {
                     delete Battles[room].bot.status[tarMon];
                 }
                 Battles[room].faints++
-                debug(JSON.stringify(Battles[room].opponent.team));
+                    debug(JSON.stringify(Battles[room].opponent.team));
                 debug(JSON.stringify(Battles[room].bot.team));
                 //wait to get all faint messages
 
@@ -1292,8 +1292,8 @@ exports.commands = {
         if (!arg) {
             return this.say(by, room, 'The battlecount cap is set at ' + MAXBATTLES);
         }
-        if (typeof arg !== 'number') return false;
-        MAXBATTLES = arg;
+        if (isNaN(arg * 1)) return false;
+        MAXBATTLES = arg * 1;
     },
     battlelist: function(arg, by, room) {
         if (!this.rankFrom(by, '~')) return false;
