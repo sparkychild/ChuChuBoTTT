@@ -186,7 +186,7 @@ if (config.url) {
 				}
 				catch (e) {
 					config.rooms = [];
-					console.log('Rooms are not loaded.')
+					info('Rooms are not loaded.')
 				}
 				global.globalvar = require('./globals.js');
 				loadFunctions();
