@@ -187,8 +187,6 @@ exports.commands = {
     },
     joke: function(arg, by, room) {
         if (!Bot.canUse('joke', room, by) || room.charAt(0) === ',') room = ',' + toId(by);
-        var self = this;
-
         var reqOpt = {
             hostname: 'api.icndb.com',
             path: '/jokes/random',
@@ -198,10 +196,10 @@ exports.commands = {
             res.on('data', function(chunk) {
                 try {
                     var data = JSON.parse(chunk);
-                    self.say(by, room, data.value.joke.replace(/&quot;/g, "\""));
+                    Bot.say(by, room, data.value.joke.replace(/&quot;/g, "\""));
                 }
                 catch (e) {
-                    self.say(by, room, 'Sorry, couldn\'t fetch a random joke... :(');
+                    Bot.say(by, room, 'Sorry, couldn\'t fetch a random joke... :(');
                 }
             });
         });
