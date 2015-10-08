@@ -40,7 +40,7 @@ global.cmdr = function(text) { // receiving commands
 };
 
 global.dsend = function(text) {
-	if (config.debuglevel > 1 || config.debuglevel === 6) return;
+	if (config.debuglevel > 1 || config.debuglevel !== 6) return;
 	if (!colors) global.colors = require('colors');
 	console.log('send'.grey + '    ' + text);
 };
@@ -124,7 +124,21 @@ if (!fs.existsSync('./config.js')) {
 }
 
 global.config = require('./config.js');
-
+function loadFunctions() {
+	global.Commands = {};
+	global.Parse = require('./parser.js').parse;
+	var commandFiles = fs.readdirSync('./commands/');
+	for (var i = 0; i < commandFiles.length; i++) {
+		try {
+			Object.merge(Commands, require('./commands/' + commandFiles[i]).commands);
+			ok('Loaded command files: ' + commandFiles[i])
+		}
+		catch (e) {
+			error('Unable to load command files: ' + commandFiles[i]);
+			console.log(e.stack)
+		}
+	}
+}
 if (config.url) {
 	var serverUrl = config.url;
 	if (serverUrl.indexOf('://') !== -1) {
@@ -174,14 +188,8 @@ if (config.url) {
 					config.rooms = [];
 					console.log('Rooms are not loaded.')
 				}
-				global.Commands = require('./commands.js').commands;
-				global.Parse = require('./parser.js').parse;
-				try {
-					Object.merge(Commands, require('./battle/battle.js').commands);
-				}
-				catch (e) {
-					error("Could not import commands file: BattleEngine | " + sys.inspect(e));
-				}
+				global.globalvar = require('./globals.js');
+				loadFunctions();
 			}
 			else {
 				console.log('ERROR: failed to get data!');
@@ -201,6 +209,7 @@ else {
 	console.log('ERROR: no URL specified!');
 	process.exit(-1)
 }
+
 
 
 var checkCommandCharacter = function() {
@@ -234,7 +243,7 @@ if (config.watchconfig) {
 }
 
 // And now comes the real stuff...
-info('starting server');
+ok('starting server');
 var WebSocketClient = require('websocket').client;
 
 

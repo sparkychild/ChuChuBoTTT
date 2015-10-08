@@ -17,7 +17,14 @@ A pastebin guide to the bot's features can be found [here][6]
   
   [6]: http://pastebin.com/zT0eFG8a
   
+data/ranks.txt
+--------------
 
+Under the folder data, create a new file called `ranks.txt` and put the following in:
+
+  `~username`
+
+with username being your username, followed by an empty line.
 
 Installation
 ------------
@@ -64,7 +71,6 @@ Credits:
  - Morfent (Development)
  - TalkTakesTime (Development)
  - Quinella (Development)
- - Rival Nick (Guide)
 
 License
 -------
