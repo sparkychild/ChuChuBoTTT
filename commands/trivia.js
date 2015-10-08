@@ -6,7 +6,7 @@ exports.commands = {
 			Bot.say(by, room, 'A trivia game cannot be started, as it is in progress already.');
 			return false;
 		}
-		if (checkGame(room)) return this.say(by, room, 'There is already a game going on in this room!');
+		if (checkGame(room)) return Bot.say(by, room, 'There is already a game going on in this room!');
 		triviaON[room] = true;
 		triviaPoints[room] = [];
 		triviaA[room] = [];

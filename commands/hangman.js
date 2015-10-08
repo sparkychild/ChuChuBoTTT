@@ -6,7 +6,7 @@ exports.commands = {
             Bot.say(by, room, 'A game of Hangman is already in progress. Please wait for it to end before starting another.');
             return false;
         }
-        if (checkGame(room)) return this.say(by, room, 'There is already a game going on in this room!');
+        if (checkGame(room)) return Bot.say(by, room, 'There is already a game going on in this room!');
         var HQN = Math.floor(Object.keys(wordBank).length * Math.random());
         var spl = Object.keys(wordBank)[HQN].split('||');
         Bot.say(by, room, 'Hosting a game of Hangman! Use ' + config.commandcharacter + 'g to guess letter or word. It is a ``' + wordBank[spl[0]] + '``.')

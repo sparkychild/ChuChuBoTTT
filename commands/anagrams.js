@@ -4,7 +4,7 @@ exports.commands = {
         if (room.charAt(',') === 0) return false;
         if (!Bot.canUse('anagrams', room, by)) return false;
         if (anagramON[room]) return false;
-        if(checkGame(room)) return this.say(by, room, 'There is already a game going on in this room!');
+        if(checkGame(room)) return Bot.say(by, room, 'There is already a game going on in this room!');
         anagramON[room] = true;
         anagramA[room] = '';
         anagramPoints[room] = [];

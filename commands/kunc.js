@@ -113,7 +113,7 @@ exports.commands = {
         }
         if (kunc.on[room] && cmd === 'kunc') return Bot.say(by, room, kunc.question[room]);
         if (cmd === 'kunc') {
-            if (checkGame(room)) return this.say(by, room, 'There is already a game going on in this room!');
+            if (checkGame(room)) return Bot.say(by, room, 'There is already a game going on in this room!');
             game('kunc', room);
             kunc.on[room] = true;
             if (!arg) {

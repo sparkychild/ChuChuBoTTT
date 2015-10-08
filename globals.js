@@ -135,7 +135,7 @@ global.checkGame = function(room){
 	if(anagramON[room]){
 		return 'anagram';
 	}
-	if(gameStatus[room] || gameStatus[room] !== 'off'){
+	if(gameStatus[room] && gameStatus[room] !== 'off'){
 		return 'blackjack';
 	}
 	if(crazyeight.gameStatus[room] && crazyeight.gameStatus[room] !== 'off'){
