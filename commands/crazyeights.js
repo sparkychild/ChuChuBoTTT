@@ -50,7 +50,7 @@ exports.commands = {
 				}
 				//reset playerlist
 				crazyeight.playerList[room] = pushPlayer;
-				crazyeight.playerData[room][toId(by)] = {};
+				delete crazyeight.playerData[room][toId(by)];
 				break;
 			case 'end':
 				if (!Bot.canUse('crazyeights', room, by)) return false;

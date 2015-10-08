@@ -39,7 +39,7 @@ exports.commands = {
             case 'leave':
                 if (gameStatus[room] !== 'signup') return false;
                 if (playerData[room][toId(by)]) {
-                    playerData[room][toId(by)] = {};
+                    delete playerData[room][toId(by)]
                     //re-make playerlist
                     var pIndex = playerCount[room].indexOf(toId(by));
                     var pushPlayer = [];

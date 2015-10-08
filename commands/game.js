@@ -23,6 +23,20 @@ exports.commands = {
             Commands[game + 'end'].call(this, arg, by, room);
         }
     },
+    join: function(arg, by, room) {
+        if (!checkGame(room)) return;
+        var game = checkGame(room);
+        if (['blackjack', 'crazyeights'].indexOf(game) > -1) {
+            Commands[game].call(this, 'join', by, room);
+        }
+    },
+    leave: function(arg, by, room) {
+        if (!checkGame(room)) return false;
+        var game = checkGame(room);
+        if (['blackjack', 'crazyeights'].indexOf(game) > -1) {
+            Commands[game].call(this, 'leave', by, room);
+        }
+    },
     randomgame: function(arg, by, room) {
         if (!Bot.canUse('randomgame', room, by)) return false;
         var gameCount = 6;
@@ -43,7 +57,7 @@ exports.commands = {
             case 4:
                 Commands.crazyeights.call(this, 'new', '~', room);
                 break;
-            case 5: 
+            case 5:
                 Commands.kunc.call(this, '5', '~', room);
                 break;
         }
