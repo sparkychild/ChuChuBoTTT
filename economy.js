@@ -111,6 +111,7 @@ exports.Economy = {
         for (var t = 0; t < length; t++) {
             var max = [null, -1];
             for (var i in economyData) {
+                if(economyData[i] <= 0) continue;
                 if (economyData[i] > max[1]) {
                     max = [i, economyData[i]];
                 }

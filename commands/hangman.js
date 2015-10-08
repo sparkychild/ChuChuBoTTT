@@ -9,7 +9,7 @@ exports.commands = {
         if (checkGame(room)) return Bot.say(by, room, 'There is already a game going on in this room!');
         var HQN = Math.floor(Object.keys(wordBank).length * Math.random());
         var spl = Object.keys(wordBank)[HQN].split('||');
-        Bot.say(by, room, 'Hosting a game of Hangman! Use ' + config.commandcharacter + 'g to guess letter or word. It is a ``' + wordBank[spl[0]] + '``.')
+        Bot.say(by, room, 'Hosting a game of Hangman! Use ' + config.commandcharacter[0] + 'g to guess letter or word. It is a ``' + wordBank[spl[0]] + '``.')
         game('hangman', room);
         hangmanON[room] = true;
         hangmanChances[room] = 0;

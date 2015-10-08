@@ -109,6 +109,12 @@ global.kunc = {
 	scorecap: {},
 	points: {}
 }
+global.statspread = {
+    on: {},
+    answer: {},
+    scorecap: {},
+    score: {}
+}
 global.currentRP = null;
 global.rpTimer;
 
