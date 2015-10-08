@@ -39,55 +39,6 @@ exports.commands = {
 		Tools.writeSettings();
 		Bot.say(by, room, command + ' was ' + (setState ? 'disabled.' : 'enabled.'))
 	},
-	regdate: 'userdata',
-	rank: 'userdata',
-	userdata: function(arg, by, room, cmd) {
-		if (!Bot.hasRank(by, '+%@#~&') && room.charAt(0) !== ',') {
-			room = ',' + by;
-		}
-		if (!arg) {
-			arg = by;
-		}
-
-		function getData(link, callback) {
-			http.get(link, function(res) {
-				var data = '';
-				res.on('data', function(part) {
-					data += part
-				});
-				res.on('end', function(end) {
-					callback(data);
-				});
-			});
-		}
-		var self = this;
-		getData('http://pokemonshowdown.com/users/' + toId(arg) + '.json', function(data) {
-			try {
-				data = JSON.parse(data);
-			}
-			catch (e) {
-				self.say(by, room, 'ERROR in retrieving data.')
-			}
-			switch (cmd) {
-				case 'regdate':
-					if (data.registertime === 0) {
-						return self.say(by, room, 'The account ' + arg + ' is not registered.')
-					}
-					var regdate = data.registertime * 1000 - (1000 * 60 * 60 * 4)
-					var regDate = (new Date(regdate)).toString().substr(4, 20);
-					self.say(by, room, 'The account ' + arg + ' was registered on ' + regDate + ' (EST).');
-					break;
-				case 'rank':
-					var battleRanks = data.ratings;
-					var text = '';
-					for (var tier in battleRanks) {
-						text += tier + ': __' + battleRanks[tier].elo.split('.')[0].trim() + '/' + battleRanks[tier].gxe + 'GXE__ | '
-					}
-					self.say(by, room, 'User: ' + arg + ' -- ' + text.trim());
-					break;
-			}
-		})
-	},
 	reloadrooms: function(arg, by, room) {
 		if (!Bot.rankFrom(by, '~')) return false;
 		config.rooms = [];

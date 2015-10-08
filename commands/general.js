@@ -484,10 +484,58 @@ exports.commands = {
         fs.appendFile('data/maillog.txt', destination + '|' + spl + ' - ' + toId(by) + '~' + d + '\n', function(err) {});
     },
     checkmail: function(arg, by, room) {
-		if (!Plugins.checkMail(by, room)) return Bot.say(by, room, (room.charAt(0) === ',' ? '' : '/pm ' + by + ', ') + 'You have no mail ;-;');
-		if (room.charAt !== ',') {
-			room = ',' + toId(by);
-		}
-		Plugins.mailUser(by, room);
-	},
+        if (!Plugins.checkMail(by, room)) return Bot.say(by, room, (room.charAt(0) === ',' ? '' : '/pm ' + by + ', ') + 'You have no mail ;-;');
+        if (room.charAt !== ',') {
+            room = ',' + toId(by);
+        }
+        Plugins.mailUser(by, room);
+    },
+    regdate: 'userdata',
+    rank: 'userdata',
+    userdata: function(arg, by, room, cmd) {
+        if (!Bot.hasRank(by, '+%@#~&') && room.charAt(0) !== ',') {
+            room = ',' + by;
+        }
+        if (!arg) {
+            arg = by;
+        }
+
+        function getData(link, callback) {
+            http.get(link, function(res) {
+                var data = '';
+                res.on('data', function(part) {
+                    data += part
+                });
+                res.on('end', function(end) {
+                    callback(data);
+                });
+            });
+        }
+        getData('http://pokemonshowdown.com/users/' + toId(arg) + '.json', function(data) {
+            try {
+                data = JSON.parse(data);
+            }
+            catch (e) {
+                Bot.say(by, room, 'ERROR in retrieving data.')
+            }
+            switch (cmd) {
+                case 'regdate':
+                    if (data.registertime === 0) {
+                        return Bot.say(by, room, 'The account ' + arg + ' is not registered.')
+                    }
+                    var regdate = data.registertime * 1000 - (1000 * 60 * 60 * 4)
+                    var regDate = (new Date(regdate)).toString().substr(4, 20);
+                    Bot.say(by, room, 'The account ' + arg + ' was registered on ' + regDate + ' (EST).');
+                    break;
+                case 'rank':
+                    var battleRanks = data.ratings;
+                    var text = '';
+                    for (var tier in battleRanks) {
+                        text += tier + ': __' + battleRanks[tier].elo.split('.')[0].trim() + '/' + battleRanks[tier].gxe + 'GXE__ | '
+                    }
+                    Bot.say(by, room, 'User: ' + arg + ' -- ' + text.trim());
+                    break;
+            }
+        })
+    },
 }

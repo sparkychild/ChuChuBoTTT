@@ -122,7 +122,7 @@ exports.commands = {
                 }
                 Bot.say(by, room, 'The welcome message was set.');
                 fs.writeFileSync('data/wcmsg.txt', data.join('\n'));
-                this.botlog(room, by + ' has set the welcome message in ' + room + ' to: \"' + stripCommands(arg.slice(1).join(', ')) + '\"');
+                Bot.botlog(room, by + ' has set the welcome message in ' + room + ' to: \"' + stripCommands(arg.slice(1).join(', ')) + '\"');
                 break;
             case 'on':
                 if (!Bot.hasRank(by, '#&~')) return false;
