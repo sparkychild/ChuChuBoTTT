@@ -1,16 +1,17 @@
 exports.commands = {
-    trivia: function(arg, by, room) {
+	trivia: function(arg, by, room) {
 		if (room.charAt(',') === 0) return false;
 		if (!Bot.canUse('trivia', room, by)) return false;
 		if (triviaON[room]) {
 			Bot.say(by, room, 'A trivia game cannot be started, as it is in progress already.');
 			return false;
 		}
+		if (checkGame(room)) return this.say(by, room, 'There is already a game going on in this room!');
 		triviaON[room] = true;
 		triviaPoints[room] = [];
 		triviaA[room] = [];
 		game('trivia', room);
-		Bot.say(by, room, 'Hosting a game of trivia\. First to 10 points wins!  use ' + config.commandcharacter[0] + 'ta or ' + config.commandcharacter[0] + 'triviaanswer to submit your answer\.');
+		Bot.say(by, room, 'Hosting a game of trivia\. First to 10 points wins!  use ' + config.commandcharacter[0] + 'g or ' + config.commandcharacter[0] + 'ta to submit your answer\.');
 		triviaTimer[room] = setInterval(function() {
 			if (triviaA[room][0]) {
 				if (triviaA[room].length > 1) {
@@ -27,8 +28,8 @@ exports.commands = {
 		}, 17000);
 
 	},
-	ta: 'triviaanswer',
-	triviaanswer: function(arg, by, room) {
+	ta: 'guesstrivia',
+	guesstrivia: function(arg, by, room) {
 		if (!triviaON[room]) return false;
 		arg = toId(arg);
 		if (!arg) return false;

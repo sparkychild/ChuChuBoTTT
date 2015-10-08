@@ -6,6 +6,7 @@ exports.commands = {
             Bot.say(by, room, 'A game of Hangman is already in progress. Please wait for it to end before starting another.');
             return false;
         }
+        if (checkGame(room)) return this.say(by, room, 'There is already a game going on in this room!');
         var HQN = Math.floor(Object.keys(wordBank).length * Math.random());
         var spl = Object.keys(wordBank)[HQN].split('||');
         Bot.say(by, room, 'Hosting a game of Hangman! Use ' + config.commandcharacter + 'g to guess letter or word. It is a ``' + wordBank[spl[0]] + '``.')
@@ -25,7 +26,8 @@ exports.commands = {
             Bot.talk(room, hangmanProgress[room]);
         }, 15000);
     },
-    endhangman: function(arg, by, room) {
+    endhangman: 'hangmanend',
+    hangmanend: function(arg, by, room) {
         if (room.charAt(',') === 0) return false;
         if (!Bot.canUse('hangman', room, by)) return false;
         clearInterval(hangmanInterval[room]);
@@ -40,7 +42,6 @@ exports.commands = {
             Bot.say(config.nick, room, 'The definition of this word is: ' + hangmanDes[room])
         }
     },
-    g: 'guesshangman',
     guesshangman: function(arg, by, room) {
         if (!hangmanON[room]) return false;
         if (!toId(arg)) return false;

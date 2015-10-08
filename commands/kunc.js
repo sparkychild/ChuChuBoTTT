@@ -1,4 +1,5 @@
 var Movedex = isolate(MOVEDEX);
+
 function scramble(array) {
     var aLength = array.length;
     var returnArray = [];
@@ -112,6 +113,7 @@ exports.commands = {
         }
         if (kunc.on[room] && cmd === 'kunc') return Bot.say(by, room, kunc.question[room]);
         if (cmd === 'kunc') {
+            if (checkGame(room)) return this.say(by, room, 'There is already a game going on in this room!');
             game('kunc', room);
             kunc.on[room] = true;
             if (!arg) {
@@ -137,7 +139,7 @@ exports.commands = {
         while (!kunc.question[room]) {
             kunc.answer[room] = allMons[~~(allMons.length * Math.random())];
             try {
-                kunc.question[room] = '``Moveset: ' + formatMoves(createMoveset(kunc.answer[room])).join(', ') + '.`` Use ' + config.commandcharacter[0] + 'gk to guess the Pokemon.';
+                kunc.question[room] = '``Moveset: ' + formatMoves(createMoveset(kunc.answer[room])).join(', ') + '.`` Use ' + config.commandcharacter[0] + 'g to guess the Pokemon.';
             }
             catch (e) {
                 console.log('failed to generate kunc moveset.')
@@ -152,7 +154,8 @@ exports.commands = {
         }
         Bot.say(by, room, kunc.question[room])
     },
-    gk: function(arg, by, room) {
+    gk: 'guesskunc',
+    guesskunc: function(arg, by, room) {
         if (!kunc.on[room] || !arg) return false;
         var userid = toId(by)
         if (toId(arg) === kunc.answer[room]) {
@@ -189,7 +192,8 @@ exports.commands = {
             Bot.say(by, room, kunc.question[room])
         }
     },
-    endkunc: function(arg, by, room) {
+    endkunc: 'kuncend',
+    kuncend: function(arg, by, room) {
         if (!Bot.canUse('kunc', room, by) || !kunc.on[room]) return false;
         delete kunc.on[room];
         var tarAnswer = Pokedex[kunc.answer[room]].species;

@@ -4,10 +4,11 @@ exports.commands = {
         if (room.charAt(',') === 0) return false;
         if (!Bot.canUse('anagrams', room, by)) return false;
         if (anagramON[room]) return false;
+        if(checkGame(room)) return this.say(by, room, 'There is already a game going on in this room!');
         anagramON[room] = true;
         anagramA[room] = '';
         anagramPoints[room] = [];
-        Bot.say(by, room, 'Hosting a game of anagrams. Use +guess to submit your answer.');
+        Bot.say(by, room, 'Hosting a game of anagrams. Use ' + config.commandcharacter[0] + 'g to submit your answer.');
         game('anagrams', room)
         anagramInterval[room] = setInterval(function() {
             if (anagramA[room]) {
@@ -29,7 +30,7 @@ exports.commands = {
             Bot.talk(room, '[' + wordBank[AnagramEntry[0]] + '] ' + text);
         }, 17000);
     },
-    guess: function(arg, by, room) {
+    guessanagram: function(arg, by, room) {
         if (!anagramON[room]) return false;
         if (!toId(arg)) return false;
         if (toId(arg) !== toId(anagramA[room])) return false;
@@ -54,7 +55,7 @@ exports.commands = {
         }
     },
     endanagram: 'endanagrams',
-    endanagrams: function(arg, by, room) {
+    anagramend: function(arg, by, room) {
         if (room.charAt(',') === 0) return false;
         if (!Bot.canUse('anagrams', room, by)) return false;
         clearInterval(anagramInterval[room]);

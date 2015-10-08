@@ -1,26 +1,4 @@
 exports.commands = {
-	randomgame: function(arg, by, room) {
-		if (!Bot.canUse('randomgame', room, by)) return false;
-		var gameCount = 5;
-		var rand = ~~(Math.random() * gameCount);
-		switch (rand) {
-			case 0:
-				Commands.blackjack.call(this, 'new', '~', room);
-				break;
-			case 1:
-				Commands.trivia.call(this, arg, '~', room);
-				break;
-			case 2:
-				Commands.hangman.call(this, arg, '~', room);
-				break;
-			case 3:
-				Commands.anagrams.call(this, arg, '~', room);
-				break;
-			case 4:
-				Commands.crazyeights.call(this, 'new', '~', room);
-				break;
-		}
-	},
 	language: function(arg, by, room) {
 		if (!Bot.hasRank(by, '#~')) return false;
 		if (!arg) {

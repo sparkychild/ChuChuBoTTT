@@ -11,7 +11,8 @@ exports.commands = {
         switch (arg) {
             case 'new':
                 if (!Bot.canUse('blackjack', room, by)) return false;
-                if (gameStatus[room] !== 'off') return Bot.say(by, room, 'A game is already going on!');
+                if (gameStatus[room] !== 'off') return Bot.say(by, room, 'A blackjack game is already going on!');
+                if (checkGame(room)) return this.say(by, room, 'There is already a game going on in this room!');
                 Bot.say(by, room, 'A new game of blackjack is starting. do +bj join to join the game!')
                 game('blackjack', room);
                 clearInterval(blackJack[room]);

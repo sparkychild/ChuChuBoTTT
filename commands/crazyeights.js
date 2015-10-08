@@ -1,5 +1,5 @@
 exports.commands = {
-    'c8': 'crazyeights',
+	'c8': 'crazyeights',
 	crazyeights: function(arg, by, room) {
 		if (room.charAt(0) === ',') return false;
 		if (!crazyeight.gameStatus[room]) {
@@ -14,7 +14,8 @@ exports.commands = {
 		switch (arg) {
 			case 'new':
 				if (!Bot.canUse('crazyeights', room, by)) return false;
-				if (crazyeight.gameStatus[room] !== 'off') return Bot.say(by, room, 'A game is already going on!');
+				if (crazyeight.gameStatus[room] !== 'off') return Bot.say(by, room, 'A crazyeights game is already going on!');
+				if (checkGame(room)) return this.say(by, room, 'There is already a game going on in this room!');
 				Bot.say(by, room, 'A new game of Crazy Eights is starting. Do +crazyeights join to join the game!')
 				Bot.say(config.nick, room, 'The goal is to be the first player to get rid of all your cards.  A [ 2] will cause the next player to draw 2 cards and lose their turn.')
 				Bot.say(config.nick, room, 'A [ J] will skip the next player\'s turn and a [♠Q] will make the next player forfeit his/her turn and draw 4 cards. An [ 8] will allow the player to change the suit.');
