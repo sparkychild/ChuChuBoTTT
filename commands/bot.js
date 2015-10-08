@@ -86,7 +86,7 @@ exports.commands = {
                     fs.writeFileSync('data/ranks.txt', ranks);
                 }
                 Bot.say(by, room, target + ' was appointed BotVoice by ' + by);
-                this.botlog('global', target + ' was appointed BotVoice by ' + by);
+                Bot.botlog('global', target + ' was appointed BotVoice by ' + by);
                 break;
             case 'deauth':
                 if (!Bot.outrank(by, target) || Bot.botRank(target) === ' ') return false;
@@ -94,7 +94,7 @@ exports.commands = {
                 ranks = ranks.replace(Bot.botRank(target) + target + '\n', '');
                 fs.writeFileSync('data/ranks.txt', ranks);
                 Bot.say(by, room, '(' + target + ' no longer has BotAuth.)');
-                this.botlog('global', '(' + target + ' no longer has BotAuth by ' + by + ')');
+                Bot.botlog('global', '(' + target + ' no longer has BotAuth by ' + by + ')');
                 break;
             case 'mod':
                 if (!Bot.rankFrom(by, '~') || Bot.botRank(target) === '@') return false;
@@ -107,7 +107,7 @@ exports.commands = {
                     fs.writeFileSync('data/ranks.txt', ranks);
                 }
                 Bot.say(by, room, target + ' was appointed BotMod by ' + by);
-                this.botlog('global', target + ' was appointed BotMod by ' + by);
+                Bot.botlog('global', target + ' was appointed BotMod by ' + by);
                 break;
             case 'admin':
                 if (!Bot.rankFrom(by, '~') || Bot.botRank(target) === '~') return false;
@@ -120,7 +120,7 @@ exports.commands = {
                     fs.writeFileSync('data/ranks.txt', ranks);
                 }
                 Bot.say(by, room, target + ' was appointed BotAdmin by ' + by);
-                this.botlog('global', target + ' was appointed BotAdmin by ' + by);
+                Bot.botlog('global', target + ' was appointed BotAdmin by ' + by);
                 break;
             case 'auth':
                 var ranks = fs.readFileSync('data/ranks.txt').toString().split('\n');
@@ -163,7 +163,7 @@ exports.commands = {
         fs.appendFile('data/mailbl.txt', arg + '\n', function() {
             Bot.say(by, room, arg + ' is now banned from using ' + config.commandcharacter[0] + 'mail');
         }.bind(this));
-        this.botlog('global', arg + ' was banned from using mail by ' + by);
+        Bot.botlog('global', arg + ' was banned from using mail by ' + by);
     },
     maillog: 'maillogs',
     maillogs: function(arg, by, room) {
@@ -201,7 +201,7 @@ exports.commands = {
     banroom: function(arg, by, room) {
         if (!Bot.rankFrom(by, '~')) return false;
         fs.appendFile('data/bannedrooms.txt', '\n' + toId(arg));
-        this.botlog('global', arg + ' room was banned from using the bot by ' + by);
+        Bot.botlog('global', arg + ' room was banned from using the bot by ' + by);
         Bot.say(by, room, 'RIP ' + arg);
     },
     botban: function(arg, by, room) {
@@ -211,7 +211,7 @@ exports.commands = {
         if (banned.indexOf(toId(arg)) > -1) return Bot.say(by, room, 'User is already banned.')
         fs.appendFile('data/commandban.txt', toId(arg) + '\n');
         Bot.say(by, room, arg + ' was banned from using the bot by ' + by)
-        this.botlog('global', arg + ' was banned from using the bot by ' + by);
+        Bot.botlog('global', arg + ' was banned from using the bot by ' + by);
         Commands.bot.call(this, 'deauth, ' + arg, config.nick, room);
     },
     botunban: function(arg, by, room) {
@@ -231,7 +231,7 @@ exports.commands = {
         else {
             Bot.say(by, room, 'Done.')
         }
-        this.botlog('global', arg + ' was unbanned from using the bot by ' + by);
+        Bot.botlog('global', arg + ' was unbanned from using the bot by ' + by);
 
     },
 };

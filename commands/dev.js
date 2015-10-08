@@ -128,19 +128,7 @@ exports.commands = {
 	reload: function(arg, by, room) {
 		if (!Bot.isDev(by)) return false;
 		try {
-			Commands = {};
-			var commandFiles = fs.readdirSync('./commands/');
-			for (var i = 0; i < commandFiles.length; i++) {
-				try {
-					Tools.uncacheTree('./commands/' + commandFiles[i]);
-					Object.merge(Commands, require('./commands/' + commandFiles[i]).commands);
-					ok('Reloaded command files: ' + commandFiles[i])
-				}
-				catch (e) {
-					error('Unable to reload command files: ' + commandFiles[i]);
-					console.log(e.stack)
-				}
-			}
+			Bot.reload();
 			Bot.say(by, room, 'Commands reloaded.');
 			ok('Commands reloaded.')
 		}
