@@ -183,7 +183,7 @@ exports.commands = {
                         Bot.say(config.nick, room, playerData[room][currentPlayer[room]].name + '\'s turn! __(' + config.commandcharacter[0] + 'hit or ' + config.commandcharacter[0] + 'stay)__')
                         Bot.talk(room, '/w ' + currentPlayer[room] + ', [' + room + '] Your hand is [' + playerData[room][currentPlayer[room]].hand.join('], [') + ']. The total is ' + playerData[room][currentPlayer[room]].total)
                     }
-                }.bind(this), 90000);
+                }, 90000);
                 break;
             case 'end':
                 if (!Bot.canUse('blackjack', room, by)) return false;
@@ -354,7 +354,7 @@ exports.commands = {
                     Bot.say(config.nick, room, playerData[room][currentPlayer[room]].name + '\'s turn! __(' + config.commandcharacter[0] + 'hit or ' + config.commandcharacter[0] + 'stay)__');
                     Bot.talk(room, '/w ' + currentPlayer[room] + ', [' + room + '] Your hand is [' + playerData[room][currentPlayer[room]].hand.join('], [') + ']. The total is ' + playerData[room][currentPlayer[room]].total)
                 }
-            }.bind(this), 90000);
+            }, 90000);
         }
     },
     stay: function(arg, by, room) {
@@ -514,6 +514,6 @@ exports.commands = {
                 Bot.say(config.nick, room, playerData[room][currentPlayer[room]].name + '\'s turn! __(' + config.commandcharacter[0] + 'hit or ' + config.commandcharacter[0] + 'stay)__');
                 Bot.talk(room, '/w ' + currentPlayer[room] + ', [' + room + '] Your hand is [' + playerData[room][currentPlayer[room]].hand.join('], [') + ']. The total is ' + playerData[room][currentPlayer[room]].total)
             }
-        }.bind(this), 90000);
+        }, 90000);
     },
 }

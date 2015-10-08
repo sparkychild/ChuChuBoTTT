@@ -23,7 +23,7 @@ exports.commands = {
         Bot.talk(room, hangmanProgress[room]);
         hangmanInterval[room] = setInterval(function() {
             Bot.talk(room, hangmanProgress[room]);
-        }.bind(this), 15000);
+        }, 15000);
     },
     endhangman: function(arg, by, room) {
         if (room.charAt(',') === 0) return false;

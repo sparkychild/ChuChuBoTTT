@@ -139,7 +139,7 @@ exports.commands = {
 					Bot.talk(',' + crazyeight.currentPlayer[room], '(' + room + ') ' + '[' + crazyeight.playerData[room][crazyeight.currentPlayer[room]].hand.join('], [') + ']')
 					Bot.talk(room, crazyeight.playerData[room][crazyeight.currentPlayer[room]].name + '\'s turn! __(' + config.commandcharacter[0] + 'play [card] or ' + config.commandcharacter[0] + 'draw)__');
 					Bot.talk(room, '**Top Card: [' + crazyeight.topCard[room] + ']**');
-				}.bind(this), 90000)
+				}, 90000)
 		}
 	},
 	play: function(arg, by, room) {
@@ -287,7 +287,7 @@ exports.commands = {
 			Bot.talk(',' + crazyeight.currentPlayer[room], '(' + room + ') ' + '[' + crazyeight.playerData[room][crazyeight.currentPlayer[room]].hand.join('], [') + ']')
 			Bot.talk(room, crazyeight.playerData[room][crazyeight.currentPlayer[room]].name + '\'s turn! __(' + config.commandcharacter[0] + 'play [card] or ' + config.commandcharacter[0] + 'draw)__');
 			Bot.talk(room, '**Top Card: [' + crazyeight.topCard[room] + ']**');
-		}.bind(this), 90000)
+		}, 90000)
 	},
 	draw: function(arg, by, room) {
 		if (toId(by) !== crazyeight.currentPlayer[room] || !crazyeight.gameStatus[room] || crazyeight.gameStatus[room] !== 'on') return false;
@@ -348,6 +348,6 @@ exports.commands = {
 			Bot.talk(',' + crazyeight.currentPlayer[room], '(' + room + ') ' + '[' + crazyeight.playerData[room][crazyeight.currentPlayer[room]].hand.join('], [') + ']')
 			Bot.talk(room, crazyeight.playerData[room][crazyeight.currentPlayer[room]].name + '\'s turn! __(' + config.commandcharacter[0] + 'play [card] or ' + config.commandcharacter[0] + 'draw)__');
 			Bot.talk(room, '**Top Card: [' + crazyeight.topCard[room] + ']**');
-		}.bind(this), 90000)
+		}, 90000)
 	},
 };

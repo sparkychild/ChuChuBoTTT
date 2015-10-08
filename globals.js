@@ -122,4 +122,24 @@ global.MAXBATTLES = 1;
 global.isolate = function(data) {
     return JSON.parse(JSON.stringify(data));
 }
-
+global.checkGame = function(room){
+	if(triviaON[room]){
+		return 'trivia';
+	}
+	if(kunc.on[room]){
+		return 'kunc';
+	}
+	if(hangmanON[room]){
+		return 'hangman';
+	}
+	if(anagramON[room]){
+		return 'anagram';
+	}
+	if(gameStatus[room] || gameStatus[room] !== 'off'){
+		return 'blackjack';
+	}
+	if(crazyeight.gameStatus[room] && crazyeight.gameStatus[room] !== 'off'){
+		return 'crazyeights'
+	}
+	return false;
+};

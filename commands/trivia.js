@@ -24,7 +24,7 @@ exports.commands = {
 			triviaQ[room] = triviaQuestions[TQN];
 			triviaA[room] = triviaQuestions[TQN + 1].toLowerCase().replace(/ /g, '').trim().split(',');
 			Bot.say(config.nick, room, 'Question: __' + triviaQ[room] + '__');
-		}.bind(this), 17000);
+		}, 17000);
 
 	},
 	ta: 'triviaanswer',
