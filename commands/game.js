@@ -44,6 +44,33 @@ exports.commands = {
             Commands[game].call(this, '', by, room, 'skip' + game)
         }
     },
+    signups: function(arg, by, room){
+        var game = toID(arg.split(',')[0]);
+        var arg = arg.split(',').slice(1).join(',').trim();
+        switch (game){
+            case 'bj': case 'blackjack': case 'blowjob':
+                Commands.blackjack.call(this, 'new', by, room);
+                break;
+            case 'crazyeights': case 'c8':
+                Commands.crazyeights.call(this, 'new', by, room);
+                break;
+            case 'trivia':
+                Commands.trivia.call(this, arg, by, room);
+                break;
+            case 'hangman':
+                Commands.hangman.call(this, arg, by, room);
+                break;
+            case 'anagrams':
+                Commands.anagrams.call(this, arg, by, room);
+                break;
+            case 'kunc':
+                Commands.kunc.call(this, arg, by, room);
+                break;
+            case 'statspread':
+                Commands.statspread.call(this, arg, by, room);
+                break;
+        }
+    },
     randomgame: function(arg, by, room) {
         if (!Bot.canUse('randomgame', room, by)) return false;
         var gameCount = 6;

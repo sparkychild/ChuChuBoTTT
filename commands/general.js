@@ -51,7 +51,7 @@ exports.commands = {
         var opts = arg.split(',');
         var cmd = toId(opts[0]);
         if (cmd === 'mod' || cmd === 'm' || cmd === 'modding') {
-            if (!opts[1] || !toId(opts[1]) || !(toId(opts[1]) in modOpts)) return Bot.say(by, room, 'Incorrect command: correct syntax is ' + config.commandcharacter + 'set mod, [' +
+            if (!opts[1] || !toId(opts[1]) || !(toId(opts[1]) in modOpts)) return Bot.say(by, room, 'Incorrect command: correct syntax is ' + config.commandcharacter[0]+ 'set mod, [' +
                 Object.keys(modOpts).join('/') + '](, [on/off])');
 
             if (!this.settings[config.serverid][toId(config.nick)]['modding']) this.settings[config.serverid][toId(config.nick)]['modding'] = {};
@@ -61,7 +61,7 @@ exports.commands = {
                 if (!(toId(opts[2]) in {
                         on: 1,
                         off: 1
-                    })) return Bot.say(by, room, 'Incorrect command: correct syntax is ' + config.commandcharacter + 'set mod, [' +
+                    })) return Bot.say(by, room, 'Incorrect command: correct syntax is ' + config.commandcharacter[0]+ 'set mod, [' +
                     Object.keys(modOpts).join('/') + '](, [on/off])');
                 if (toId(opts[2]) === 'off') {
                     this.settings[config.serverid][toId(config.nick)]['modding'][room][toId(opts[1])] = 0;
@@ -80,7 +80,7 @@ exports.commands = {
             }
         }
         else {
-            if (!Commands[cmd]) return Bot.say(by, room, config.commandcharacter + '' + opts[0] + ' is not a valid command.');
+            if (!Commands[cmd]) return Bot.say(by, room, config.commandcharacter[0]+ '' + opts[0] + ' is not a valid command.');
             var failsafe = 0;
             while (!(cmd in settable)) {
                 if (typeof Commands[cmd] === 'string') {
@@ -91,7 +91,7 @@ exports.commands = {
                         break;
                     }
                     else {
-                        Bot.say(by, room, 'The settings for ' + config.commandcharacter + '' + opts[0] + ' cannot be changed.');
+                        Bot.say(by, room, 'The settings for ' + config.commandcharacter[0]+ '' + opts[0] + ' cannot be changed.');
                         return;
                     }
                 }
@@ -101,7 +101,7 @@ exports.commands = {
                 }
                 failsafe++;
                 if (failsafe > 5) {
-                    Bot.say(by, room, 'The command "' + config.commandcharacter + '' + opts[0] + '" could not be found.');
+                    Bot.say(by, room, 'The command "' + config.commandcharacter[0]+ '' + opts[0] + '" could not be found.');
                     return;
                 }
             }
@@ -121,16 +121,16 @@ exports.commands = {
             if (!opts[1] || !opts[1].trim()) {
                 var msg = '';
                 if (!this.settings[config.serverid][toId(config.nick)][cmd] || (!this.settings[config.serverid][toId(config.nick)][cmd][room] && this.settings[config.serverid][toId(config.nick)][cmd][room] !== false)) {
-                    msg = '' + config.commandcharacter + '' + cmd + ' is available for users of rank ' + ((cmd === 'autoban' || cmd === 'banword') ? '#' : config.defaultrank) + ' and above.';
+                    msg = '' + config.commandcharacter[0]+ '' + cmd + ' is available for users of rank ' + ((cmd === 'autoban' || cmd === 'banword') ? '#' : config.defaultrank) + ' and above.';
                 }
                 else if (this.settings[config.serverid][toId(config.nick)][cmd][room] in settingsLevels) {
-                    msg = '' + config.commandcharacter + '' + cmd + ' is available for users of rank ' + this.settings[config.serverid][toId(config.nick)][cmd][room] + ' and above.';
+                    msg = '' + config.commandcharacter[0]+ '' + cmd + ' is available for users of rank ' + this.settings[config.serverid][toId(config.nick)][cmd][room] + ' and above.';
                 }
                 else if (this.settings[config.serverid][toId(config.nick)][cmd][room] === true) {
-                    msg = '' + config.commandcharacter + '' + cmd + ' is available for all users in this room.';
+                    msg = '' + config.commandcharacter[0]+ '' + cmd + ' is available for all users in this room.';
                 }
                 else if (this.settings[config.serverid][toId(config.nick)][cmd][room] === false) {
-                    msg = '' + config.commandcharacter + '' + cmd + ' is not available for use in this room.';
+                    msg = '' + config.commandcharacter[0]+ '' + cmd + ' is not available for use in this room.';
                 }
                 Bot.say(by, room, msg);
                 return;
@@ -142,7 +142,7 @@ exports.commands = {
                 if (!this.settings[config.serverid][toId(config.nick)][cmd]) this.settings[config.serverid][toId(config.nick)][cmd] = {};
                 this.settings[config.serverid][toId(config.nick)][cmd][room] = settingsLevels[newRank];
                 Tools.writeSettings();
-                Bot.say(by, room, 'The command ' + config.commandcharacter + '' + cmd + ' is now ' +
+                Bot.say(by, room, 'The command ' + config.commandcharacter[0]+ '' + cmd + ' is now ' +
                     (settingsLevels[newRank] === newRank ? ' available for users of rank ' + newRank + ' and above.' :
                         (this.settings[config.serverid][toId(config.nick)][cmd][room] ? 'available for all users in this room.' : 'unavailable for use in this room.')))
             }
@@ -215,7 +215,7 @@ exports.commands = {
         choices = choices.filter(function(i) {
             return (toId(i) !== '')
         });
-        if (choices.length < 2) return Bot.say(by, room, (room.charAt(0) === ',' ? '' : '/pm ' + by + ', ') + config.commandcharacter + 'choose: You must give at least 2 valid choices.');
+        if (choices.length < 2) return Bot.say(by, room, (room.charAt(0) === ',' ? '' : '/pm ' + by + ', ') + config.commandcharacter[0]+ 'choose: You must give at least 2 valid choices.');
 
         var choice = choices[Math.floor(Math.random() * choices.length)];
         Bot.say(by, room, ((Bot.canUse('choose', room, by) || room.charAt(0) === ',') ? '' : '/pm ' + by + ', ') + stripCommands(choice));

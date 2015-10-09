@@ -8,16 +8,13 @@ exports.commands = {
         }
         if (checkGame(room)) return Bot.say(by, room, 'There is already a game going on in this room!');
         var HQN = Math.floor(Object.keys(wordBank).length * Math.random());
-        var spl = Object.keys(wordBank)[HQN].split('||');
-        Bot.say(by, room, 'Hosting a game of Hangman! Use ' + config.commandcharacter[0] + 'g to guess letter or word. It is a ``' + wordBank[spl[0]] + '``.')
+        var spl = Object.keys(wordBank)[HQN];
+        Bot.say(by, room, 'Hosting a game of Hangman! Use ' + config.commandcharacter[0] + 'g to guess letter or word. It is a ``' + wordBank[spl] + '``.')
         game('hangman', room);
         hangmanON[room] = true;
         hangmanChances[room] = 0;
         hangmanDes[room] = '';
-        hangmanA[room] = spl[0];
-        if (spl[1]) {
-            hangmanDes[room] = spl[1];
-        }
+        hangmanA[room] = spl;
         hangmanProgress[room] = '';
         for (var i = 0; i < hangmanA[room].length; i++) hangmanProgress[room] += '_ ';
         hangmanProgress[room] += '| ';
@@ -34,13 +31,6 @@ exports.commands = {
         if (!hangmanON[room]) return false;
         hangmanON[room] = false;
         Bot.say(by, room, 'The game of hangman has been ended. The answer was ' + hangmanA[room] + '.');
-        if (!hangmanDes[room]) return false;
-        if (hangmanDes[room].indexOf('http') > -1) {
-            Bot.say(config.nick, room, 'For a tutorial/information about this dance style/term, click this following link: ' + hangmanDes[room])
-        }
-        else {
-            Bot.say(config.nick, room, 'The definition of this word is: ' + hangmanDes[room])
-        }
     },
     guesshangman: function(arg, by, room) {
         if (!hangmanON[room]) return false;
@@ -53,14 +43,6 @@ exports.commands = {
                 Economy.give(by, Economy.getPayout(3, room), room);
                 hangmanA[room] = '';
                 hangmanON[room] = false;
-                if (!hangmanDes[room]) return false;
-                if (hangmanDes[room].indexOf('http') > -1) {
-                    Bot.say(config.nick, room, 'For a tutorial/information about this dance style/term, click this following link: ' + hangmanDes[room])
-                }
-                else {
-                    Bot.say(config.nick, room, 'The definition of this word is: ' + hangmanDes[room])
-                }
-
             }
             else {
                 hangmanProgress[room] += toId(arg) + ' ';
@@ -71,13 +53,6 @@ exports.commands = {
                     Bot.say(config.nick, room, 'RIP, the man has died. Game over.');
                     Bot.say(config.nick, room, 'The answer was ' + hangmanA[room] + '.');
                     hangmanA[room] = '';
-                    if (!hangmanDes[room]) return false;
-                    if (hangmanDes[room].indexOf('http') > -1) {
-                        Bot.say(config.nick, room, 'For a tutorial/information about this dance style/term, click this following link: ' + hangmanDes[room])
-                    }
-                    else {
-                        Bot.say(config.nick, room, 'The definition of this word is: ' + hangmanDes[room])
-                    }
                 }
             }
         }
@@ -93,13 +68,6 @@ exports.commands = {
                         clearInterval(hangmanInterval[room]);
                         hangmanON[room] = false;
                         hangmanA[room] = '';
-                        if (!hangmanDes[room]) return false;
-                        if (hangmanDes[room].indexOf('http') > -1) {
-                            Bot.say(config.nick, room, 'For a tutorial/information about this dance style/term, click this following link: ' + hangmanDes[room])
-                        }
-                        else {
-                            Bot.say(config.nick, room, 'The definition of this word is: ' + hangmanDes[room])
-                        }
                     }
                 }
             }
@@ -112,14 +80,6 @@ exports.commands = {
                     Bot.say(config.nick, room, 'RIP, the man has died. Game over.');
                     Bot.say(config.nick, room, 'The answer was ' + hangmanA[room] + '.');
                     hangmanA[room] = '';
-
-                    if (!hangmanDes[room]) return false;
-                    if (hangmanDes[room].indexOf('http') > -1) {
-                        Bot.say(config.nick, room, 'For a tutorial/information about this dance style/term, click this following link: ' + hangmanDes[room])
-                    }
-                    else {
-                        Bot.say(config.nick, room, 'The definition of this word is: ' + hangmanDes[room])
-                    }
                 }
             }
         }

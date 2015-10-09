@@ -11,7 +11,19 @@ exports.commands = {
 		triviaPoints[room] = [];
 		triviaA[room] = [];
 		game('trivia', room);
-		Bot.say(by, room, 'Hosting a game of trivia\. First to 10 points wins!  use ' + config.commandcharacter[0] + 'g or ' + config.commandcharacter[0] + 'ta to submit your answer\.');
+		if (!arg) {
+			triviaScorecap[room] = 5;
+		}
+		else {
+			var cap = arg.replace(/[^0-9]/g, '');
+			if (cap) {
+				triviaScorecap[room] = cap * 1;
+			}
+			else {
+				triviaScorecap[room] = 5;
+			}
+		}
+		Bot.say(by, room, 'Hosting a game of trivia\. First to ' + triviaScorecap[room] + ' points wins!  use ' + config.commandcharacter[0] + 'g or ' + config.commandcharacter[0] + 'ta to submit your answer\.');
 		triviaTimer[room] = setInterval(function() {
 			if (triviaA[room][0]) {
 				if (triviaA[room].length > 1) {
@@ -30,29 +42,24 @@ exports.commands = {
 	},
 	ta: 'guesstrivia',
 	guesstrivia: function(arg, by, room) {
-		if (!triviaON[room]) return false;
+		if (!triviaON[room] || !arg) return false;
 		arg = toId(arg);
 		if (!arg) return false;
 		var user = toId(by);
 		if (triviaA[room].indexOf(arg) !== -1) {
-			if (triviaPoints[room].indexOf(user) > -1) {
-				triviaA[room] = [];
-				triviaPoints[room][triviaPoints[room].indexOf(user) + 1] = triviaPoints[room][triviaPoints[room].indexOf(user) + 1] + 1;
-				if (triviaPoints[room][triviaPoints[room].indexOf(user) + 1] >= 10) {
-					clearInterval(triviaTimer[room]);
-					Bot.say(config.nick, room, 'Congrats to ' + by + ' for winning! Reward: ' + Economy.getPayout(triviaPoints[room].length, room) + ' ' + Economy.currency(room));
-					Economy.give(by, Economy.getPayout((triviaPoints[room].length), room), room)
-					triviaON[room] = false;
-					return false;
-				}
-				Bot.say(config.nick, room, '' + by.slice(1, by.length) + ' got the right answer, and has ' + triviaPoints[room][triviaPoints[room].indexOf(user) + 1] + ' points!');
+			triviaA[room] = [];
+			if (!triviaPoints[room][user]) {
+				triviaPoints[room][user] = 0;
 			}
-			else {
-				triviaA[room] = [];
-				triviaPoints[room][triviaPoints[room].length] = user;
-				triviaPoints[room][triviaPoints[room].length] = 1;
-				Bot.say(config.nick, room, '' + by.slice(1, by.length) + ' got the right answer, and has ' + triviaPoints[room][triviaPoints[room].indexOf(user) + 1] + ' point!');
+			triviaPoints[room][user]++;
+			if (triviaPoints[room][user] > triviaScorecap[room]) {
+				Bot.say(config.nick, room, 'Congrats to ' + by + ' for winning! Reward: ' + Economy.getPayout(triviaPoints[room].length, room) + ' ' + Economy.currency(room));
+				Economy.give(by, Economy.getPayout((triviaPoints[room].length), room), room);
+				delete triviaON[room];
+				clearInterval(triviaTimer[room]);
+				return;
 			}
+			Bot.say(config.nick, room, '' + by.slice(1) + ' got the right answer, and has ' + triviaPoints[room][user] + ' point!');
 		}
 	},
 	endtrivia: 'triviaend',
@@ -67,11 +74,9 @@ exports.commands = {
 		if (!triviaON[room]) return false;
 		if (!Bot.canUse('trivia', room, by)) return false;
 		var text = 'Points so far: '
-		for (var i = 0; i < triviaPoints[room].length; i++) {
-			text += '' + triviaPoints[room][i] + ': ';
-			text += triviaPoints[room][i + 1] + ' points, ';
-			i++
-		}
+        for (var i in triviaPoints[room]) {
+            text += i + ' - ' + triviaPoints[room][i] + ' points, '
+        }
 		Bot.say(by, room, text);
 	},
 	trivialist: function(arg, by, room) {

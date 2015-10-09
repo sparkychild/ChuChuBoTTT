@@ -82,6 +82,7 @@ global.anagramInterval = {};
 global.anagramA = {};
 global.anagramON = {};
 global.anagramPoints = {};
+global.anagramScorecap = {};
 //
 global.wordBank = require('./wordbank.js').words;
 
@@ -101,6 +102,7 @@ global.triviaA = {};
 global.triviaQ = {};
 global.triviaPoints = {};
 global.triviaQuestions = fs.readFileSync('data/trivia.txt').toString().split('\n');
+global.triviaScorecap = {};
 
 global.kunc = {
 	on: {},

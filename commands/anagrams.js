@@ -4,18 +4,30 @@ exports.commands = {
         if (room.charAt(',') === 0) return false;
         if (!Bot.canUse('anagrams', room, by)) return false;
         if (anagramON[room]) return false;
-        if(checkGame(room)) return Bot.say(by, room, 'There is already a game going on in this room!');
+        if (checkGame(room)) return Bot.say(by, room, 'There is already a game going on in this room!');
         anagramON[room] = true;
         anagramA[room] = '';
-        anagramPoints[room] = [];
-        Bot.say(by, room, 'Hosting a game of anagrams. Use ' + config.commandcharacter[0] + 'g to submit your answer.');
+        anagramPoints[room] = {};
+        if (!arg) {
+            anagramScorecap[room] = 5;
+        }
+        else {
+            var cap = arg.replace(/[^0-9]/g, '');
+            if (cap) {
+                anagramScorecap[room] = cap * 1;
+            }
+            else {
+                anagramScorecap[room] = 5;
+            }
+        }
+        Bot.say(by, room, 'Hosting a game of anagrams. Use ' + config.commandcharacter[0] + 'g to submit your answer. First to ' + anagramScorecap[room] + ' points wins!');
         game('anagrams', room)
         anagramInterval[room] = setInterval(function() {
             if (anagramA[room]) {
                 Bot.say(config.nick, room, 'The correct answer was: ' + anagramA[room]);
             }
             var AQN = Math.floor(Object.keys(wordBank).length * Math.random());
-            var AnagramEntry = Object.keys(wordBank)[AQN].split('||');
+            var AnagramEntry = Object.keys(wordBank)[AQN];
             anagramA[room] = AnagramEntry[0];
             var anagramQ = anagramA[room];
             var repeatTimes = (anagramA[room].length + 2) * (anagramA[room].length + 2);
@@ -35,24 +47,19 @@ exports.commands = {
         if (!toId(arg)) return false;
         if (toId(arg) !== toId(anagramA[room])) return false;
         var user = toId(by);
-        if (anagramPoints[room].indexOf(user) > -1) {
-            anagramA[room] = '';
-            anagramPoints[room][anagramPoints[room].indexOf(user) + 1] = anagramPoints[room][anagramPoints[room].indexOf(user) + 1] + 1;
-            if (anagramPoints[room][anagramPoints[room].indexOf(user) + 1] >= 10) {
-                clearInterval(anagramInterval[room]);
-                Bot.say(config.nick, room, 'Congrats to ' + by + ' for winning! Reward: ' + Economy.getPayout(anagramPoints[room].length, room) + ' ' + Economy.currency(room));
-                Economy.give(by, Economy.getPayout(anagramPoints[room].length, room), room)
-                anagramON[room] = false;
-                return false;
-            }
-            Bot.say(config.nick, room, '' + by.slice(1, by.length) + ' got the right answer, and has ' + anagramPoints[room][anagramPoints[room].indexOf(user) + 1] + ' points!');
+        anagramA[room] = '';
+        if (!anagramPoints[room][user]) {
+            anagramPoints[room][user] = 0
         }
-        else {
-            anagramA[room] = '';
-            anagramPoints[room][anagramPoints[room].length] = user;
-            anagramPoints[room][anagramPoints[room].length] = 1;
-            Bot.say(config.nick, room, '' + by.slice(1, by.length) + ' got the right answer, and has ' + anagramPoints[room][anagramPoints[room].indexOf(user) + 1] + ' point!');
+        anagramPoints[room][user]++;
+        if (anagramPoints[room][user] <= anagramScorecap[room]) {
+            Bot.say(config.nick, room, 'Congrats to ' + by + ' for winning! Reward: ' + Economy.getPayout(Object.keys(anagramPoints[room]).length * 2, room) + ' ' + Economy.currency(room));
+            Economy.give(by, Economy.getPayout(anagramPoints[room].length, room), room);
+            delete anagramON[room];
+            clearInterval(anagramInterval[room]);
+            return;
         }
+        Bot.say(config.nick, room, '' + by.slice(1, by.length) + ' got the right answer, and has ' + anagramPoints[room][toId(by)] + ' point!');
     },
     endanagram: 'endanagrams',
     anagramend: function(arg, by, room) {
@@ -68,10 +75,8 @@ exports.commands = {
         if (room.charAt(',') === 0) return false;
         if (!Bot.canUse('anagrams', room, by)) return false;
         var text = 'Points so far: '
-        for (var i = 0; i < anagramPoints[room].length; i++) {
-            text += '' + anagramPoints[room][i] + ': ';
-            text += anagramPoints[room][i + 1] + ' points, ';
-            i++
+        for (var i in anagramPoints[room]) {
+            text += i + ' - ' + anagramPoints[room][i] + ' points, '
         }
         Bot.say(by, room, text);
     },
