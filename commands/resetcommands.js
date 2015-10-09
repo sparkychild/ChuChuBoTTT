@@ -30,6 +30,14 @@ exports.commands = {
             ok('Reset crazyeights game in ' + room)
 
         }
+        if (kunc.on[room]) {
+            delete kunc.on[room];
+            ok('Reset kunc game in ' + room)
+        }
+        if(statspread.on[room]){
+            delete statspread.on[room];
+            ok('Reset StatSpread game in ' + room);
+        }
         if (Bot.repeatON[room]) {
             delete Bot.repeatON[room];
             clearInterval(Bot.repeatText[room]);
@@ -40,7 +48,7 @@ exports.commands = {
         if (cmd) return false;
         for (var tarRoom in triviaON) {
             if (triviaON[tarRoom]) {
-                clearInterval(triviaTimer[room]);
+                clearInterval(triviaTimer[tarRoom]);
                 delete triviaON[tarRoom];
                 ok('Reset trivia game in ' + tarRoom)
             }
@@ -68,15 +76,23 @@ exports.commands = {
         }
         for (var tarRoom in crazyeight.gameStatus) {
             if (crazyeight.gameStatus[tarRoom] !== 'off') {
-                clearInterval(crazyeight.interval[room]);
-                delete(crazyeight.gameStatus[room]);
+                clearInterval(crazyeight.interval[tarRoom]);
+                delete(crazyeight.gameStatus[tarRoom]);
                 ok('Reset crazyeights game in ' + tarRoom)
             }
         }
+        for (var tarRoom in kunc.on) {
+            delete kunc.on[tarRoom];
+            ok('Reset kunc game in ' + tarRoom);
+        }
+        for (var tarRoom in statspread.on) {
+            delete statspread.on[tarRoom];
+            ok('Reset StatSpread game in ' + tarRoom);
+        }
         for (var tarRoom in Bot.repeatON) {
             if (Bot.repeatON[tarRoom]) {
-                clearInterval(Bot.repeatText[room]);
-                delete Bot.repeatON[room];
+                clearInterval(Bot.repeatText[tarRoom]);
+                delete Bot.repeatON[tarRoom];
                 ok('Reset repeat in ' + tarRoom)
             }
         }
