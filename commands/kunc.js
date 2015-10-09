@@ -103,7 +103,7 @@ var Pokedex = isolate(POKEDEX);
 
 exports.commands = {
     //kunc game
-    sk: 'kunc',
+    skipkunc: 'kunc',
     kunc: function(arg, by, room, cmd) {
         if (!Bot.canUse('kunc', room, by) || room.charAt(0) === ',') return false;
         if (cmd === 'sk') {

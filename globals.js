@@ -135,6 +135,9 @@ global.checkGame = function(room){
 	if(kunc.on[room]){
 		return 'kunc';
 	}
+	if(statspread.on[room]){
+		return 'statspread';
+	}
 	if(hangmanON[room]){
 		return 'hangman';
 	}

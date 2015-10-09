@@ -2,7 +2,7 @@ exports.commands = {
     g: function(arg, by, room) {
         if (!checkGame(room)) return false;
         var game = checkGame(room)
-        if (['anagram', 'trivia', 'hangman', 'kunc'].indexOf(game) > -1) {
+        if (['anagram', 'trivia', 'hangman', 'kunc', 'statspread'].indexOf(game) > -1) {
             Commands['guess' + game].call(this, arg, by, room);
         }
     },
@@ -19,7 +19,7 @@ exports.commands = {
         if (['blackjack', 'crazyeights'].indexOf(game) > -1) {
             Commands[game].call(this, 'end', by, room);
         }
-        if (['anagram', 'trivia', 'hangman', 'kunc'].indexOf(game) > -1) {
+        if (['anagram', 'trivia', 'hangman', 'kunc', 'statspread'].indexOf(game) > -1) {
             Commands[game + 'end'].call(this, arg, by, room);
         }
     },
@@ -35,6 +35,13 @@ exports.commands = {
         var game = checkGame(room);
         if (['blackjack', 'crazyeights'].indexOf(game) > -1) {
             Commands[game].call(this, 'leave', by, room);
+        }
+    },
+    skip: function(arg, by, room){
+        if(!checkGame(room)) return false;
+        var game = checkGame(room);
+        if(['kunc', 'statspread'].indexOf(game) > -1){
+            Commands[game].call(this, '', by, room, 'skip' + game)
         }
     },
     randomgame: function(arg, by, room) {
