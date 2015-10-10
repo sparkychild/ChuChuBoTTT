@@ -71,6 +71,13 @@ exports.commands = {
                 break;
         }
     },
+    points: function(arg, by, room) {
+        if (!checkGame(room)) return false;
+        var game = checkGame(room);
+        if (['kunc', 'statspread', 'trivia', 'anagram'].indexOf(game) > -1) {
+            Commands[game + points].call(this, arg, by, room);
+        }
+    },
     randomgame: function(arg, by, room) {
         if (!Bot.canUse('randomgame', room, by)) return false;
         var gameCount = 6;
