@@ -198,6 +198,16 @@ exports.commands = {
         delete kunc.on[room];
         var tarAnswer = Pokedex[kunc.answer[room]].species;
         return Bot.say(by, room, 'The game of kunc has ended. The correct answer is: ' + tarAnswer);
+    },
+    kuncpoints: function(arg, by, room) {
+        if (!kunc.on[room]) return false;
+        if (room.charAt(',') === 0) return false;
+        if (!Bot.canUse('kunc', room, by)) return false;
+        var text = 'Points so far: '
+        for (var i in kunc.points[room]) {
+            text += i + ' - ' + kunc.points[room][i] + ' points, '
+        }
+        Bot.say(by, room, text);
     }
 };
 
