@@ -21,7 +21,7 @@ exports.commands = {
             }
         }
         Bot.say(by, room, 'Hosting a game of anagrams. Use ' + config.commandcharacter[0] + 'g to submit your answer. First to ' + anagramScorecap[room] + ' points wins!');
-        game('anagrams', room)
+        game('anagrams', room);
         anagramInterval[room] = setInterval(function() {
             if (anagramA[room]) {
                 Bot.say(config.nick, room, 'The correct answer was: ' + anagramA[room]);
@@ -49,7 +49,7 @@ exports.commands = {
         var user = toId(by);
         anagramA[room] = '';
         if (!anagramPoints[room][user]) {
-            anagramPoints[room][user] = 0
+            anagramPoints[room][user] = 0;
         }
         anagramPoints[room][user]++;
         if (anagramPoints[room][user] <= anagramScorecap[room]) {
@@ -68,16 +68,34 @@ exports.commands = {
         clearInterval(anagramInterval[room]);
         if (!anagramON[room]) return false;
         anagramON[room] = false;
-        Bot.say(by, room, 'The game of anagrams has been ended.')
+        Bot.say(by, room, 'The game of anagrams has been ended.');
     },
     anagrampoints: function(arg, by, room) {
         if (!anagramON[room]) return false;
         if (room.charAt(',') === 0) return false;
         if (!Bot.canUse('anagrams', room, by)) return false;
-        var text = 'Points so far: '
+        var text = 'Points so far: ';
         for (var i in anagramPoints[room]) {
-            text += i + ' - ' + anagramPoints[room][i] + ' points, '
+            text += i + ' - ' + anagramPoints[room][i] + ' points, ';
         }
         Bot.say(by, room, text);
     },
 };
+
+/****************************
+*       For C9 Users        *
+*****************************/
+// Yes, sadly it can't be done in one huge chunk w/o undoing it / looking ugly :(
+
+/* globals toId */
+/* globals Bot */
+/* globals config */
+/* globals anagramPoints */
+/* globals anagramON */
+/* globals anagramInterval */
+/* globals Economy */
+/* globals anagramScorecap */
+/* globals anagramA */
+/* globals wordBank */
+/* globals game */
+/* globals checkGame */

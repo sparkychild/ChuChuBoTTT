@@ -24,12 +24,12 @@ exports.commands = {
         if (cmd === 'skipss' && !statspread.on[room]) return;
         if (cmd !== 'skipss') {
             if (!arg) {
-                statspread.score[room] = {}
+                statspread.score[room] = {};
                 statspread.scorecap[room] = 3;
-                Bot.say(by, room, 'Hosting a game of "Stat Spread".  Simply guess which Pokémon has this stat spread. First to ' + statspread.scorecap[room] + ' points wins!')
+                Bot.say(by, room, 'Hosting a game of "Stat Spread".  Simply guess which Pokémon has this stat spread. First to ' + statspread.scorecap[room] + ' points wins!');
             }
             else {
-                statspread.score[room] = {}
+                statspread.score[room] = {};
                 var cap = arg.replace(/[^0-9]/g, '');
                 if (cap) {
                     statspread.scorecap[room] = cap * 1;
@@ -37,7 +37,7 @@ exports.commands = {
                 else {
                     statspread.scorecap[room] = 3;
                 }
-                Bot.say(by, room, 'Hosting a game of "Stat Spread".  Simply guess which Pokémon has this stat spread. First to ' + statspread.scorecap[room] + ' points wins!')
+                Bot.say(by, room, 'Hosting a game of "Stat Spread".  Simply guess which Pokémon has this stat spread. First to ' + statspread.scorecap[room] + ' points wins!');
             }
         }
         if (cmd === 'skipss') {
@@ -49,7 +49,7 @@ exports.commands = {
         var tarMon = allMons[~~(allMons.length * Math.random())];
         var statSpread = POKEDEX[tarMon].baseStats;
         statspread.answer[room] = findSimilarBST(statSpread);
-        Bot.say(by, room, 'Stat Spread: ' + Object.values(statSpread).join('/') + '. Use ' + config.commandcharacter[0] + 'g to submit your answer.')
+        Bot.say(by, room, 'Stat Spread: ' + Object.values(statSpread).join('/') + '. Use ' + config.commandcharacter[0] + 'g to submit your answer.');
     },
     guessstatspread: function(arg, by, room) {
         if (!arg || !statspread.on[room]) return false;
@@ -59,7 +59,7 @@ exports.commands = {
             if (!statspread.score[room][userid]) {
                 statspread.score[room][userid] = 0;
             }
-            statspread.score[room][userid]++
+            statspread.score[room][userid]++;
                 if (statspread.score[room][userid] >= statspread.scorecap[room]) {
                     Bot.say(by, room, by + ' has won the game! Answer(s): __' + formatAnswer(statspread.answer[room]) + '.__');
                     Economy.give(by, Economy.getPayout(statspread.scorecap[room], room), room);
@@ -72,7 +72,7 @@ exports.commands = {
             var tarMon = allMons[~~(allMons.length * Math.random())];
             var statSpread = POKEDEX[tarMon].baseStats;
             statspread.answer[room] = findSimilarBST(statSpread);
-            Bot.say(by, room, 'Stat Spread: ' + Object.values(statSpread).join('/') + '. Use ' + config.commandcharacter[0] + 'g to submit your answer.')
+            Bot.say(by, room, 'Stat Spread: ' + Object.values(statSpread).join('/') + '. Use ' + config.commandcharacter[0] + 'g to submit your answer.');
         }
     },
     statspreadend: function(arg, by, room) {
@@ -80,4 +80,18 @@ exports.commands = {
         Bot.say(by, room, 'The Stat Spread game has been ended. The correct answer(s) were: ' + formatAnswer(statspread.answer[room]) + '.');
         delete statspread.on[room];
     }
-}
+};
+
+/****************************
+*       For C9 Users        *
+*****************************/
+// Yes, sadly it can't be done in one huge chunk w/o undoing it / looking ugly :(
+
+/* globals toId */
+/* globals Bot */
+/* globals config */
+/* globals Economy */
+/* globals statspread */
+/* globals POKEDEX */
+/* globals checkGame */
+/* globals MOVEDEX */

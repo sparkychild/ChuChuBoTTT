@@ -9,7 +9,7 @@ exports.commands = {
         if (checkGame(room)) return Bot.say(by, room, 'There is already a game going on in this room!');
         var HQN = Math.floor(Object.keys(wordBank).length * Math.random());
         var spl = Object.keys(wordBank)[HQN];
-        Bot.say(by, room, 'Hosting a game of Hangman! Use ' + config.commandcharacter[0] + 'g to guess letter or word. It is a ``' + wordBank[spl] + '``.')
+        Bot.say(by, room, 'Hosting a game of Hangman! Use ' + config.commandcharacter[0] + 'g to guess letter or word. It is a ``' + wordBank[spl] + '``.');
         game('hangman', room);
         hangmanON[room] = true;
         hangmanChances[room] = 0;
@@ -83,5 +83,24 @@ exports.commands = {
                 }
             }
         }
-    },
-}
+    }
+};
+
+/****************************
+*       For C9 Users        *
+*****************************/
+// Yes, sadly it can't be done in one huge chunk w/o undoing it / looking ugly :(
+
+/* globals toId */
+/* globals Bot */
+/* globals config */
+/* globals hangmanA */
+/* globals hangmanProgress */
+/* globals hangmanChances */
+/* globals hangmanON */
+/* globals hangmanInterval */
+/* globals Economy */
+/* globals hangmanDes */
+/* globals game */
+/* globals checkGame */
+/* globals wordBank */

@@ -9,18 +9,18 @@ exports.commands = {
 			return false;
 		}
 		else {
-			arg = toId(arg)
+			arg = toId(arg);
 		}
 		switch (arg) {
 			case 'new':
 				if (!Bot.canUse('crazyeights', room, by)) return false;
 				if (crazyeight.gameStatus[room] !== 'off') return Bot.say(by, room, 'A crazyeights game is already going on!');
 				if (checkGame(room)) return Bot.say(by, room, 'There is already a game going on in this room!');
-				Bot.say(by, room, 'A new game of Crazy Eights is starting. Do +crazyeights join to join the game!')
-				Bot.say(config.nick, room, 'The goal is to be the first player to get rid of all your cards.  A [ 2] will cause the next player to draw 2 cards and lose their turn.')
+				Bot.say(by, room, 'A new game of Crazy Eights is starting. Do +crazyeights join to join the game!');
+				Bot.say(config.nick, room, 'The goal is to be the first player to get rid of all your cards.  A [ 2] will cause the next player to draw 2 cards and lose their turn.');
 				Bot.say(config.nick, room, 'A [ J] will skip the next player\'s turn and a [♠Q] will make the next player forfeit his/her turn and draw 4 cards. An [ 8] will allow the player to change the suit.');
 				Bot.say(config.nick, room, 'You can play a card with either the same suit or number/letter.  The goal is to get rid of your cards before the other players do so.');
-				Bot.say(config.nick, room, 'You only need to say first letter of the suit + value to play your card. Ex. ' + config.commandcharacter[0] + 'play sQ would be playing the Queen of Spades.')
+				Bot.say(config.nick, room, 'You only need to say first letter of the suit + value to play your card. Ex. ' + config.commandcharacter[0] + 'play sQ would be playing the Queen of Spades.');
 				game('crazyeights', room);
 				crazyeight.gameStatus[room] = 'signups';
 				crazyeight.playerData[room] = {};
@@ -66,7 +66,7 @@ exports.commands = {
 				crazyeight.gameStatus[room] = 'on';
 				crazyeight.deck[room] = Tools.generateDeck(1);
 
-				Bot.say(by, room, 'Use ' + config.commandcharacter[0] + 'play [card] to play a card. c for clubs, h for hearts, s for spades and, d for diamonds. When playing a [ 8], be sure to include what you\'re changing to (' + config.commandcharacter[0] + 'play c8 s)')
+				Bot.say(by, room, 'Use ' + config.commandcharacter[0] + 'play [card] to play a card. c for clubs, h for hearts, s for spades and, d for diamonds. When playing a [ 8], be sure to include what you\'re changing to (' + config.commandcharacter[0] + 'play c8 s)');
 
 				//deal the cards
 				for (var j = 0; j < 7; j++) {
@@ -94,8 +94,8 @@ exports.commands = {
 				//init first player
 				crazyeight.currentPlayer[room] = crazyeight.playerList[room][0];
 
-				Bot.talk(',' + crazyeight.currentPlayer[room], '(' + room + ') ' + '[' + crazyeight.playerData[room][crazyeight.currentPlayer[room]].hand.join('], [') + ']')
-				Bot.talk(room, crazyeight.playerData[room][crazyeight.currentPlayer[room]].name + '\'s turn! __(' + config.commandcharacter[0] + 'play [card] or ' + config.commandcharacter[0] + 'draw)__')
+				Bot.talk(',' + crazyeight.currentPlayer[room], '(' + room + ') ' + '[' + crazyeight.playerData[room][crazyeight.currentPlayer[room]].hand.join('], [') + ']');
+				Bot.talk(room, crazyeight.playerData[room][crazyeight.currentPlayer[room]].name + '\'s turn! __(' + config.commandcharacter[0] + 'play [card] or ' + config.commandcharacter[0] + 'draw)__');
 
 
 				crazyeight.interval[room] = setInterval(function() {
@@ -121,12 +121,12 @@ exports.commands = {
 					//checking if all players are DQ'd
 
 					if (crazyeight.playerList[room].length === 0) {
-						Bot.say(config.nick, room, 'Nobody wins this game :(')
+						Bot.say(config.nick, room, 'Nobody wins this game :(');
 					}
 					else if (crazyeight.playerList[room].length === 1) {
 						Bot.say(config.nick, room, crazyeight.playerData[room][crazyeight.playerList[room][0]].name + ' wins!');
 						Bot.say(config.nick, room, 'Rewards: ' + Economy.getPayout(crazyeight.playerList[room].length, room) + ' ' + Economy.currency(room));
-						Economy.give(crazyeight.playerData[room][crazyeight.playerList[room][0]].name, Economy.getPayout(crazyeight.playerList[room].length, room), room)
+						Economy.give(crazyeight.playerData[room][crazyeight.playerList[room][0]].name, Economy.getPayout(crazyeight.playerList[room].length, room), room);
 					}
 					if (crazyeight.playerList[room].length < 2) {
 						clearInterval(crazyeight.interval[room]);
@@ -137,10 +137,10 @@ exports.commands = {
 					crazyeight.currentPlayer[room] = crazyeight.playerList[room][(crazyeight.playerList[room].indexOf(crazyeight.currentPlayer[room]) + 1) % crazyeight.playerList[room].length];
 
 					//pming next user their hand
-					Bot.talk(',' + crazyeight.currentPlayer[room], '(' + room + ') ' + '[' + crazyeight.playerData[room][crazyeight.currentPlayer[room]].hand.join('], [') + ']')
+					Bot.talk(',' + crazyeight.currentPlayer[room], '(' + room + ') ' + '[' + crazyeight.playerData[room][crazyeight.currentPlayer[room]].hand.join('], [') + ']');
 					Bot.talk(room, crazyeight.playerData[room][crazyeight.currentPlayer[room]].name + '\'s turn! __(' + config.commandcharacter[0] + 'play [card] or ' + config.commandcharacter[0] + 'draw)__');
 					Bot.talk(room, '**Top Card: [' + crazyeight.topCard[room] + ']**');
-				}, 90000)
+				}, 90000);
 		}
 	},
 	play: function(arg, by, room) {
@@ -153,7 +153,7 @@ exports.commands = {
 			var modifier = arg[1].slice(0, 1).toLowerCase().replace('c', '♣').replace('h', '♥').replace('d', '♦').replace('s', '♠');
 		}
 		else {
-			var modifier = '';
+			modifier = '';
 		}
 
 
@@ -169,11 +169,11 @@ exports.commands = {
 			return Bot.say(by, room, 'You can\'t play this card now.');
 		}
 		if (value === '8' && !modifier) {
-			return Bot.say(by, room, 'Please choose what suit to change to.  Ex. ' + config.commandcharacter[0] + 'play c8 s')
+			return Bot.say(by, room, 'Please choose what suit to change to.  Ex. ' + config.commandcharacter[0] + 'play c8 s');
 		}
 		if (modifier) {
 			if (suitList.indexOf(modifier) === -1) {
-				return Bot.say(by, room, 'Not a correct suit.')
+				return Bot.say(by, room, 'Not a correct suit.');
 			}
 		}
 
@@ -223,7 +223,7 @@ exports.commands = {
 		if (crazyeight.topCard[room] === '♠Q') {
 			crazyeight.currentPlayer[room] = crazyeight.playerList[room][(crazyeight.playerList[room].indexOf(crazyeight.currentPlayer[room]) + 1) % crazyeight.playerList[room].length];
 			//for loop - draw 4
-			var tarPlayer = crazyeight.currentPlayer[room];
+			tarPlayer = crazyeight.currentPlayer[room];
 			for (var y = 0; y < 4; y++) {
 				crazyeight.playerData[room][tarPlayer].hand[crazyeight.playerData[room][tarPlayer].hand.length] = crazyeight.deck[room][0];
 				crazyeight.deck[room] = crazyeight.deck[room].slice(1);
@@ -236,14 +236,14 @@ exports.commands = {
 		if (crazyeight.playerData[room][crazyeight.currentPlayer[room]].hand.length < 1) {
 			Bot.say(config.nick, room, by.slice(1) + ' wins!');
 			Bot.say(config.nick, room, 'Rewards: ' + Economy.getPayout(crazyeight.playerList[room].length, room) + ' ' + Economy.currency(room));
-			Economy.give(crazyeight.playerData[room][crazyeight.playerList[room][0]].name, Economy.getPayout(crazyeight.playerList[room].length, room), room)
+			Economy.give(crazyeight.playerData[room][crazyeight.playerList[room][0]].name, Economy.getPayout(crazyeight.playerList[room].length, room), room);
 			clearInterval(crazyeight.interval[room]);
 			crazyeight.gameStatus[room] = 'off';
 			return;
 		}
 
 		crazyeight.currentPlayer[room] = crazyeight.playerList[room][(crazyeight.playerList[room].indexOf(crazyeight.currentPlayer[room]) + 1) % crazyeight.playerList[room].length];
-		Bot.talk(',' + crazyeight.currentPlayer[room], '(' + room + ') ' + '[' + crazyeight.playerData[room][crazyeight.currentPlayer[room]].hand.join('], [') + ']')
+		Bot.talk(',' + crazyeight.currentPlayer[room], '(' + room + ') ' + '[' + crazyeight.playerData[room][crazyeight.currentPlayer[room]].hand.join('], [') + ']');
 		Bot.talk(room, crazyeight.playerData[room][crazyeight.currentPlayer[room]].name + '\'s turn! __(' + config.commandcharacter[0] + 'play [card] or ' + config.commandcharacter[0] + 'draw)__');
 		//start new dq cycle
 		crazyeight.interval[room] = setInterval(function() {
@@ -269,12 +269,12 @@ exports.commands = {
 			//checking if all players are DQ'd
 
 			if (crazyeight.playerList[room].length === 0) {
-				Bot.say(config.nick, room, 'Nobody wins this game :(')
+				Bot.say(config.nick, room, 'Nobody wins this game :(');
 			}
 			else if (crazyeight.playerList[room].length === 1) {
 				Bot.say(config.nick, room, crazyeight.playerData[room][crazyeight.playerList[room][0]].name + ' wins!');
 				Bot.say(config.nick, room, 'Rewards: ' + Economy.getPayout(crazyeight.playerList[room].length, room) + ' ' + Economy.currency(room));
-				Economy.give(crazyeight.playerData[room][crazyeight.playerList[room][0]].name, Economy.getPayout(crazyeight.playerList[room].length, room), room)
+				Economy.give(crazyeight.playerData[room][crazyeight.playerList[room][0]].name, Economy.getPayout(crazyeight.playerList[room].length, room), room);
 			}
 			if (crazyeight.playerList[room].length < 2) {
 				clearInterval(crazyeight.interval[room]);
@@ -285,10 +285,10 @@ exports.commands = {
 			crazyeight.currentPlayer[room] = crazyeight.playerList[room][(crazyeight.playerList[room].indexOf(crazyeight.currentPlayer[room]) + 1) % crazyeight.playerList[room].length];
 
 			//pming next user their hand
-			Bot.talk(',' + crazyeight.currentPlayer[room], '(' + room + ') ' + '[' + crazyeight.playerData[room][crazyeight.currentPlayer[room]].hand.join('], [') + ']')
+			Bot.talk(',' + crazyeight.currentPlayer[room], '(' + room + ') ' + '[' + crazyeight.playerData[room][crazyeight.currentPlayer[room]].hand.join('], [') + ']');
 			Bot.talk(room, crazyeight.playerData[room][crazyeight.currentPlayer[room]].name + '\'s turn! __(' + config.commandcharacter[0] + 'play [card] or ' + config.commandcharacter[0] + 'draw)__');
 			Bot.talk(room, '**Top Card: [' + crazyeight.topCard[room] + ']**');
-		}, 90000)
+		}, 90000);
 	},
 	draw: function(arg, by, room) {
 		if (toId(by) !== crazyeight.currentPlayer[room] || !crazyeight.gameStatus[room] || crazyeight.gameStatus[room] !== 'on') return false;
@@ -300,10 +300,10 @@ exports.commands = {
 			crazyeight.deck[room] = Tools.generateDeck(1);
 		}
 
-		Bot.talk(',' + crazyeight.currentPlayer[room], '(' + room + ') ' + '[' + crazyeight.playerData[room][crazyeight.currentPlayer[room]].hand.join('], [') + ']')
+		Bot.talk(',' + crazyeight.currentPlayer[room], '(' + room + ') ' + '[' + crazyeight.playerData[room][crazyeight.currentPlayer[room]].hand.join('], [') + ']');
 			//next player
 		crazyeight.currentPlayer[room] = crazyeight.playerList[room][(crazyeight.playerList[room].indexOf(crazyeight.currentPlayer[room]) + 1) % crazyeight.playerList[room].length];
-		Bot.talk(',' + crazyeight.currentPlayer[room], '(' + room + ') ' + '[' + crazyeight.playerData[room][crazyeight.currentPlayer[room]].hand.join('], [') + ']')
+		Bot.talk(',' + crazyeight.currentPlayer[room], '(' + room + ') ' + '[' + crazyeight.playerData[room][crazyeight.currentPlayer[room]].hand.join('], [') + ']');
 		Bot.talk(room, '**Top Card: [' + crazyeight.topCard[room] + ']**');
 		Bot.talk(room, crazyeight.playerData[room][crazyeight.currentPlayer[room]].name + '\'s turn! __(' + config.commandcharacter[0] + 'play [card] or ' + config.commandcharacter[0] + 'draw)__');
 		//start new dq cycle
@@ -330,12 +330,12 @@ exports.commands = {
 			//checking if all players are DQ'd
 
 			if (crazyeight.playerList[room].length === 0) {
-				Bot.say(config.nick, room, 'Nobody wins this game :(')
+				Bot.say(config.nick, room, 'Nobody wins this game :(');
 			}
 			else if (crazyeight.playerList[room].length === 1) {
 				Bot.say(config.nick, room, crazyeight.playerData[room][crazyeight.playerList[room][0]].name + ' wins!');
 				Bot.say(config.nick, room, 'Rewards: ' + Economy.getPayout(crazyeight.playerList[room].length, room) + ' ' + Economy.currency(room));
-				Economy.give(crazyeight.playerData[room][crazyeight.playerList[room][0]].name, Economy.getPayout(crazyeight.playerList[room].length, room), room)
+				Economy.give(crazyeight.playerData[room][crazyeight.playerList[room][0]].name, Economy.getPayout(crazyeight.playerList[room].length, room), room);
 			}
 			if (crazyeight.playerList[room].length < 2) {
 				clearInterval(crazyeight.interval[room]);
@@ -346,9 +346,25 @@ exports.commands = {
 			crazyeight.currentPlayer[room] = crazyeight.playerList[room][(crazyeight.playerList[room].indexOf(crazyeight.currentPlayer[room]) + 1) % crazyeight.playerList[room].length];
 
 			//pming next user their hand
-			Bot.talk(',' + crazyeight.currentPlayer[room], '(' + room + ') ' + '[' + crazyeight.playerData[room][crazyeight.currentPlayer[room]].hand.join('], [') + ']')
+			Bot.talk(',' + crazyeight.currentPlayer[room], '(' + room + ') ' + '[' + crazyeight.playerData[room][crazyeight.currentPlayer[room]].hand.join('], [') + ']');
 			Bot.talk(room, crazyeight.playerData[room][crazyeight.currentPlayer[room]].name + '\'s turn! __(' + config.commandcharacter[0] + 'play [card] or ' + config.commandcharacter[0] + 'draw)__');
 			Bot.talk(room, '**Top Card: [' + crazyeight.topCard[room] + ']**');
-		}, 90000)
+		}, 90000);
 	},
 };
+
+/****************************
+*       For C9 Users        *
+*****************************/
+// Yes, sadly it can't be done in one huge chunk w/o undoing it / looking ugly :(
+
+/* globals toId */
+/* globals Bot */
+/* globals config */
+/* globals Economy */
+/* globals game */
+/* globals checkGame */
+/* globals crazyeight */
+/* globals Tools */
+/* globals tarPlayer */
+/* globals gameStatus */

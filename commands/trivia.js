@@ -33,7 +33,7 @@ exports.commands = {
 					Bot.say(config.nick, room, 'The correct answer is: ' + triviaA[room].join(', '));
 				}
 			}
-			var TQN = 2 * (Math.floor(triviaQuestions.length * Math.random() / 2))
+			var TQN = 2 * (Math.floor(triviaQuestions.length * Math.random() / 2));
 			triviaQ[room] = triviaQuestions[TQN];
 			triviaA[room] = triviaQuestions[TQN + 1].toLowerCase().replace(/ /g, '').trim().split(',');
 			Bot.say(config.nick, room, 'Question: __' + triviaQ[room] + '__');
@@ -73,9 +73,9 @@ exports.commands = {
 	triviapoints: function(arg, by, room) {
 		if (!triviaON[room]) return false;
 		if (!Bot.canUse('trivia', room, by)) return false;
-		var text = 'Points so far: '
+		var text = 'Points so far: ';
 		for (var i in triviaPoints[room]) {
-			text += i + ' - ' + triviaPoints[room][i] + ' points, '
+			text += i + ' - ' + triviaPoints[room][i] + ' points, ';
 		}
 		Bot.say(by, room, text);
 	},
@@ -84,7 +84,7 @@ exports.commands = {
 		var TriviaDataBase = fs.readFileSync('data/trivia.txt').toString().split('\n');
 		var uploadText = '';
 		for (var i = 0; i < TriviaDataBase.length - 1; i++) {
-			uploadText += 'Question: ' + TriviaDataBase[i] + '\nAnswer: ' + TriviaDataBase[i + 1] + '\n\n'
+			uploadText += 'Question: ' + TriviaDataBase[i] + '\nAnswer: ' + TriviaDataBase[i + 1] + '\n\n';
 			i++;
 		}
 		Tools.uploadToHastebin(uploadText, function(link) {
@@ -102,5 +102,26 @@ exports.commands = {
 		fs.appendFile('data/trivia.txt', '\n' + saveQuestion + '\n' + saveAnswer);
 		Bot.say(by, room, 'Done!');
 		triviaQuestions = fs.readFileSync('data/trivia.txt').toString().split('\n');
-	},
-}
+	}
+};
+
+/****************************
+*       For C9 Users        *
+*****************************/
+// Yes, sadly it can't be done in one huge chunk w/o undoing it / looking ugly :(
+
+/* globals toId */
+/* globals Bot */
+/* globals config */
+/* globals Economy */
+/* globals game */
+/* globals checkGame */
+/* globals fs */
+/* globals triviaON */
+/* globals triviaQuestions */
+/* globals Tools */
+/* globals triviaPoints */
+/* globals triviaScorecap */
+/* globals triviaTimer */
+/* globals triviaA */
+/* globals triviaQ */

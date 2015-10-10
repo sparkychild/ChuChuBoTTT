@@ -25,14 +25,14 @@ exports.commands = {
 		if (newRank) {
 			newRank = newRank.trim();
 		}
-		if (newRank && (tarRanks.indexOf(newRank) === -1 || newRank.length !== 1)) return Bot.say(by, room, 'The format is ' + config.commandcharacter[0] + 'setcom [command], [rank]')
+		if (newRank && (tarRanks.indexOf(newRank) === -1 || newRank.length !== 1)) return Bot.say(by, room, 'The format is ' + config.commandcharacter[0] + 'setcom [command], [rank]');
 		var search = config.serverid + '|' + toId(config.nick) + '|' + room + '|' + command + '|';
 		var ccommands = fs.readFileSync('data/addcom.txt').toString().split("\n");
 		for (var i = 0; i < ccommands.length; i++) {
 			if (ccommands[i].indexOf(search) === 0) {
 				var spl = ccommands[i].split('|');
 				if (!newRank) {
-					return Bot.say(by, room, config.commandcharacter[0] + command + ' is usable by users ' + spl[4].replace('n', '"reg"') + ' and higher')
+					return Bot.say(by, room, config.commandcharacter[0] + command + ' is usable by users ' + spl[4].replace('n', '"reg"') + ' and higher');
 				}
 				var part = spl.slice(0, 4).join('|');
 				ccommands[i] = part + '|' + newRank + '|' + spl.slice(5).join('|');
@@ -47,7 +47,7 @@ exports.commands = {
 		var splarg = arg.split(',');
 		var tarRanks = 'n+★%@#&~';
 		if (!splarg[0] || !splarg[1] || !splarg[2]) {
-			Bot.say(by, room, 'The correct format is +addcom __command__, __rank__, __output__');
+			Bot.say(by, room, 'The correct format is ' + config.commandcharacter[0] + 'addcom __command__, __rank__, __output__');
 			return false;
 		}
 
@@ -55,7 +55,7 @@ exports.commands = {
 		splarg[1] = splarg[1].trim();
 
 		if (!splarg[0] || !splarg[1] || !splarg[2]) {
-			Bot.say(by, room, 'The correct format is +addcom __command__, __rank__, __output__');
+			Bot.say(by, room, 'The correct format is ' + config.commandcharacter[0] + 'addcom __command__, __rank__, __output__');
 			return false;
 		}
 		if (!(tarRanks.indexOf(splarg[1]) > -1) || splarg[1].length !== 1) {
@@ -109,7 +109,7 @@ exports.commands = {
 		}
 		//allow more information?
 
-		var comlist = fs.readFileSync('data/addcom.txt').toString().split('\n')
+		var comlist = fs.readFileSync('data/addcom.txt').toString().split('\n');
 		var tarComlist = '';
 		var success = false;
 		for (var i = 0; i < comlist.length; i++) {
@@ -131,4 +131,16 @@ exports.commands = {
 			}.bind(this));
 		}
 	},
-}
+};
+
+/****************************
+*       For C9 Users        *
+*****************************/
+// Yes, sadly it can't be done in one huge chunk w/o undoing it / looking ugly :(
+
+/* globals toId */
+/* globals Bot */
+/* globals config */
+/* globals Tools */
+/* globals Commands */
+/* globals fs */

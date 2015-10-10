@@ -144,7 +144,7 @@ exports.commands = {
                 Tools.writeSettings();
                 Bot.say(by, room, 'The command ' + config.commandcharacter[0]+ '' + cmd + ' is now ' +
                     (settingsLevels[newRank] === newRank ? ' available for users of rank ' + newRank + ' and above.' :
-                        (this.settings[config.serverid][toId(config.nick)][cmd][room] ? 'available for all users in this room.' : 'unavailable for use in this room.')))
+                        (this.settings[config.serverid][toId(config.nick)][cmd][room] ? 'available for all users in this room.' : 'unavailable for use in this room.')));
             }
         }
     },
@@ -159,7 +159,7 @@ exports.commands = {
             var text = '';
         }
         else {
-            var text = '/pm ' + by + ', ';
+            text = '/pm ' + by + ', ';
         }
         text += 'Hi!!! n_n I\'m sparkychild\'s PS Bot - Based on Pokémon Showdown Bot by: Quinella, TalkTakesTime, and Morfent';
         Bot.say(by, room, text);
@@ -167,7 +167,7 @@ exports.commands = {
     guide: function(arg, by, room) {
         var text = '';
         if (!Bot.hasRank(by, '&#~') && room.charAt(0) !== ',') {
-            text += '/w ' + by + ','
+            text += '/w ' + by + ',';
         }
         if (config.botguide) {
             text += 'A guide on how to use this bot can be found here: ' + config.botguide;
@@ -177,10 +177,9 @@ exports.commands = {
         }
         Bot.say(by, room, text);
         if (Bot.rankFrom(by, '@')) {
-            Bot.say(by, ',' + by, 'Bot Staff guide: http://pastebin.com/t8e7UBV2')
+            Bot.say(by, ',' + by, 'Bot Staff guide: http://pastebin.com/t8e7UBV2');
         }
     },
-    tell: 'say',
     say: function(arg, by, room) {
         if (!Bot.canUse('say', room, by)) return false;
         Bot.say(by, room, stripCommands(arg));
@@ -210,10 +209,10 @@ exports.commands = {
             var choices = arg.split(' ');
         }
         else {
-            var choices = arg.split(',');
+            choices = arg.split(',');
         }
         choices = choices.filter(function(i) {
-            return (toId(i) !== '')
+            return (toId(i) !== '');
         });
         if (choices.length < 2) return Bot.say(by, room, (room.charAt(0) === ',' ? '' : '/pm ' + by + ', ') + config.commandcharacter[0]+ 'choose: You must give at least 2 valid choices.');
 
@@ -225,18 +224,18 @@ exports.commands = {
     monousage: 'usagestats',
     monousagedata: 'usagestats',
     usagestats: function(arg, by, room, cmd) {
-        var usageLink = 'http://www.smogon.com/stats/2015-09/'
+        var usageLink = 'http://www.smogon.com/stats/2015-09/';
         if (Bot.canUse('usagestats', room, by) || room.charAt(0) === ',') {
             var text = '';
         }
         else {
-            var text = '/pm ' + by + ', ';
+            text = '/pm ' + by + ', ';
         }
         if (!arg) {
             text += usageLink;
             return Bot.say(by, room, text);
         }
-        var arg = arg.split(',');
+        arg = arg.split(',');
         switch (arg.length) {
             case 3:
                 var targetRank = arg[2].replace(/[^0-9]/g, '');
@@ -251,7 +250,7 @@ exports.commands = {
             http.get(link, function(res) {
                 var data = '';
                 res.on('data', function(part) {
-                    data += part
+                    data += part;
                 });
                 res.on('end', function(end) {
                     callback(data);
@@ -269,7 +268,7 @@ exports.commands = {
                 case 'rarelyused':
                 case 'ru':
                 case 'therulers':
-                    targetTier = 'ru'
+                    targetTier = 'ru';
                     break;
                 case 'pu':
                     targetTier = 'pu';
@@ -290,7 +289,7 @@ exports.commands = {
                     if (!pokemonData[targetPoke]) {
                         return Bot.say(by, room, text + 'Invalid Pokemon');
                     }
-                    var targetTier = toId(pokemonData[targetPoke].tier);
+                    targetTier = toId(pokemonData[targetPoke].tier);
                     if (targetTier === 'nfe') {
                         targetTier = 'pu';
                     }
@@ -303,7 +302,7 @@ exports.commands = {
             getData(usageLink + destination, function(data) {
                 var usageStats = data.split('\n');
                 if (usageStats[0].indexOf(' Total battles:') === -1) {
-                    return Bot.say(by, room, text + 'ERROR: Invalid Tier/Failed to get data.')
+                    return Bot.say(by, room, text + 'ERROR: Invalid Tier/Failed to get data.');
                 }
                 for (var i = 5; i < usageStats.length; i++) {
                     var tarStats = usageStats[i].replace(/ /g, '').split('|');
@@ -312,10 +311,10 @@ exports.commands = {
                     }
                     if (toId(tarStats[2]) === targetPoke) {
                         index = i - 5;
-                        return Bot.say(by, room, text + tarStats[2] + ' - #' + tarStats[1] + ' in ' + targetTier.toUpperCase() + '| Usage: ' + tarStats[3] + '| Raw Count: ' + tarStats[4])
+                        return Bot.say(by, room, text + tarStats[2] + ' - #' + tarStats[1] + ' in ' + targetTier.toUpperCase() + '| Usage: ' + tarStats[3] + '| Raw Count: ' + tarStats[4]);
                     }
-                };
-                return Bot.say(by, room, text + 'Pokémon not found.')
+                }
+                return Bot.say(by, room, text + 'Pokémon not found.');
             }.bind(this));
             if (cmd === 'usagedata') {
                 getData(usageLink + 'moveset/' + destination, function(data) {
@@ -354,18 +353,18 @@ exports.commands = {
                         }
                     }
                     Bot.say(by, room, text + 'Common moves are: __' + moves.trim() + '__ **|** Common items include: __' + items.join(', ').trim() + '__');
-                    Bot.say(by, room, text + 'Common partners include: __' + teammates.trim() + '__ **|** Commonly used checks and counters: __' + checks.join(', ') + '__.')
-                }.bind(this))
+                    Bot.say(by, room, text + 'Common partners include: __' + teammates.trim() + '__ **|** Commonly used checks and counters: __' + checks.join(', ') + '__.');
+                }.bind(this));
             }
         }
         else {
             if (!targetTier) {
-                return Bot.say(by, room, 'Please include the type.')
+                return Bot.say(by, room, 'Please include the type.');
             }
             getData(usageLink + '/monotype/monotype-mono' + destination.replace('mono', ''), function(data) {
                 var usageStats = data.split('\n');
                 if (usageStats[0].indexOf(' Total battles:') === -1) {
-                    return Bot.say(by, room, text + 'ERROR: Invalid type/Failed to get data.')
+                    return Bot.say(by, room, text + 'ERROR: Invalid type/Failed to get data.');
                 }
                 for (var i = 5; i < usageStats.length; i++) {
                     var tarStats = usageStats[i].replace(/ /g, '').split('|');
@@ -374,11 +373,11 @@ exports.commands = {
                     }
                     if (toId(tarStats[2]) === targetPoke) {
                         index = i - 5;
-                        return Bot.say(by, room, text + tarStats[2] + ' - #' + tarStats[1] + ' in ' + targetTier.toUpperCase() + '| Usage: ' + tarStats[3] + '| Raw Count: ' + tarStats[4])
+                        return Bot.say(by, room, text + tarStats[2] + ' - #' + tarStats[1] + ' in ' + targetTier.toUpperCase() + '| Usage: ' + tarStats[3] + '| Raw Count: ' + tarStats[4]);
                     }
-                };
-                return Bot.say(by, room, text + 'Pokémon not found.')
-            }.bind(this))
+                }
+                return Bot.say(by, room, text + 'Pokémon not found.');
+            }.bind(this));
         }
         if (cmd === 'monousagedata') {
             getData(usageLink + '/monotype/moveset/monotype-mono' + destination, function(data) {
@@ -391,7 +390,6 @@ exports.commands = {
                 var moves = '';
                 var teammates = [];
                 var items = [];
-                var checks = [];
                 for (var i = 0; i < tarData.length; i++) {
                     if (toId(tarData[i]) === 'moves') {
                         moves = tarData.slice(i + 1, i + 5).join(', ').replace(/[^A-Za-z\,\s]/g, '').replace(/[\s]{2,}/g, '').replace(/,/g, ', ');
@@ -414,8 +412,8 @@ exports.commands = {
                     }
                 }
                 Bot.say(by, room, text + 'Common moves are: __' + moves.trim() + '__ **|** Common items include: __' + items.join(', ').trim() + '__');
-                Bot.say(by, room, text + 'Common partners include: __' + teammates.join(', ').trim() + '__.')
-            }.bind(this))
+                Bot.say(by, room, text + 'Common partners include: __' + teammates.join(', ').trim() + '__.');
+            }.bind(this));
         }
     },
     seen: function(arg, by, room) { // this command is still a bit buggy
@@ -443,7 +441,7 @@ exports.commands = {
 
         if (!Bot.hasRank(by, '#') || !Bot.rankFrom(by, '+')) return false;
         if (Bot.repeatON[room]) {
-            return Bot.say(by, room, 'There is already a repeat happening in this room.')
+            return Bot.say(by, room, 'There is already a repeat happening in this room.');
         }
 
         var spl = arg.split(',');
@@ -453,7 +451,7 @@ exports.commands = {
             return false;
         }
         if (isNaN(tarTime) || tarTime < 5 * 60000) {
-            return Bot.say(by, room, 'Please use a valid time interval more than 5 minutes.')
+            return Bot.say(by, room, 'Please use a valid time interval more than 5 minutes.');
         }
         Bot.say(by, room, 'I will be repeating that text once every ' + tarTime / 60000 + ' minutes.');
         Bot.repeatON[room] = true;
@@ -481,7 +479,12 @@ exports.commands = {
         }.bind(this));
         var d = new Date();
         if (mailbl.indexOf(toId(by)) > -1) return false;
-        fs.appendFile('data/maillog.txt', destination + '|' + spl + ' - ' + toId(by) + '~' + d + '\n', function(err) {});
+        fs.appendFile('data/maillog.txt', destination + '|' + spl + ' - ' + toId(by) + '~' + d + '\n', function(err) {
+            if (err) {
+                Bot.say(by, room, 'There was an error, please report this to sparkychild.');
+                throw err;
+            }
+        });
     },
     checkmail: function(arg, by, room) {
         if (!Plugins.checkMail(by, room)) return Bot.say(by, room, (room.charAt(0) === ',' ? '' : '/pm ' + by + ', ') + 'You have no mail ;-;');
@@ -504,7 +507,7 @@ exports.commands = {
             http.get(link, function(res) {
                 var data = '';
                 res.on('data', function(part) {
-                    data += part
+                    data += part;
                 });
                 res.on('end', function(end) {
                     callback(data);
@@ -516,14 +519,14 @@ exports.commands = {
                 data = JSON.parse(data);
             }
             catch (e) {
-                Bot.say(by, room, 'ERROR in retrieving data.')
+                Bot.say(by, room, 'ERROR in retrieving data.');
             }
             switch (cmd) {
                 case 'regdate':
                     if (data.registertime === 0) {
-                        return Bot.say(by, room, 'The account ' + arg + ' is not registered.')
+                        return Bot.say(by, room, 'The account ' + arg + ' is not registered.');
                     }
-                    var regdate = data.registertime * 1000 - (1000 * 60 * 60 * 4)
+                    var regdate = data.registertime * 1000 - (1000 * 60 * 60 * 4);
                     var regDate = (new Date(regdate)).toString().substr(4, 20);
                     Bot.say(by, room, 'The account ' + arg + ' was registered on ' + regDate + ' (EST).');
                     break;
@@ -531,11 +534,26 @@ exports.commands = {
                     var battleRanks = data.ratings;
                     var text = '';
                     for (var tier in battleRanks) {
-                        text += tier + ': __' + battleRanks[tier].elo.split('.')[0].trim() + '/' + battleRanks[tier].gxe + 'GXE__ | '
+                        text += tier + ': __' + battleRanks[tier].elo.split('.')[0].trim() + '/' + battleRanks[tier].gxe + 'GXE__ | ';
                     }
                     Bot.say(by, room, 'User: ' + arg + ' -- ' + text.trim());
                     break;
             }
-        })
-    },
-}
+        });
+    }
+};
+
+/****************************
+*       For C9 Users        *
+*****************************/
+// Yes, sadly it can't be done in one huge chunk w/o undoing it / looking ugly :(
+
+/* globals toId */
+/* globals Bot */
+/* globals config */
+/* globals Plugins */
+/* globals fs */
+/* globals stripCommands */
+/* globals Tools */
+/* globals Commands */
+/* globals pokemonData */

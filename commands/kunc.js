@@ -37,7 +37,7 @@ function createMoveset(target) {
     }
     for (var i = 0; i < allMoves.length; i++) {
         if (isBoostingMove(allMoves[i])) {
-            var rand = Math.random()
+            var rand = Math.random();
             if (rand >= 0.7) {
                 break;
             }
@@ -109,7 +109,7 @@ exports.commands = {
         if (cmd === 'sk') {
             if (!kunc.on[room]) return false;
             var tarAnswer = Pokedex[kunc.answer[room]].species;
-            Bot.say(by, room, 'The correct answer was ' + tarAnswer)
+            Bot.say(by, room, 'The correct answer was ' + tarAnswer);
         }
         if (kunc.on[room] && cmd === 'kunc') return Bot.say(by, room, kunc.question[room]);
         if (cmd === 'kunc') {
@@ -126,14 +126,14 @@ exports.commands = {
                 }
                 else {
                     kunc.scorecap[room] = cap * 1;
-                    Bot.say(by, room, 'Hosting a game of \'kunc\', a game originating from IRC.  Guess the Pokémon that has this moveset and you get one point. First player to ' + cap + ' points wins!')
+                    Bot.say(by, room, 'Hosting a game of \'kunc\', a game originating from IRC.  Guess the Pokémon that has this moveset and you get one point. First player to ' + cap + ' points wins!');
                 }
             }
             kunc.points[room] = {};
         }
         //now the real part;
         //choose the random pokemon
-        var allMons = Object.keys(pokemonData)
+        var allMons = Object.keys(pokemonData);
 
         kunc.question[room] = '';
         while (!kunc.question[room]) {
@@ -142,7 +142,7 @@ exports.commands = {
                 kunc.question[room] = '``Moveset: ' + formatMoves(createMoveset(kunc.answer[room])).join(', ') + '.`` Use ' + config.commandcharacter[0] + 'g to guess the Pokemon.';
             }
             catch (e) {
-                console.log('failed to generate kunc moveset.')
+                console.log('failed to generate kunc moveset.');
             }
         }
         //special case for arceus bc this gets dumb
@@ -152,12 +152,12 @@ exports.commands = {
         if (kunc.answer[room].substr(0, 6) === 'arceus') {
             kunc.answer[room] = 'arceus';
         }
-        Bot.say(by, room, kunc.question[room])
+        Bot.say(by, room, kunc.question[room]);
     },
     gk: 'guesskunc',
     guesskunc: function(arg, by, room) {
         if (!kunc.on[room] || !arg) return false;
-        var userid = toId(by)
+        var userid = toId(by);
         if (toId(arg) === kunc.answer[room]) {
             if (!kunc.points[room][userid]) {
                 kunc.points[room][userid] = 0;
@@ -170,7 +170,7 @@ exports.commands = {
             }
             Bot.say(config.nick, room, by.slice(1) + ' has the correct answer and now has ' + kunc.points[room][userid] + ' points!');
             //choose the random pokemon
-            var allMons = Object.keys(pokemonData)
+            var allMons = Object.keys(pokemonData);
 
             kunc.question[room] = '';
             while (!kunc.question[room]) {
@@ -179,7 +179,7 @@ exports.commands = {
                     kunc.question[room] = '``Moveset: ' + formatMoves(createMoveset(kunc.answer[room])).join(', ') + '.`` Use ' + config.commandcharacter[0] + 'gk to guess the Pokemon.';
                 }
                 catch (e) {
-                    console.log('failed to generate kunc moveset.')
+                    console.log('failed to generate kunc moveset.');
                 }
             }
             //special case for arceus bc this gets dumb
@@ -189,7 +189,7 @@ exports.commands = {
             if (kunc.answer[room].substr(0, 6) === 'arceus') {
                 kunc.answer[room] = 'arceus';
             }
-            Bot.say(by, room, kunc.question[room])
+            Bot.say(by, room, kunc.question[room]);
         }
     },
     endkunc: 'kuncend',
@@ -198,5 +198,22 @@ exports.commands = {
         delete kunc.on[room];
         var tarAnswer = Pokedex[kunc.answer[room]].species;
         return Bot.say(by, room, 'The game of kunc has ended. The correct answer is: ' + tarAnswer);
-    },
-}
+    }
+};
+
+/****************************
+*       For C9 Users        *
+*****************************/
+// Yes, sadly it can't be done in one huge chunk w/o undoing it / looking ugly :(
+
+/* globals toId */
+/* globals Bot */
+/* globals config */
+/* globals kunc */
+/* globals pokemonData */
+/* globals Economy */
+/* globals isolate */
+/* globals POKEDEX */
+/* globals checkGame */
+/* globals game */
+/* globals MOVEDEX */

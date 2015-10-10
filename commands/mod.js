@@ -214,7 +214,7 @@ exports.commands = {
 					noModeration[noModeration.indexOf('d|' + room)] = 'n|' + room;
 				}
 				fs.writeFileSync('data/emotemoderation.txt', noModeration.join('\n'));
-				return Bot.say(by, room, 'Moderation for emoticons is ON.')
+				Bot.say(by, room, 'Moderation for emoticons is ON.');
 				break;
 			case 'off':
 				if (noModeration.indexOf('n|' + room) > -1) {
@@ -224,10 +224,21 @@ exports.commands = {
 					noModeration.push('d|' + room);
 				}
 				fs.writeFileSync('data/emotemoderation.txt', noModeration.join('\n'));
-				return Bot.say(by, room, 'Moderation for emoticons is OFF.')
+				Bot.say(by, room, 'Moderation for emoticons is OFF.');
 				break;
 			default:
 				return Bot.say(by, room, 'The params for this is on/off');
 		}
 	},
-}
+};
+
+/****************************
+*       For C9 Users        *
+*****************************/
+// Yes, sadly it can't be done in one huge chunk w/o undoing it / looking ugly :(
+
+/* globals toId */
+/* globals Bot */
+/* globals config */
+/* globals fs */
+/* globals Tools */
