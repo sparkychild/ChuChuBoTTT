@@ -64,10 +64,10 @@ exports.commands = {
                 Commands.anagrams.call(this, arg, by, room);
                 break;
             case 'kunc':
-                Commands.kunc.call(this, arg, by, room);
+                Commands.kunc.call(this, arg, by, room, 'kunc');
                 break;
             case 'statspread':
-                Commands.statspread.call(this, arg, by, room);
+                Commands.statspread.call(this, arg, by, room, 'statspread');
                 break;
         }
     },
@@ -75,7 +75,7 @@ exports.commands = {
         if (!checkGame(room)) return false;
         var game = checkGame(room);
         if (['kunc', 'statspread', 'trivia', 'anagram'].indexOf(game) > -1) {
-            Commands[game + points].call(this, arg, by, room);
+            Commands[game + 'points'].call(this, arg, by, room);
         }
     },
     randomgame: function(arg, by, room) {

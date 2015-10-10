@@ -479,12 +479,7 @@ exports.commands = {
         }.bind(this));
         var d = new Date();
         if (mailbl.indexOf(toId(by)) > -1) return false;
-        fs.appendFile('data/maillog.txt', destination + '|' + spl + ' - ' + toId(by) + '~' + d + '\n', function(err) {
-            if (err) {
-                Bot.say(by, room, 'There was an error, please report this to sparkychild.');
-                throw err;
-            }
-        });
+        fs.appendFile('data/maillog.txt', destination + '|' + spl + ' - ' + toId(by) + '~' + d + '\n');
     },
     checkmail: function(arg, by, room) {
         if (!Plugins.checkMail(by, room)) return Bot.say(by, room, (room.charAt(0) === ',' ? '' : '/pm ' + by + ', ') + 'You have no mail ;-;');
