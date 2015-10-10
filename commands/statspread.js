@@ -79,6 +79,16 @@ exports.commands = {
         if (!Bot.canUse('statspread', room, by) || room.charAt(0) === ',' || !statspread.on[room]) return false;
         Bot.say(by, room, 'The Stat Spread game has been ended. The correct answer(s) were: ' + formatAnswer(statspread.answer[room]) + '.');
         delete statspread.on[room];
+    },
+    statspreadpoints: function(arg, by, room) {
+        if (!statspread.on[room]) return false;
+        if (room.charAt(',') === 0) return false;
+        if (!Bot.canUse('statspread', room, by)) return false;
+        var text = 'Points so far: '
+        for (var i in statspread.score[room]) {
+            text += i + ' - ' + statspread.score[room][i] + ' points, '
+        }
+        Bot.say(by, room, text);
     }
 };
 
