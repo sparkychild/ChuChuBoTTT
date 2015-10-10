@@ -53,7 +53,7 @@ exports.commands = {
         }
         anagramPoints[room][user]++;
         if (anagramPoints[room][user] <= anagramScorecap[room]) {
-            Bot.say(config.nick, room, 'Congrats to ' + by + ' for winning! Reward: ' + Economy.getPayout(Object.keys(anagramPoints[room]).length * 2, room) + ' ' + Economy.currency(room));
+            Bot.say(config.nick, room, 'Congrats to ' + by + ' for winning! Reward: ' + Economy.getPayout((Object.keys(anagramPoints[room]).length * anagramScorecap[room]), room) + ' ' + Economy.currency(room));
             Economy.give(by, Economy.getPayout(anagramPoints[room].length, room), room);
             delete anagramON[room];
             clearInterval(anagramInterval[room]);

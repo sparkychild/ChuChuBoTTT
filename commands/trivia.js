@@ -52,8 +52,8 @@ exports.commands = {
 				triviaPoints[room][user] = 0;
 			}
 			triviaPoints[room][user]++;
-			if (triviaPoints[room][user] > triviaScorecap[room]) {
-				Bot.say(config.nick, room, 'Congrats to ' + by + ' for winning! Reward: ' + Economy.getPayout(triviaPoints[room].length, room) + ' ' + Economy.currency(room));
+			if (triviaPoints[room][user] >= triviaScorecap[room]) {
+				Bot.say(config.nick, room, 'Congrats to ' + by + ' for winning! Reward: ' + Economy.getPayout((Object.keys(triviaPoints[room]).length * triviaScorecap[room]) / 4, room) + ' ' + Economy.currency(room));
 				Economy.give(by, Economy.getPayout((triviaPoints[room].length), room), room);
 				delete triviaON[room];
 				clearInterval(triviaTimer[room]);
@@ -74,9 +74,9 @@ exports.commands = {
 		if (!triviaON[room]) return false;
 		if (!Bot.canUse('trivia', room, by)) return false;
 		var text = 'Points so far: '
-        for (var i in triviaPoints[room]) {
-            text += i + ' - ' + triviaPoints[room][i] + ' points, '
-        }
+		for (var i in triviaPoints[room]) {
+			text += i + ' - ' + triviaPoints[room][i] + ' points, '
+		}
 		Bot.say(by, room, text);
 	},
 	trivialist: function(arg, by, room) {

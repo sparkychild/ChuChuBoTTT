@@ -164,10 +164,10 @@ exports.Economy = {
     },
     getPayout: function(amount, room) {
         if (!room || !this.economy.rooms[room]) {
-            return this.economy.global.cp.factor * amount;
+            return ~~(this.economy.global.cp.factor * amount);
         }
         else {
-            return this.economy.rooms[room].cp.factor * amount;
+            return ~~(this.economy.rooms[room].cp.factor * amount);
         }
     }
 }
