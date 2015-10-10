@@ -1,14 +1,14 @@
 exports.commands = {
     autores: function(arg, by, room) {
         if (!Bot.canUse('autores', room, by)) return false;
-        if (!arg) return Bot.say(by, room, 'Please specify how I should respond to that certain phrase. ' + config.commandcharacter + 'autores [add|delete|list] ([input]::[output])');
+        if (!arg) return Bot.say(by, room, 'Please specify how I should respond to that certain phrase. ' + config.commandcharacter[0] + 'autores [add|delete|list] ([input]::[output])');
         var command = toId(arg.split(' ')[0]);
         if (!arg.split(' ')[1] && command !== 'list') return Bot.say(by, room, 'Please specify how I should respond to that certain phrase. ' + config.commandcharacter + 'autores [add|delete|list] ([input]::[output])');
         var text = arg.split(' ').slice(1).join(' ');
         var input = text.split('::')[0].toLowerCase().replace(/(\*\*|\_\_|\~\~|\`\`)/g, '');
-        if (input.length < 2 && command !== 'list') return Bot.say(by, room, 'Please specify a longer phrase for me to search for.')
+        if (input.length < 2 && command !== 'list') return Bot.say(by, room, 'Please specify a longer phrase for me to search for.');
         if (!Bot.rankFrom(by, '+') && command === 'regex') {
-            command = 'add'
+            command = 'add';
         }
         if (command === 'add') {
             input = input.split('');
@@ -20,9 +20,9 @@ exports.commands = {
             input = input.join('');
         }
         if (command === 'regex') {
-            var tempInput = input.replace(/(\*|\?)/g, '')
+            var tempInput = input.replace(/(\*|\?)/g, '');
             if (input.length / tempInput.length >= 2) {
-                return Bot.say(by, room, 'Please specify more text to search for.')
+                return Bot.say(by, room, 'Please specify more text to search for.');
             }
         }
         var output = text.split('::').slice(1).join('::').replace(/(!mod|!driver|!leader|!op|!voice|!admin|\/mod|\/driver|\/voice|\/leader|\/op|\/admin|!deauth|\/deauth|!promote|\/promote|\/demote|!demote|!ban|!lock|\/ban|\/lock|\/transferbucks|\/givebucks|\/takebucks|\/givebuck|\/givemoney|!givebucks|!givemoney|!givebuck|!takebucks|!takebuck|!takemoney|\/takebuck|\/takemoney|!transfer|\/transfer|\/transferbucks|\/transferbuck|\/transfermoney|!transfer|!transferbucks|!transferbuck|!transfermoney)/g, '/me does stuff to ');
@@ -30,7 +30,7 @@ exports.commands = {
         switch (command) {
             case 'regex':
             case 'add':
-                if (!output) return Bot.say(by, room, 'Please specify how I should respond to that certain phrase. ' + config.commandcharacter + 'autores [add|delete|list] ([input]::[output])')
+                if (!output) return Bot.say(by, room, 'Please specify how I should respond to that certain phrase. ' + config.commandcharacter[0] + 'autores [add|delete|list] ([input]::[output])');
                     //check if it triggers
                 for (var i = 0; i < autoRes.length; i++) {
                     var spl = autoRes[i].split('||');
@@ -39,31 +39,31 @@ exports.commands = {
                         if (!regex.test(input.replace(/\\/g, ''))) {
                             continue;
                         }
-                        var regex = new RegExp(input, 'i');
+                        regex = new RegExp(input, 'i');
                         if (!regex.test(spl[3].replace(/\\/g, ''))) {
                             continue;
                         }
-                        return Bot.say(by, room, 'There is already an auto response with the searching for a similar combination of characters.')
+                        return Bot.say(by, room, 'There is already an auto response with the searching for a similar combination of characters.');
                     }
                 }
                 fs.appendFile('data/autores.txt', config.serverid + '||' + toId(config.nick) + '||' + room + '||' + input + '||' + output + '\n');
-                return Bot.say(by, room, 'Added the search for /' + input + '/i')
+                Bot.say(by, room, 'Added the search for /' + input + '/i');
                 break;
             case 'delete':
                 for (var i = 0; i < autoRes.length; i++) {
-                    var spl = autoRes[i].split('||');
+                    spl = autoRes[i].split('||');
                     if (spl[0] === config.serverid && spl[1] === toId(config.nick) && spl[2] === room && input === spl[3]) {
                         autoRes.splice(i, 1);
-                        fs.writeFileSync('data/autores.txt', autoRes.join('\n'))
-                        return Bot.say(by, room, 'Deleted!')
+                        fs.writeFileSync('data/autores.txt', autoRes.join('\n'));
+                        return Bot.say(by, room, 'Deleted!');
                     }
                 }
-                Bot.say(by, room, 'I can\'t seem to find this auto response anywhere....')
+                Bot.say(by, room, 'I can\'t seem to find this auto response anywhere....');
                 break;
             case 'list':
                 var uploadText = ['AutoResponse list for room: ', this.rooms[room].name, '-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-', ' '];
                 for (var i = 0; i < autoRes.length; i++) {
-                    var spl = autoRes[i].split('||');
+                    spl = autoRes[i].split('||');
                     if (spl[0] === config.serverid && spl[1] === toId(config.nick) && spl[2] === room) {
                         uploadText.push('Input: ' + spl[3]);
                         uploadText.push('***Output: ' + spl.slice(4).join('||'));
@@ -85,7 +85,7 @@ exports.commands = {
             Bot.say(by, room, 'Autorank is set at: ' + arg);
         }
         if (arg) {
-            arg = arg.slice(0, 1)
+            arg = arg.slice(0, 1);
         }
         else {
             return false;
@@ -104,7 +104,9 @@ exports.commands = {
     welcomemessage: 'welcome',
     welcome: function(arg, by, room) {
         if (!fs.existsSync('data/wcmsg.txt') || !fs.existsSync('data/ignorewcmsg.txt')) {
-            return Bot.say(by, room, 'Looks like someone forgot to make the files needed for this command.....')
+            fs.appendFile('data/wcmsg.txt');
+            fs.appendFile('data/ignorewcmsg.txt');
+            Bot.say(by, room, 'Welcome message files were created.');
         }
         arg = arg.replace(/, /g, ',').split(',');
         var data = fs.readFileSync('data/wcmsg.txt').toString().split('\n');
@@ -130,7 +132,7 @@ exports.commands = {
                     data[data.indexOf(room + '|' + config.serverid) + 1] = 'n' + data[data.indexOf(room + '|' + config.serverid) + 1].slice(1);
                 }
                 else {
-                    return Bot.say(by, room, 'You need to set a welcome message first')
+                    return Bot.say(by, room, 'You need to set a welcome message first');
                 }
                 Bot.say(by, room, 'The welcome message was enabled.');
                 fs.writeFileSync('data/wcmsg.txt', data.join('\n'));
@@ -141,7 +143,7 @@ exports.commands = {
                     data[data.indexOf(room + '|' + config.serverid) + 1] = 'd' + data[data.indexOf(room + '|' + config.serverid) + 1].slice(1);
                 }
                 else {
-                    return Bot.say(by, room, 'You need to set a welcome message first')
+                    return Bot.say(by, room, 'You need to set a welcome message first');
                 }
                 Bot.say(by, room, 'The welcome message was disabled.');
                 fs.writeFileSync('data/wcmsg.txt', data.join('\n'));
@@ -150,15 +152,15 @@ exports.commands = {
                 if (room.charAt(0) !== ',') return false;
                 if (ignore.indexOf(toId(by)) > -1) return Bot.say(by, room, 'You are already ignoring welcome messages!~');
                 fs.appendFile('data/ignorewcmsg.txt', '\n' + toId(by));
-                Bot.say(by, room, 'You are now ignoring welcome messages.')
+                Bot.say(by, room, 'You are now ignoring welcome messages.');
                 break;
             case 'unignore':
                 if (room.charAt(0) !== ',') return false;
                 if (ignore.indexOf(toId(by)) === -1) return Bot.say(by, room, 'You are already recieving welcome messages!~');
                 var ignoredata = fs.readFileSync('data/ignorewcmsg.txt').toString();
-                var replacer = '\n' + toId(by)
+                var replacer = '\n' + toId(by);
                 fs.writeFileSync('data/ignorewcmsg.txt', ignoredata.replace(new RegExp(replacer, "g"), ''));
-                Bot.say(by, room, 'You are now recieving welcome messages.')
+                Bot.say(by, room, 'You are now recieving welcome messages.');
                 break;
             case 'show':
                 if (!Bot.hasRank(by, '#&~')) return false;
@@ -166,4 +168,16 @@ exports.commands = {
                 Bot.say(by, room, '\"' + data[data.indexOf(room + '|' + config.serverid) + 1].slice(2) + '\"');
         }
     },
-}
+};
+
+/****************************
+*       For C9 Users        *
+*****************************/
+// Yes, sadly it can't be done in one huge chunk w/o undoing it / looking ugly :(
+
+/* globals toId */
+/* globals Bot */
+/* globals config */
+/* globals Tools */
+/* globals fs */
+/* globals stripCommands */

@@ -1,7 +1,7 @@
 exports.commands = {
     g: function(arg, by, room) {
         if (!checkGame(room)) return false;
-        var game = checkGame(room)
+        var game = checkGame(room);
         if (['anagram', 'trivia', 'hangman', 'kunc', 'statspread'].indexOf(game) > -1) {
             Commands['guess' + game].call(this, arg, by, room);
         }
@@ -41,12 +41,12 @@ exports.commands = {
         if(!checkGame(room)) return false;
         var game = checkGame(room);
         if(['kunc', 'statspread'].indexOf(game) > -1){
-            Commands[game].call(this, '', by, room, 'skip' + game)
+            Commands[game].call(this, '', by, room, 'skip' + game);
         }
     },
     signups: function(arg, by, room){
         var game = toId(arg.split(',')[0]);
-        var arg = arg.split(',').slice(1).join(',').trim();
+        arg = arg.split(',').slice(1).join(',').trim();
         switch (game){
             case 'bj': case 'blackjack': case 'blowjob':
                 Commands.blackjack.call(this, 'new', by, room);
@@ -97,3 +97,13 @@ exports.commands = {
         }
     },
 };
+
+/****************************
+*       For C9 Users        *
+*****************************/
+// Yes, sadly it can't be done in one huge chunk w/o undoing it / looking ugly :(
+
+/* globals toId */
+/* globals checkGame */
+/* globals Commands */
+/* globals Bot */

@@ -13,13 +13,13 @@ exports.commands = {
     chall: 'challenge',
     challenge: function(arg, by, room) {
         if (!Bot.hasRank(by, '#&~') || !arg) return false;
-        var arg = arg.split(',');
+        arg = arg.split(',');
         if (arg.length !== 2) return false;
         if (toId(arg[0]) === toId(config.nick)) return false;
         var tier = toId(arg[1]);
         if (!TEAMS[toId(arg[1])] && ['battlefactory', 'randombattle', 'challengecup1v1', 'monotyperandombattle', 'hackmonscup'].indexOf(tier) === -1) return false;
         if (TEAMS[tier]) {
-            var selectTeam = TEAMS[tier][~~(TEAMS[tier].length * Math.random())]
+            var selectTeam = TEAMS[tier][~~(TEAMS[tier].length * Math.random())];
             send('|/useteam ' + selectTeam);
         }
         send('|/challenge ' + arg[0] + ', ' + toId(arg[1]));
@@ -38,7 +38,6 @@ exports.commands = {
     },
     addteam: function(arg, by, room) {
         var Pokedex = isolate(POKEDEX);
-        var Movedex = isolate(MOVEDEX);
         var TypeChart = isolate(TYPECHART);
         //Pawnie|bisharp|airballoon|H|knockoff,hiddenpowerdragon,dualchop,ironhead|Naughty|252,252,,4,,|F|,30,,,,|S|98|156
         //NICKNAME|species|item|ABILITY|moves|NATURE|evs|GENDER|ivs|SHINY|level|happiness
@@ -63,10 +62,10 @@ exports.commands = {
         //DONT ALLOW ANYTHING GOES BC OF NO SPECIES CLAUSE;
         var allowedTiers = ['ubers', 'oumomega', 'ou', 'uu', 'ru', 'nu', 'pu', 'monotype', 'lc', 'oumomega', 'battlespotsingles', 'cap', '1v1', 'lcuu'];
         if (allowedTiers.indexOf(tier) == -1) {
-            return Bot.say(by, room, 'Sorry, I don\'t accept these teams becaues I cannot play these formats!')
+            return Bot.say(by, room, 'Sorry, I don\'t accept these teams becaues I cannot play these formats!');
         }
         var link = parts[1].trim();
-        if (!link) return Bot.say(by, room, 'The format is ' + config.commandcharacter[0] + ' addteam tier, hastebin of team')
+        if (!link) return Bot.say(by, room, 'The format is ' + config.commandcharacter[0] + ' addteam tier, hastebin of team');
         if (link.indexOf('hastebin.com') === -1) return false;
         var id = link.trim().split('/');
         id = id[id.length - 1];
@@ -74,8 +73,8 @@ exports.commands = {
         var packedTeam = [];
         try {
             Tools.getHastebin(destination, function(data) {
-                if (!data) return Bot.say(by, room, 'Error parsing hastebin.')
-                Bot.say(by, room, 'Parsing Team....')
+                if (!data) return Bot.say(by, room, 'Error parsing hastebin.');
+                Bot.say(by, room, 'Parsing Team....');
                 var PokemonData = data.split('\n\n');
                 for (var i = 0; i < PokemonData.length; i++) {
                     //reset tarpoke
@@ -93,7 +92,7 @@ exports.commands = {
                             tarPoke.gender = tarData[0].split('@')[0].split('(')[1].split(')')[0].toUpperCase().trim();
                         }
                         else {
-                            tarPoke.species = toId(tarData[0].split('@')[0].split('(')[1].split(')')[0])
+                            tarPoke.species = toId(tarData[0].split('@')[0].split('(')[1].split(')')[0]);
                         }
                     }
                     if (tarData[0].split('@')[0].split('(').length === 3) {
@@ -152,7 +151,7 @@ exports.commands = {
                             if (toId(tarLine).substr(0, 12) === 'hiddenpower') {
                                 var HPtype = toId(tarLine).slice(12);
                                 HPtype = HPtype.charAt(0).toUpperCase() + HPtype.slice(1);
-                                var order = ['hp', 'atk', 'def', 'spa', 'spd', 'spe'];
+                                order = ['hp', 'atk', 'def', 'spa', 'spd', 'spe'];
                                 tarPoke.ivs = ['31', '31', '31', '31', '31', '31'];
                                 var neededIVs = TypeChart[HPtype].HPivs;
                                 for (var type in neededIVs) {
@@ -175,7 +174,7 @@ exports.commands = {
                     //Pawnie|bisharp|airballoon|H|knockoff,hiddenpowerdragon,dualchop,ironhead|Naughty|252,252,,4,,|F|,30,,,,|S|98|156
                     //NICKNAME|species|item|ABILITY|moves|NATURE|evs|GENDER|ivs|SHINY|level|happiness
                     packedTeam[i] = '';
-                    packedTeam[i] += tarPoke.nick + '|'
+                    packedTeam[i] += tarPoke.nick + '|';
                     packedTeam[i] += (tarPoke.species || '') + '|';
                     packedTeam[i] += (tarPoke.item || '') + '|';
                     packedTeam[i] += (tarPoke.ability || '0') + '|';
@@ -199,10 +198,10 @@ exports.commands = {
                 TEAMS[tier].push(packedTeam);
                 fs.writeFileSync('battle/teams.json', JSON.stringify(TEAMS));
                 Bot.say(by, room, 'Done!');
-            })
+            });
         }
         catch (e) {
-            return Bot.say(by, room, 'ERROR in parsing team.')
+            return Bot.say(by, room, 'ERROR in parsing team.');
         }
     },
     tourjoin: function(arg, by, room) {
@@ -226,3 +225,21 @@ exports.commands = {
         Bot.say(by, room, 'Tour autojoin is ' + (this.settings[config.serverid][toId(config.nick)].tournaments[room] ? 'ON' : 'OFF'));
     },
 };
+
+/****************************
+*       For C9 Users        *
+*****************************/
+// Yes, sadly it can't be done in one huge chunk w/o undoing it / looking ugly :(
+
+/* globals TEAMS */
+/* globals toId */
+/* globals Bot */
+/* globals config */
+/* globals Tools */
+/* globals TYPECHART */
+/* globals fs */
+/* globals send */
+/* globals isolate */
+/* globals POKEDEX */
+/* globals MAXBATTLES*/
+/* globals Battles */

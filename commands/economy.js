@@ -3,24 +3,24 @@ exports.commands = {
     resetleaderboard: function(arg, by, room) {
         if (!Bot.hasRank(by, '#~')) return false;
         Economy.clear(room, by);
-        Bot.say(by, room, 'The leaderboard has been reset.')
+        Bot.say(by, room, 'The leaderboard has been reset.');
     },
     registerroom: function(arg, by, room) {
         if (room.charAt(0) === ',' || !Bot.rankFrom(by, '~')) return false;
         if (Economy.addRoom(room)) {
-            return Bot.say(by, room, 'An individual leaderboard has been enabled for this room.')
+            return Bot.say(by, room, 'An individual leaderboard has been enabled for this room.');
         }
         else {
-            return Bot.say(by, room, 'An individual leaderboard already exists for this room.')
+            return Bot.say(by, room, 'An individual leaderboard already exists for this room.');
         }
     },
     deregisterroom: function(arg, by, room) {
         if (room.charAt(0) === ',' || !Bot.rankFrom(by, '~')) return false;
         if (Economy.deleteRoom(room)) {
-            return Bot.say(by, room, 'The individual leaderboard has been deleted for this room.')
+            return Bot.say(by, room, 'The individual leaderboard has been deleted for this room.');
         }
         else {
-            return Bot.say(by, room, 'An individual leaderboard does not exist for this room.')
+            return Bot.say(by, room, 'An individual leaderboard does not exist for this room.');
         }
     },
     takepoints: 'givepoints',
@@ -34,9 +34,9 @@ exports.commands = {
         if (cmd === 'takepoints') amount = amount * -1;
         Economy.give(target, amount * 1, room);
         if (amount < 0) {
-            return Bot.say(by, room, target + ' has lost ' + amount * -1 + ' ' + Economy.currency(room))
+            return Bot.say(by, room, target + ' has lost ' + amount * -1 + ' ' + Economy.currency(room));
         }
-        return Bot.say(by, room, target + ' has been given ' + amount + ' ' + Economy.currency(room))
+        return Bot.say(by, room, target + ' has been given ' + amount + ' ' + Economy.currency(room));
     },
     points: 'atm',
     score: 'atm',
@@ -46,7 +46,7 @@ exports.commands = {
             var targetRoom = ',' + by;
         }
         else {
-            targetRoom = room
+            targetRoom = room;
         }
         if (arg) {
             var user = arg.split(',')[0];
@@ -62,7 +62,7 @@ exports.commands = {
             var targetRoom = ',' + by;
         }
         else {
-            targetRoom = room
+            targetRoom = room;
         }
         if (arg) {
             room = toId(arg);
@@ -74,7 +74,7 @@ exports.commands = {
             var targetRoom = ',' + by;
         }
         else {
-            targetRoom = room
+            targetRoom = room;
         }
         if (arg) {
             room = toId(arg);
@@ -97,7 +97,7 @@ exports.commands = {
             var economyCP = Economy.economy.rooms[room].cp;
         }
         else {
-            var economyCP = Economy.economy.global.cp;
+            economyCP = Economy.economy.global.cp;
         }
         switch (param) {
             case 'currency':
@@ -116,11 +116,21 @@ exports.commands = {
                 Bot.say(by, room, 'Payout factor for winning games is: ' + value);
                 break;
         }
-        Economy.write()
+        Economy.write();
     },
     lbhelp: 'leaderboardhelp',
     leaderboardhelp: function(arg, by, room) {
         if (!Bot.hasRank(by, '@#&~')) room = ',' + by;
-        Bot.say(by, room, 'http://pastebin.com/am4FgVCH')
+        Bot.say(by, room, 'http://pastebin.com/am4FgVCH');
     }
-}
+};
+
+/****************************
+*       For C9 Users        *
+*****************************/
+// Yes, sadly it can't be done in one huge chunk w/o undoing it / looking ugly :(
+
+/* globals toId */
+/* globals Bot */
+/* globals Tools */
+/* globals Economy */

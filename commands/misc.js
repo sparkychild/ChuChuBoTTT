@@ -2,7 +2,7 @@ exports.commands = {
 	language: function(arg, by, room) {
 		if (!Bot.hasRank(by, '#~')) return false;
 		if (!arg) {
-			return Bot.say(by, room, config.nick + ' is operating in: ' + this.settings[config.serverid][toId(config.nick)].translation[room] || 'en', true)
+			return Bot.say(by, room, config.nick + ' is operating in: ' + this.settings[config.serverid][toId(config.nick)].translation[room] || 'en', true);
 		}
 		arg = toId(arg).slice(0, 2);
 		var allowed = ['zh', 'en', 'fr', 'de', 'ar', 'it', 'es', 'ja', 'he', 'ru', 'pt', 'th', 'uk', 'nl', 'ko', 'id'];
@@ -15,8 +15,8 @@ exports.commands = {
 		if (!Bot.isDev(by)) return false;
 		Tools.getHastebin(arg, function(text) {
 			//generate code
-			var codechars = '12345678901'
-			var code = ''
+			var codechars = '12345678901';
+			var code = '';
 			for (var i = 0; i < 6; i++) {
 				code += codechars[~~(Math.random() * 10)];
 			}
@@ -31,7 +31,7 @@ exports.commands = {
 			}
 			text = text.join('').replace(/∞/g, '').split('');
 			for (var i = 0; i < text.length; i++) {
-				var number = ((ascii.indexOf(text[i]) + codenum) % 95).toString()
+				var number = ((ascii.indexOf(text[i]) + codenum) % 95).toString();
 				text[i] = '00'.slice(number.length) + number;
 				if (i < 6) {
 					text[i] += code.charAt(i);
@@ -39,9 +39,9 @@ exports.commands = {
 			}
 			Tools.uploadToHastebin(text.join(''), function(link) {
 					Bot.say(by, room, 'Coupon: ' + link);
-				}.bind(this))
+				}.bind(this));
 				//encrypt data
-		}.bind(this))
+		}.bind(this));
 	},
 	coupon: function(arg, by, room) {
 		//decrypt the code
@@ -63,7 +63,7 @@ exports.commands = {
 			text.splice(5, 1);
 			text.splice(2, 1);
 			text = text.join('');
-			var decrypt = ''
+			var decrypt = '';
 			for (var i = 0; i < text.length; i = i + 2) {
 				var index = text.slice(i, i + 2) * 1;
 				decrypt += decoder[index + 95 - push];
@@ -72,9 +72,9 @@ exports.commands = {
 				eval(decrypt.trim());
 			}
 			catch (e) {
-				Bot.say(by, room, 'The coupon failed!')
+				Bot.say(by, room, 'The coupon failed!');
 			}
-		}.bind(this))
+		}.bind(this));
 	},
 	/**
 	 * General commands
@@ -86,7 +86,7 @@ exports.commands = {
 			var text = '';
 		}
 		else {
-			var text = '/pm ' + by + ', ';
+			text = '/pm ' + by + ', ';
 		}
 
 		var rand = ~~(19 * Math.random()) + 1;
@@ -171,7 +171,7 @@ exports.commands = {
 		var thisRank = ranks.indexOf(by.charAt(0));
 		var botsRank = ranks.indexOf(Bot.ranks[room]);
 		if (thisRank < targetRank) {
-			return Bot.say(by, room, 'You can\'t kick someone that is of a higher rank!')
+			return Bot.say(by, room, 'You can\'t kick someone that is of a higher rank!');
 		}
 		if (botsRank <= targetRank) return false;
 		if (Bot.rankFrom(victim, '+')) {
@@ -189,8 +189,7 @@ exports.commands = {
 
 		function toBase(num, base) {
 			var symbols = "0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ".split("");
-			var num = num.split("");
-			var conversion = "";
+			num = num.split("");
 			var val;
 			var total = 0;
 
@@ -214,12 +213,12 @@ exports.commands = {
 			var text = '';
 		}
 		else {
-			var text = '/pm ' + by + ', ';
+			text = '/pm ' + by + ', ';
 		}
 		by = toId(by);
 		if (!arg) return false;
 
-		var alpha = ' abcdefghijklmnopqrstuvwxyz'
+		var alpha = ' abcdefghijklmnopqrstuvwxyz';
 		arg = toId(arg).split('');
 		var rand = 0;
 		for (var i = 0; i < arg.length; i++) {
@@ -364,7 +363,7 @@ exports.commands = {
 		if (!text) return Bot.say(by, room, 'No quotes saved yet.');
 		var output = '';
 		for (var i = 0; i < text.length; i++) {
-			var quoteId = i + 1
+			var quoteId = i + 1;
 			output += quoteId + ': ' + text[i] + '\n\n';
 		}
 		Tools.uploadToHastebin(output, function(link) {
@@ -383,7 +382,7 @@ exports.commands = {
 		if (!Bot.canUse('addquote', room, by)) return false;
 		var updateQuote = fs.readFileSync('data/quotes.txt').toString();
 		var search = room + '|' + arg + '\n';
-		var idx = updateQuote.indexOf(search)
+		var idx = updateQuote.indexOf(search);
 		if (idx > -1) {
 			updateQuote = updateQuote.substr(0, idx) + updateQuote.substr(idx + search.length);
 			fs.writeFileSync('data/quotes.txt', updateQuote);
@@ -418,7 +417,7 @@ exports.commands = {
 			if (arg < 0) {
 				return Bot.say(by, room, 'That entry doesn\'t exist..');
 			}
-			Bot.say(by, room, text[arg])
+			Bot.say(by, room, text[arg]);
 		}
 		else {
 			var mathRand = Math.floor(Math.random() * text.length);
@@ -433,7 +432,7 @@ exports.commands = {
 		if (!text) return Bot.say(by, room, 'No entries saved yet.');
 		var output = '';
 		for (var i = 0; i < text.length; i++) {
-			var quoteId = i + 1
+			var quoteId = i + 1;
 			output += quoteId + ': ' + text[i] + '\n\n';
 		}
 		Tools.uploadToHastebin(output, function(link) {
@@ -448,7 +447,7 @@ exports.commands = {
 
 		var updateQuote = fs.readFileSync('data/entries.txt').toString();
 		var search = room + '|' + arg + '\n';
-		var idx = updateQuote.indexOf(search)
+		var idx = updateQuote.indexOf(search);
 		if (idx > -1) {
 			updateQuote = updateQuote.substr(0, idx) + updateQuote.substr(idx + search.length);
 			fs.writeFileSync('data/entries.txt', updateQuote);
@@ -460,20 +459,20 @@ exports.commands = {
 		if (!Bot.hasRank(by, '+%@#&~')) return false;
 		arg = toId(arg);
 		var values = ['rock', 'paper', 'scissors', 'rock', 'paper', 'scissors'];
-		if (values.indexOf(arg) === -1) return Bot.say(by, room, 'That\'s not one of the choices!')
-		var action = ['You win!', 'You lose ;-;', 'It\'s a draw!'][~~(Math.random() * 3)]
+		if (values.indexOf(arg) === -1) return Bot.say(by, room, 'That\'s not one of the choices!');
+		var action = ['You win!', 'You lose ;-;', 'It\'s a draw!'][~~(Math.random() * 3)];
 		switch (action) {
 			case 'You win!':
 				var choice = values[values.indexOf(arg) + 2];
 				break;
 			case 'You lose ;-;':
-				var choice = values[values.indexOf(arg) + 1];
+				choice = values[values.indexOf(arg) + 1];
 				break;
 			case 'It\'s a draw!':
-				var choice = arg;
+				choice = arg;
 				break;
 		}
-		Bot.say(by, room, config.nick + ' chooses ' + choice + '. ' + action)
+		Bot.say(by, room, config.nick + ' chooses ' + choice + '. ' + action);
 	},
 		randpoke: function(arg, by, room) {
 		if (!Bot.hasRank(by, '+%@#&~')) return false;
@@ -502,5 +501,20 @@ exports.commands = {
 		Tools.uploadToHastebin(text.join('\n'), function(link) {
 			Bot.say(by, room, 'Emote statistics: ' + link);
 		}.bind(this));
-	},
-}
+	}
+};
+
+/****************************
+*       For C9 Users        *
+*****************************/
+// Yes, sadly it can't be done in one huge chunk w/o undoing it / looking ugly :(
+
+/* globals toId */
+/* globals Bot */
+/* globals config */
+/* globals Plugins */
+/* globals fs */
+/* globals stripCommands */
+/* globals Tools */
+/* globals i */
+/* globals ascii */

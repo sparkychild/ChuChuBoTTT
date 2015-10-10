@@ -21,20 +21,20 @@ exports.commands = {
 		if (room !== rpRoom) return false;
 		if (!Bot.hasRank(by, '%@#&~')) return false;
 		if (currentRP) {
-			Bot.say(by, room, 'There is currently an RP going on. Please end it before starting another one.')
+			Bot.say(by, room, 'There is currently an RP going on. Please end it before starting another one.');
 			return false;
 		}
 		if (!Bot.hasRank(by, '~') || room !== rpRoom) return false;
 		if (rpModes.indexOf(toId(arg)) > -1 && rpModes.indexOf(toId(arg)) % 2 === 0) {
 			currentRP = arg;
 			Bot.say(by, room, 'The current RP is set to: ' + arg);
-			Bot.say(by, room, rpModes[rpModes.indexOf(toId(arg)) + 1])
+			Bot.say(by, room, rpModes[rpModes.indexOf(toId(arg)) + 1]);
 		}
 		else {
 			var text = 'Invalid RP Mode; modes include: ';
 			for (var i = 0; i < rpModes.length; i++) {
 				text += rpModes[i] + ', ';
-				i++
+				i++;
 			}
 			Bot.say(by, room, text);
 		}
@@ -55,7 +55,7 @@ exports.commands = {
 			var text = 'The current RP is ';
 		}
 		else {
-			var text = '/w ' + by + ', The current RP is ';
+			text = '/w ' + by + ', The current RP is ';
 		}
 		if (!currentRP) {
 			text += 'not yet set.';
@@ -66,10 +66,10 @@ exports.commands = {
 		Bot.say(by, room, text);
 
 		if (!Bot.hasRank(by, '~') || room.charAt(0) === ',') {
-			var text = '';
+			text = '';
 		}
 		else {
-			var text = '/w ' + by + ', ';
+			text = '/w ' + by + ', ';
 		}
 		text += rpModes[rpModes.indexOf(toId(currentRP)) + 1];
 		Bot.say(by, room, text);
@@ -77,10 +77,21 @@ exports.commands = {
 	startrp: function(arg, by, room) {
 		if (room !== rpRoom) return false;
 		if (!Bot.hasRank(by, '~')) return false;
-		Bot.say(by, room, 'The RP has started.')
+		Bot.say(by, room, 'The RP has started.');
 		rpTimer = setTimeout(function() {
 			Bot.say(config.nick, room, 'The RP is now over.');
 			currentRP = '';
 		}.bind(this), 8 * 60 * 60 * 1000);
-	},
-}
+	}
+};
+
+/****************************
+*       For C9 Users        *
+*****************************/
+// Yes, sadly it can't be done in one huge chunk w/o undoing it / looking ugly :(
+
+/* globals Bot */
+/* globals rpTimer */
+/* globals currentRP */
+/* globals config */
+/* globals toId */
