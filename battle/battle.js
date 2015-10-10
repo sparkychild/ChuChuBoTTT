@@ -1197,7 +1197,7 @@ exports.battleParser = {
     },
     accept: function(user, tier) {
         if (!user || !tier) return;
-        if ((!TEAMS[tier] && ['battlefactory', 'randombattle', 'challengecup1v1', 'monotyperandombattle', 'hackmonscup'].indexOf(tier) === -1) || Object.keys(Battles).length >= MAXBATTLES || Parse.isBanned(user)) {
+        if ((!TEAMS[tier] && ['battlefactory', 'randombattle', 'challengecup1v1', 'monotyperandombattle', 'hackmonscup'].indexOf(tier) === -1) || Object.keys(Battles).length >= MAXBATTLES || Bot.isBanned(user)) {
             return send('|/reject ' + user);
         }
         if (TEAMS[tier]) {
