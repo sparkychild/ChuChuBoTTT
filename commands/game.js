@@ -45,7 +45,7 @@ exports.commands = {
         }
     },
     signups: function(arg, by, room){
-        var game = toID(arg.split(',')[0]);
+        var game = toId(arg.split(',')[0]);
         var arg = arg.split(',').slice(1).join(',').trim();
         switch (game){
             case 'bj': case 'blackjack': case 'blowjob':
