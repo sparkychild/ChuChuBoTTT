@@ -101,6 +101,7 @@ exports.commands = {
             case 5:
                 Commands.kunc.call(this, '5', '~', room);
                 break;
+            
         }
     },
 };

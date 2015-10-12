@@ -28,7 +28,7 @@ exports.commands = {
             }
             var AQN = Math.floor(Object.keys(wordBank).length * Math.random());
             var AnagramEntry = Object.keys(wordBank)[AQN];
-            anagramA[room] = AnagramEntry[0];
+            anagramA[room] = AnagramEntry;
             var anagramQ = anagramA[room];
             var repeatTimes = (anagramA[room].length + 2) * (anagramA[room].length + 2);
             for (var idx = 0; idx < repeatTimes; idx++) {
@@ -52,7 +52,7 @@ exports.commands = {
             anagramPoints[room][user] = 0;
         }
         anagramPoints[room][user]++;
-        if (anagramPoints[room][user] <= anagramScorecap[room]) {
+        if (anagramPoints[room][user] >= anagramScorecap[room]) {
             Bot.say(config.nick, room, 'Congrats to ' + by + ' for winning! Reward: ' + Economy.getPayout((Object.keys(anagramPoints[room]).length * anagramScorecap[room]), room) + ' ' + Economy.currency(room));
             Economy.give(by, Economy.getPayout(anagramPoints[room].length, room), room);
             delete anagramON[room];

@@ -261,7 +261,6 @@ exports.parse = {
 			case 'c':
 				var by = spl[2];
 				spl = spl.slice(3).join('|');
-				this.rooms[room].users[toId(by)] = by.charAt(0);
 				if (Bot.roomIsBanned(room)) return Bot.talk(room, '/leave', true);
 				if (this.isBlacklisted(toId(by), room)) return Bot.talk(room, '/roomban ' + by + ', Blacklisted user', true);
 				if (!Bot.hasRank(by, '%@&#~')) {

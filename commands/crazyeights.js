@@ -39,6 +39,7 @@ exports.commands = {
 				crazyeight.playerList[room][crazyeight.playerList[room].length] = toId(by);
 				break;
 			case 'leave':
+				if (crazyeight.gameStatus[room] !== 'signups') return false;
 				var pIndex = crazyeight.playerList[room].indexOf(toId(by));
 				if (pIndex < 0) return false;
 				var pushPlayer = [];
@@ -301,7 +302,7 @@ exports.commands = {
 		}
 
 		Bot.talk(',' + crazyeight.currentPlayer[room], '(' + room + ') ' + '[' + crazyeight.playerData[room][crazyeight.currentPlayer[room]].hand.join('], [') + ']');
-			//next player
+		//next player
 		crazyeight.currentPlayer[room] = crazyeight.playerList[room][(crazyeight.playerList[room].indexOf(crazyeight.currentPlayer[room]) + 1) % crazyeight.playerList[room].length];
 		Bot.talk(',' + crazyeight.currentPlayer[room], '(' + room + ') ' + '[' + crazyeight.playerData[room][crazyeight.currentPlayer[room]].hand.join('], [') + ']');
 		Bot.talk(room, '**Top Card: [' + crazyeight.topCard[room] + ']**');
@@ -354,8 +355,8 @@ exports.commands = {
 };
 
 /****************************
-*       For C9 Users        *
-*****************************/
+ *       For C9 Users        *
+ *****************************/
 // Yes, sadly it can't be done in one huge chunk w/o undoing it / looking ugly :(
 
 /* globals toId */

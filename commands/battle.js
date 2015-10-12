@@ -40,7 +40,7 @@ exports.commands = {
         var Pokedex = isolate(POKEDEX);
         var TypeChart = isolate(TYPECHART);
         //Pawnie|bisharp|airballoon|H|knockoff,hiddenpowerdragon,dualchop,ironhead|Naughty|252,252,,4,,|F|,30,,,,|S|98|156
-        //NICKNAME|species|item|ABILITY|moves|NATURE|evs|GENDER|ivs|SHINY|level|happiness
+        //NICKNAME|species|item|ABILITY|moves|NATURE|evs|GENDER|ivs|SHINY|level|happiness[
         /*
         Pawnie (Bisharp) (F) @ Air Balloon  
         Ability: Pressure  
