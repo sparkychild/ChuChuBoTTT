@@ -229,34 +229,36 @@ exports.Tools = {
             });
         });
     },
-    uploadToHastebin: function(toUpload, callback) {
-        if (typeof callback !== 'function') return false;
-        var reqOpts = {
-            hostname: 'hastebin.com',
-            method: 'POST',
-            path: '/documents'
-        };
-
-        var req = http.request(reqOpts, function(res) {
-            res.on('data', function(chunk) {
+    uploadToHastebin: function (toUpload, callback) {
+		if (typeof callback !== 'function') return false;
+		var reqOpts = {
+			hostname: 'hastebin.com',
+			method: 'POST',
+			path: '/documents'
+		};
+		
+		var req = http.request(reqOpts, function (res) {
+			res.on('data', function (chunk) {
                 // CloudFlare can go to hell for sending the body in a header request like this
-                if (typeof chunk === 'string' && chunk.substr(0, 15) === '<!DOCTYPE html>') return callback('Error uploading to Hastebin.');
-                try {
-                    var filename = JSON.parse(chunk.toString()).key;
-                }
-                catch (e) {
-                    return callback('Error uploading to hastebin.');
+				try {
+                    var filename = JSON.parse(chunk).key;
+                } catch (e) {
+                    if (typeof chunk === 'string' && /^[^\<]*\<!DOCTYPE html\>/.test(chunk)) {
+                        callback('Cloudflare-related error uploading to Hastebin: ' + e.message);
+                    } else {
+                        callback('Unknown error uploading to Hastebin: ' + e.message);
+                    }
                 }
                 callback('http://hastebin.com/raw/' + filename);
-            });
+			});
         });
-        req.on('error', function(e) {
-            callback('Error uploading to Hastebin: ' + e.message);
-        });
-
-        req.write(toUpload);
-        req.end();
-    },
+        req.on('error', function (e) {
+			callback('Error uploading to Hastebin: ' + e.message);
+			throw e;
+		});
+		req.write(toUpload);
+		req.end();
+	},
     parseHandTotal: function(hand) {
 		var aceCount = 0
 		var handTotal = 0;
