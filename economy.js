@@ -69,7 +69,7 @@ exports.Economy = {
         return false;
     },
     clear: function(room, by) {
-        if ((!room || !this.economy.rooms[room]) && Parse.rankFrom(by, '~')) {
+        if ((!room || !this.economy.rooms[room]) && Bot.rankFrom(by, '~')) {
             this.economy.global.data = {};
         }
         else {

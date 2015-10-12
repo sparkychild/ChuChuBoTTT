@@ -54,7 +54,7 @@ exports.commands = {
 			triviaPoints[room][user]++;
 			if (triviaPoints[room][user] >= triviaScorecap[room]) {
 				Bot.say(config.nick, room, 'Congrats to ' + by + ' for winning! Reward: ' + Economy.getPayout((Object.keys(triviaPoints[room]).length * triviaScorecap[room]) / 4, room) + ' ' + Economy.currency(room));
-				Economy.give(by, Economy.getPayout((triviaPoints[room].length), room), room);
+				Economy.give(by, Economy.getPayout((Object.keys(triviaPoints[room]).length * triviaScorecap[room]) / 4, room), room);
 				delete triviaON[room];
 				clearInterval(triviaTimer[room]);
 				return;

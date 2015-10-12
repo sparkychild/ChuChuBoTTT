@@ -39,7 +39,7 @@ exports.commands = {
             for (var i = 1; i < anagramQ.length; i++) {
                 text += ', ' + anagramQ[i];
             }
-            Bot.talk(room, '[' + wordBank[AnagramEntry[0]] + '] ' + text);
+            Bot.talk(room, '[' + wordBank[anagramA[room]] + '] ' + text);
         }, 17000);
     },
     guessanagram: function(arg, by, room) {
@@ -54,12 +54,12 @@ exports.commands = {
         anagramPoints[room][user]++;
         if (anagramPoints[room][user] >= anagramScorecap[room]) {
             Bot.say(config.nick, room, 'Congrats to ' + by + ' for winning! Reward: ' + Economy.getPayout((Object.keys(anagramPoints[room]).length * anagramScorecap[room]), room) + ' ' + Economy.currency(room));
-            Economy.give(by, Economy.getPayout(anagramPoints[room].length, room), room);
+            Economy.give(by, Economy.getPayout((Object.keys(anagramPoints[room]).length * anagramScorecap[room]), room)  , room);
             delete anagramON[room];
             clearInterval(anagramInterval[room]);
             return;
         }
-        Bot.say(config.nick, room, '' + by.slice(1, by.length) + ' got the right answer, and has ' + anagramPoints[room][toId(by)] + ' point!');
+        Bot.say(config.nick, room, '' + by.slice(1, by.length) + ' got the right answer, and has ' + anagramPoints[room][toId(by)] + ' points!');
     },
     endanagram: 'endanagrams',
     anagramend: function(arg, by, room) {
