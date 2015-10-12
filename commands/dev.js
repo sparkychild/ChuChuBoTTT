@@ -59,7 +59,7 @@ exports.commands = {
 	 * to perform arbitrary actions that can't be done through any other commands
 	 * or to help with upkeep of the bot.
 	 */
-	join: function(arg, by, room) {
+	joinroom: function(arg, by, room) {
 		if (room.charAt(0) !== ',') return false;
 		send('|/join ' + arg);
 	},
