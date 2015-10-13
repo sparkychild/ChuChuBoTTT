@@ -75,7 +75,6 @@ exports.commands = {
             Tools.getHastebin(destination, function(data) {
                 if (!data) return Bot.say(by, room, 'Error parsing hastebin.');
                 Bot.say(by, room, 'Parsing Team....');
-                fs.writeFileSync('team.txt', data);
                 var PokemonData = data.replace(/\n[\s]+\n/g, '\n\n').split('\n\n');
                 for (var i = 0; i < PokemonData.length; i++) {
                     //reset tarpoke
