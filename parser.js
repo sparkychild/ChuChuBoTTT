@@ -7,7 +7,6 @@
  *
  * @license MIT license
  */
-//grants DEV access to the bot: the bot itself should be kept on here so it can moderate itself; leave sparkychild here in case you need help.
 
 var pmUser = [toId(config.nick)];
 
@@ -19,7 +18,6 @@ var forceRenamed = false;
 
 var sys = require('sys');
 var https = require('https');
-var http = require('http');
 var url = require('url');
 
 const ACTION_COOLDOWN = 3 * 1000;
@@ -38,7 +36,7 @@ try {
 	settings = JSON.parse(fs.readFileSync('settings.json'));
 }
 catch (e) {
-	error('Unable to load settings file.')
+	error('Unable to load settings file.');
 	process.exit(-1);
 } // file doesn't exist [yet]
 
@@ -80,7 +78,7 @@ exports.parse = {
 		var changes = false;
 		if (!this.settings[config.serverid]) {
 			this.settings[config.serverid] = {};
-			info('Created subsettings: serverid')
+			info('Created subsettings: serverid');
 			changes = true;
 		}
 		if (!this.settings[config.serverid][toId(config.nick)]) {
@@ -136,7 +134,7 @@ exports.parse = {
 					Commands.clearstatus.call(this, '', config.nick, '');
 				}
 				if (spl[1] === 'challstr') {
-					initChallstr = spl
+					initChallstr = spl;
 				}
 				else {
 					spl = initChallstr;
@@ -241,7 +239,7 @@ exports.parse = {
 					send('|/avatar ' + config.avatar);
 				}
 				for (var i = 0, len = config.rooms.length; i < len; i++) {
-					var room = toId(config.rooms[i]);
+					room = toId(config.rooms[i]);
 					send('|/join ' + room);
 				}
 				try {
@@ -253,7 +251,7 @@ exports.parse = {
 					}
 				}
 				catch (e) {
-					error('Blacklists not loaded..')
+					error('Blacklists not loaded..');
 				}
 				setInterval(this.cleanChatData.bind(this), 30 * 60 * 1000);
 				Bot.initMonitor();
@@ -276,7 +274,7 @@ exports.parse = {
 				Plugins.mailUser(by, room);
 				break;
 			case 'c:':
-				var by = spl[3];
+				by = spl[3];
 				spl = spl.slice(4).join('|');
 				this.rooms[room].users[toId(by)] = by.charAt(0);
 				if (Bot.roomIsBanned(room)) return Bot.talk(room, '/leave', true);
@@ -298,19 +296,19 @@ exports.parse = {
 				Plugins.mailUser(by, room);
 				break;
 			case 'pm':
-				var by = spl[2];
+				by = spl[2];
 				this.chatMessage(spl.slice(4).join('|'), by, ',' + by);
 				if (Bot.isDev(by) && spl.slice(4).join('|').slice(0, 4) === '>>>>') {
 					Bot.eval(spl.slice(4).join('|'), ',' + by);
 				}
 				if (pmUser.indexOf(toId(by)) === -1 && config.commandcharacter.indexOf(spl.slice(4).join('|').charAt(0)) === -1 && spl.slice(4).join('|').indexOf('/invite') !== 0 && spl.slice(4).join('|').indexOf('>>>>') !== 0) {
-					Bot.talk(',' + by, 'Hi, I am only a bot.  Please PM another staff member for assistance. Use ' + config.commandcharacter[0] + 'guide to see my commands. ' + 'Have a nice day! n_n');
+					Bot.talk(',' + by, config.pmmessage);
 					pmUser.push(toId(by));
 				}
 
 				break;
 			case 'N':
-				var by = spl[2];
+				by = spl[2];
 				delete this.rooms[room].users[toId(spl[3])];
 				this.rooms[room].users[toId(by)] = by.charAt(0);
 				if (toId(by) === toId(config.nick)) {
@@ -327,7 +325,7 @@ exports.parse = {
 				break;
 			case 'J':
 			case 'j':
-				var by = spl[2];
+				by = spl[2];
 				this.rooms[room].users[toId(by)] = by.charAt(0);
 				if (config.rooms.indexOf(room) === -1 && room.substr(0, 7) !== 'battle-' && room.substr(0, 10) !== 'groupchat-') {
 					config.rooms.push(room);
@@ -368,7 +366,7 @@ exports.parse = {
 				this.rooms[room].name = spl[2];
 				break;
 			case 'popup':
-				this.parseTransfer(spl.slice(2).join('|'))
+				this.parseTransfer(spl.slice(2).join('|'));
 				break;
 			case 'deinit':
 				if (room.substr(0, 7) !== 'battle-') {
@@ -381,7 +379,7 @@ exports.parse = {
 			case 'updatechallenges':
 				var challengeData = JSON.parse(spl[2]).challengesFrom;
 				var players = Object.keys(challengeData);
-				Battle.accept(players[0], challengeData[players[0]])
+				Battle.accept(players[0], challengeData[players[0]]);
 				break;
 			case 'tournament':
 				Battle.tournaments(spl.slice(2), room);
@@ -396,7 +394,7 @@ exports.parse = {
 		if (typeof amount !== 'number') {
 			if (text.split(' has transferred ').length < 3) return;
 			user += ' has transferred ';
-			amount = text.split(' has transferred')[2].split(' buck')[0] * 1
+			amount = text.split(' has transferred')[2].split(' buck')[0] * 1;
 		}
 		info(user + ' has transfered ' + amount + 'bucks');
 	},
@@ -453,7 +451,7 @@ exports.parse = {
 		if (html.indexOf('<div class=\'chat\'><small>') !== 0) return false;
 		var emoteList = ["#freewolf", "feelsbd", "feelsbn", "feelspn", "feelsdd", "feelsgd", "feelsgn", "feelsmd", "feelsnv", "feelsok", "feelspika", "feelspink", "feelsrs", "feelssc", "fukya", "funnylol", "hmmface", "Kappa", "noface", "Obama", "oshet", "PJSalt", "trumpW", "Sanic", "wtfman", "xaa", "yayface", "yesface", "meGusta", "trollface", "Doge"];
 		var initialLength = html.length;
-		var usersearch = html.indexOf('</small><button name=\'parseCommand\' value=\'/user ') + 49
+		var usersearch = html.indexOf('</small><button name=\'parseCommand\' value=\'/user ') + 49;
 
 		var user = html.slice(usersearch).split('\' style=\'background:none;border:0;padding:0 5px 0 0;font-family:Verdana,Helvetica,Arial,sans-serif;font-size:9pt;cursor:pointer\'><b><font color=')[0];
 
@@ -465,7 +463,6 @@ exports.parse = {
 
 		for (var j = 0; j < emoteList.length; j++) {
 			var replacer = '" title="' + emoteList[j] + '" />';
-			var newText = '';
 			emoteStats[emoteList[j]] = 0;
 			for (var i = 0; i < ~~(initialLength / replacer.length) + 1; i++) {
 				if (html.indexOf(replacer) === -1) {
@@ -482,9 +479,9 @@ exports.parse = {
 			if (!emoteFlooding[toId(user)]) {
 				emoteFlooding[toId(user)] = 0;
 			}
-			emoteFlooding[toId(user)]++
+			emoteFlooding[toId(user)]++;
 				setTimeout(function() {
-					emoteFlooding[toId(user)]--
+					emoteFlooding[toId(user)]--;
 				}.bind(this), FLOOD_MESSAGE_TIME);
 			if (emoteFlooding[toId(user)] >= FLOOD_MESSAGE_NUM) {
 				emoteCount = emoteFlooding[toId(user)];
@@ -493,13 +490,13 @@ exports.parse = {
 		//data logging
 		Plugins.emoteCount(emoteStats);
 		//moderation
-		this.emoteModerate(emoteCount, user, room)
+		this.emoteModerate(emoteCount, user, room);
 	},
 	emoteModerate: function(count, user, room) {
 		if (Bot.rankFrom(user, '+')) return false;
 
 		if (!emoticonAbuse[toId(user)]) {
-			emoticonAbuse[toId(user)] = 0
+			emoticonAbuse[toId(user)] = 0;
 		}
 		if (count < 3) return false;
 		if (count > 2) {
@@ -583,7 +580,7 @@ exports.parse = {
 			arg = message.substr(index + 1).trim();
 		}
 		else {
-			var cmd = toId(message);
+			cmd = toId(message);
 		}
 
 		if (Commands[cmd]) {
@@ -605,7 +602,7 @@ exports.parse = {
 				}
 				catch (e) {
 					Bot.talk(room, 'The command failed! :o');
-					error(sys.inspect(e).toString().split('\n').join(' '))
+					error(sys.inspect(e).toString().split('\n').join(' '));
 					if (config.debuglevel <= 3) {
 						console.log(e.stack);
 					}
@@ -682,7 +679,6 @@ exports.parse = {
 		var roomData = userData[room];
 
 		roomData.times.push(now);
-		var by = user;
 		user = toId(user);
 		// this deals with punishing rulebreakers, but note that the bot can't think, so it might make mistakes
 		if (config.allowmute && Bot.hasRank(Bot.ranks[room] || ' ', '%@&#~')) {
@@ -821,3 +817,25 @@ exports.parse = {
 		userData.seenAt = now;
 	},
 };
+
+/****************************
+*       For C9 Users        *
+*****************************/
+// Yes, sadly it can't be done in one huge chunk w/o undoing it / looking ugly :(
+
+/* globals toId */
+/* globals Bot */
+/* globals config */
+/* globals join */
+/* globals leave */
+/* globals invite */
+/* globals send */
+/* globals cmdr */
+/* globals error */
+/* globals Commands */
+/* globals fs */
+/* globals Plugins */
+/* globals Battle */
+/* globals info */
+/* globals ok */
+/* globals Tools */

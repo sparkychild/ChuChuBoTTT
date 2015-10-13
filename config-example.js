@@ -64,12 +64,16 @@ exports.punishvals = {
 	5: 'roomban'
 };
 
-//This key is used to deliver requests from Google Spreadsheets. Used by the wifi room.
+// This key is used to deliver requests from Google Spreadsheets. Used by the wifi room.
 exports.googleapikey = '';
 
-//alt tracking - generally disabled bc it takes up a LOT of memory
-//if you use this, you will need to uncomment out the neccessary parts in the parser.js and commands.js
+// Alt tracking - generally disabled bc it takes up a LOT of memory.
+// If you use this, you will need to uncomment out the neccessary parts in the parser.js and commands.js
 exports.alts = false;
 
-//default avatar
+// Default avatar
 exports.avatar = null;
+
+// When you pm the bot but don't use a command, it replies you this message.
+// Example: "Hi, I'm a bot. Use .guide to view a command guide"
+exports.pmmessage = "";
