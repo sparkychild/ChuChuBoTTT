@@ -28,6 +28,7 @@ exports.commands = {
         if (!Bot.canUse('givepoints', room, by) || !arg) return false;
         if (!Economy.isRegistered(room) && !Bot.rankFrom(by, '@')) return false;
         arg = arg.split(',');
+        if (arg.length !== 2) return false;
         var target = toId(arg[0]);
         var amount = toId(arg[1]).replace(/[^0-9]/g, '');
         if (!amount) return;
@@ -126,8 +127,8 @@ exports.commands = {
 };
 
 /****************************
-*       For C9 Users        *
-*****************************/
+ *       For C9 Users        *
+ *****************************/
 // Yes, sadly it can't be done in one huge chunk w/o undoing it / looking ugly :(
 
 /* globals toId */

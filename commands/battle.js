@@ -75,9 +75,11 @@ exports.commands = {
             Tools.getHastebin(destination, function(data) {
                 if (!data) return Bot.say(by, room, 'Error parsing hastebin.');
                 Bot.say(by, room, 'Parsing Team....');
-                var PokemonData = data.split('\n\n');
+                fs.writeFileSync('team.txt', data);
+                var PokemonData = data.replace(/\n[\s]+\n/g, '\n\n').split('\n\n');
                 for (var i = 0; i < PokemonData.length; i++) {
                     //reset tarpoke
+                    if(i >= 6) break;
                     var tarPoke = {};
                     //line one the pokemon/nickname/gender/item
                     var tarData = PokemonData[i].split('\n');
@@ -101,7 +103,7 @@ exports.commands = {
                     //for each line thereafter
                     tarPoke.moves = [];
                     for (var l = 1; l < tarData.length; l++) {
-                        var tarLine = tarData[l];
+                        var tarLine = tarData[l].trim();
                         if (!tarLine) continue;
                         if (tarLine.indexOf(': ') > -1) {
                             var dataLine = tarLine.split(': ');

@@ -64,7 +64,7 @@ exports.commands = {
                     Bot.say(by, room, by + ' has won the game! Answer(s): __' + formatAnswer(statspread.answer[room]) + '.__');
                     Economy.give(by, Economy.getPayout(statspread.scorecap[room], room), room);
                     delete statspread.on[room];
-                    return Bot.say(config.nick, by, 'Rewards: ' + Economy.getPayout(statspread.scorecap[room], room));
+                    return Bot.say(config.nick, room, 'Rewards: ' + Economy.getPayout(statspread.scorecap[room], room));
                 }
             Bot.say(by, room, by + ' has the right answer and now has ' + statspread.score[room][userid] + ' points! Answer(s): __' + formatAnswer(statspread.answer[room]) + '.__');
             var allMons = Object.keys(POKEDEX);
