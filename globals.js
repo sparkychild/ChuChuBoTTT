@@ -126,6 +126,12 @@ global.POKEDEX = require('./battle/pokedex.js').BattlePokedex;
 global.TYPECHART = require('./battle/typeEff.js').BattleTypeChart;
 global.MAXBATTLES = 1;
 
+global.timer = {
+	on:{},
+	repeat:{},
+	end:{}
+}
+
 //screw javascript for changing my pokemon data
 global.isolate = function(data) {
     return JSON.parse(JSON.stringify(data));

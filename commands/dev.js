@@ -63,19 +63,6 @@ exports.commands = {
 		if (room.charAt(0) !== ',') return false;
 		send('|/join ' + arg);
 	},
-	js: function(arg, user, room) {
-		if (!Bot.isDev(user)) return false;
-		try {
-			var result = eval(arg.trim());
-			Bot.talk(room, JSON.stringify(result));
-		}
-		catch (e) {
-			Bot.talk(room, e.name + ": " + e.message);
-			console.log('ERROR');
-			console.log('');
-			console.log(e.stack);
-		}
-	},
 	reload: function(arg, by, room) {
 		if (!Bot.isDev(by)) return false;
 		try {

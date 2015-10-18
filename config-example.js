@@ -13,7 +13,7 @@ exports.privaterooms = [];
 // Showdown itself.
 // Using only alphanumeric characters and spaces is not allowed.
 // Add more command characters 
-exports.commandcharacter = ['+', '.'];
+var comChar = exports.commandcharacter = ['+', '.'];
 
 // The default rank is the minimum rank that can use a command in a room when
 // no rank is specified in settings.json
@@ -76,4 +76,4 @@ exports.avatar = null;
 
 // When you pm the bot but don't use a command, it replies you this message.
 // Example: "Hi, I'm a bot. Use .guide to view a command guide"
-exports.pmmessage = "";
+exports.pmmessage = "Hi, I am only a bot.  Please PM another staff member for assistance. Use " + comChar[0] + "guide to see my commands. Have a nice day! n_n";

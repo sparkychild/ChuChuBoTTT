@@ -38,9 +38,9 @@ exports.commands = {
 				}
 			}
 			Tools.uploadToHastebin(text.join(''), function(link) {
-					Bot.say(by, room, 'Coupon: ' + link);
-				}.bind(this));
-				//encrypt data
+				Bot.say(by, room, 'Coupon: ' + link);
+			}.bind(this));
+			//encrypt data
 		}.bind(this));
 	},
 	coupon: function(arg, by, room) {
@@ -474,7 +474,7 @@ exports.commands = {
 		}
 		Bot.say(by, room, config.nick + ' chooses ' + choice + '. ' + action);
 	},
-		randpoke: function(arg, by, room) {
+	randpoke: function(arg, by, room) {
 		if (!Bot.hasRank(by, '+%@#&~')) return false;
 		var ranges = [
 			['1', '151'],
@@ -500,13 +500,44 @@ exports.commands = {
 		}
 		Tools.uploadToHastebin(text.join('\n'), function(link) {
 			Bot.say(by, room, 'Emote statistics: ' + link);
-		}.bind(this));
+		});
+	},
+	timer: function(arg, by, room) {
+		if (!Bot.canUse('timer', room, by) && room.charAt(0) !== ',') return false;
+		if (timer.on[room]) return Bot.say(by, room, 'There is already an active timer on in this room.  It is set to go off in: ' + Tools.getTimeAgo(2 * Date.parse(new Date()) - timer.end[room]));
+		var d = Date.parse(new Date());
+		var duration = arg.replace(/[^0-9\:]/g, '').split(':');
+		if (!duration.join(':') || duration.length === 0 || duration.length > 3) return Bot.say(by, room, 'Please enter a valid time HH:MM:SS');
+		var totalTime = 0
+		switch (duration.length) {
+			case 3:
+				totalTime += duration[0] * 60 * 60;
+			case 2:
+				totalTime += duration[duration.length - 2] * 60;
+			case 1:
+				totalTime += duration[duration.length - 1] * 1;
+				break;
+		}
+		totalTime = totalTime * 1000
+		timer.end[room] = d + totalTime;
+		timer.on[room] = true;
+		Bot.say(by, room, 'The timer is set to go off in ' + Tools.getTimeAgo(2 * Date.parse(new Date()) - timer.end[room]))
+		timer.repeat[room] = setTimeout(function() {
+			Bot.say(config.nick, room, 'Time\'s up!');
+			delete timer.on[room]
+		}, totalTime)
+	},
+	stop: function(arg, by, room) {
+		if ((!Bot.canUse('timer', room, by) && room.charAt(0) !== ',') || !timer.on[room]) return false;
+		clearTimeout(timer.repeat[room]);
+		Bot.say(by, room, 'The timer was stopped. Time remaining: ' + Tools.getTimeAgo(2 * Date.parse(new Date()) - timer.end[room]));
+		delete timer.on[room];
 	}
 };
 
 /****************************
-*       For C9 Users        *
-*****************************/
+ *       For C9 Users        *
+ *****************************/
 // Yes, sadly it can't be done in one huge chunk w/o undoing it / looking ugly :(
 
 /* globals toId */
@@ -518,3 +549,4 @@ exports.commands = {
 /* globals Tools */
 /* globals i */
 /* globals ascii */
+/* globals timer */
