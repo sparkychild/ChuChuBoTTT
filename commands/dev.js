@@ -122,8 +122,14 @@ exports.commands = {
 		if (Object.keys(kunc.on).length !== 0) {
 			return Bot.say(by, room, 'Kunc game going on.');
 		}
-		process.exit(-1);
-	},
+		try {
+			console.log('Restarted by: ' + by);
+			forever.restart('index.js');
+		} catch (e) {
+			console.log('Process killed by: ' + by);
+			process.exit(-1); // If the user is not running forever it will kill the process instead of restarting.
+		}
+	}
 };
 
 /****************************
