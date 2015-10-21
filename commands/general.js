@@ -1,5 +1,4 @@
 var http = require('http');
-
 exports.commands = {
     /**
      * Room Owner commands
@@ -39,7 +38,9 @@ exports.commands = {
             anagrams: 1,
             comlist: 1,
             kunc: 1,
-            givepoints: 1
+            givepoints: 1,
+            statspread: 1,
+            timer: 1,
         };
         var modOpts = {
             flooding: 1,
@@ -479,7 +480,12 @@ exports.commands = {
         }.bind(this));
         var d = new Date();
         if (mailbl.indexOf(toId(by)) > -1) return false;
-        fs.appendFile('data/maillog.txt', destination + '|' + spl + ' - ' + toId(by) + '~' + d + '\n');
+        fs.appendFile('data/maillog.txt', destination + '|' + spl + ' - ' + toId(by) + '~' + d + '\n', function(err) {
+            if (err) {
+                Bot.say(by, room, 'There was an error, please report this to sparkychild.');
+                throw err;
+            }
+        });
     },
     checkmail: function(arg, by, room) {
         if (!Plugins.checkMail(by, room)) return Bot.say(by, room, (room.charAt(0) === ',' ? '' : '/pm ' + by + ', ') + 'You have no mail ;-;');
@@ -521,7 +527,31 @@ exports.commands = {
                     if (data.registertime === 0) {
                         return Bot.say(by, room, 'The account ' + arg + ' is not registered.');
                     }
-                    var regdate = data.registertime * 1000 - (1000 * 60 * 60 * 4);
+                    function isDst(tarDate) {
+                        var deezNuts = new Date(tarDate);
+                        var deezMonth = deezNuts.getMonth() + 1;
+                        var deezDay = deezNuts.getDate() + 1;
+                        var deezDayofWeek = deezNuts.getDay();
+                        if(deezMonth > 11 || deezMonth < 3){
+                            return false;
+                        }
+                        if(deezMonth === 3){
+                            if(deezDay - deezDayofWeek > 7){
+                                return true;
+                            }
+                            return false;
+                        }
+                        if(deezMonth === 11){
+                            if(deezDay - deezDayofWeek > 0){
+                                return true
+                            }
+                            return false;
+                        }
+                        return true;
+                    }
+                    var regdate = data.registertime * 1000 - (1000 * 60 * 60 * 5) + (new Date().getTimezoneOffset() * 60 * 1000);
+                    console.log(isDst(regdate));
+                    if(isDst(regdate)) regdate = regdate + 3600000;
                     var regDate = (new Date(regdate)).toString().substr(4, 20);
                     Bot.say(by, room, 'The account ' + arg + ' was registered on ' + regDate + ' (EST).');
                     break;
