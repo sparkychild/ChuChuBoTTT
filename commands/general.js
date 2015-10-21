@@ -550,7 +550,6 @@ exports.commands = {
                         return true;
                     }
                     var regdate = data.registertime * 1000 - (1000 * 60 * 60 * 5) + (new Date().getTimezoneOffset() * 60 * 1000);
-                    console.log(isDst(regdate));
                     if(isDst(regdate)) regdate = regdate + 3600000;
                     var regDate = (new Date(regdate)).toString().substr(4, 20);
                     Bot.say(by, room, 'The account ' + arg + ' was registered on ' + regDate + ' (EST).');
