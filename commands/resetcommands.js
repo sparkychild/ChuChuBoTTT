@@ -43,6 +43,11 @@ exports.commands = {
             clearInterval(Bot.repeatText[room]);
             ok('Reset repeat in ' + room);
         }
+        if(timer.on[room]){
+            delete timer.on[room];
+            clearTimeout(timer.repeat[room]);
+            ok('Reset timer in ' + room);
+        }
     },
     clearstatus: function(arg, by, room, cmd) {
         if (cmd) return false;
@@ -96,6 +101,11 @@ exports.commands = {
                 ok('Reset repeat in ' + tarRoom);
             }
         }
+        for(var tarRoom in timer.on){
+            clearTimeout(timer.repeat[tarRoom])
+            delete timer.on[tarRoom];
+            ok('Reset tier in ' + tarRoom)
+        }
     },
 };
 
@@ -117,3 +127,4 @@ exports.commands = {
 /* globals hangmanInterval */
 /* globals triviaTimer */
 /* globals anagramInterval */
+/* globals timer */
