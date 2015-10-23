@@ -19,7 +19,7 @@ function createMoveset(target) {
     }
     var selectedMoves = [];
     var damagingTypes = [];
-    var boostingMove = 0;
+    var boostingMove = null;
     //search boosting move
     function sum(array) {
         var total = 0;
@@ -42,7 +42,31 @@ function createMoveset(target) {
                 break;
             }
             selectedMoves.push(allMoves[i]);
-            boostingMove = 1;
+            if(Movedex[allMoves[i]].boosts.spa && Movedex[allMoves[i]].boosts.atk){
+                boostingMove = 'Both';
+            } else if (Movedex[allMoves[i]].boosts.spa) {
+                boostingMove = 'Special';
+            } else if (Movedex[allMoves[i]].boosts.atk){
+                boostingMove = 'Physical';
+            } else {
+                boostingMove = 'Both'
+            }
+            break;
+        }
+    }
+    //add a stab gdi
+    for(var i = 0; i < allMoves.length; i++){
+        var tarType = Movedex[allMoves[i]].type;
+        //stab does not match boosting move
+        if(boostingMove && Movedex[allMoves[i]].category !== boostingMove){
+            continue;
+        }
+        if(Movedex[allMoves[i]].category === 'Status'){
+            continue;
+        }
+        if(POKEDEX[target].types.indexOf(tarType) > -1){
+            selectedMoves.push(allMoves[i]);
+            damagingTypes.push(tarType);
             break;
         }
     }
@@ -59,6 +83,10 @@ function createMoveset(target) {
         }
         var tarMove = allMoves[i];
         var tarType = Movedex[tarMove].type;
+        var tarCategory = Movedex[tarMove].category
+        if(tarCategory === boostingMove && boostingMove !== 'Both'){
+            continue;
+        }
         if (Movedex[tarMove].basePower === 0) {
             continue;
         }
@@ -88,7 +116,7 @@ function createMoveset(target) {
         }
         selectedMoves.push(allMoves[i]);
     }
-    return selectedMoves;
+    return scramble(selectedMoves);
 }
 //end of select moves functions
 function formatMoves(array) {
@@ -106,7 +134,7 @@ exports.commands = {
     skipkunc: 'kunc',
     kunc: function(arg, by, room, cmd) {
         if (!Bot.canUse('kunc', room, by) || room.charAt(0) === ',') return false;
-        if (cmd === 'sk') {
+        if (cmd === 'skipkunc') {
             if (!kunc.on[room]) return false;
             var tarAnswer = Pokedex[kunc.answer[room]].species;
             Bot.say(by, room, 'The correct answer was ' + tarAnswer);

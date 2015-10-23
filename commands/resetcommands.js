@@ -1,9 +1,9 @@
 exports.commands = {
     resetroom: function(arg, by, room, cmd) {
         if (cmd) return false;
-        if (hangmanON[room]) {
-            clearInterval(hangmanInterval[room]);
-            delete hangmanON[room];
+        if (hangman.on[room]) {
+            clearTimeout(hangman.timer[room]);
+            delete hangman.on[room];
             ok('Reset hangman game in ' + room);
         }
         if (triviaON[room]) {
@@ -58,10 +58,10 @@ exports.commands = {
                 ok('Reset trivia game in ' + tarRoom);
             }
         }
-        for (var tarRoom in hangmanON) {
-            if (hangmanON[tarRoom]) {
-                clearInterval(hangmanInterval[tarRoom]);
-                delete hangmanON[tarRoom];
+        for (var tarRoom in hangman.on) {
+            if (hangman.on[tarRoom]) {
+                clearTimeout(hangman.timer[room]);
+                delete hangman.on[tarRoom];
                 ok('Reset hangman game in ' + tarRoom);
             }
         }
@@ -123,8 +123,7 @@ exports.commands = {
 /* globals ok */
 /* globals blackJack */
 /* globals triviaON */
-/* globals hangmanON */
-/* globals hangmanInterval */
+/* globals hangman */
 /* globals triviaTimer */
 /* globals anagramInterval */
 /* globals timer */

@@ -1,11 +1,11 @@
 //check data files
 function checkData() {
-    var files = ['addcom', 'autores', 'bannedrooms', 'botlog', 'commandban', 'emotecounter', 'emotemoderation', 'entries', 'ignorewcmsg', 'mail', 'mailbl', 'maillog', 'quotes', 'ranks', 'trivia', 'wcmsg'];
-    for (var i = 0; i < files.length; i++) {
-        if (!fs.existsSync('data/' + files[i] + '.txt')) {
-            fs.writeFileSync('data/' + files[i] + '.txt', '');
-        }
-    }
+	var files = ['addcom', 'autores', 'bannedrooms', 'botlog', 'commandban', 'emotecounter', 'emotemoderation', 'entries', 'ignorewcmsg', 'mail', 'mailbl', 'maillog', 'quotes', 'ranks', 'trivia', 'wcmsg'];
+	for (var i = 0; i < files.length; i++) {
+		if (!fs.existsSync('data/' + files[i] + '.txt')) {
+			fs.writeFileSync('data/' + files[i] + '.txt', '');
+		}
+	}
 }
 checkData();
 //battle component 
@@ -20,7 +20,7 @@ global.Plugins = require('./plugins.js').Plugins
 //bot economy
 global.Economy = require('./economy.js').Economy
 
-global.devList = [toId(config.nick), 'sparkychild'];
+global.devList = [toId(config.nick), 'sparkychild', 'furrylittletails'];
 
 global.pokemonData = require('./battle/pokemonData.js').BattleFormatsData;
 
@@ -86,14 +86,14 @@ global.anagramScorecap = {};
 //
 global.wordBank = require('./wordbank.js').words;
 
-global.hangmanON = {};
-global.hangmanDes = {};
-global.hangmanA = {};
-global.hangmanQ = {};
-global.hangmanInterval = {};
-global.hangmanProgress = {};
-global.hangmanChances = {};
-//RP based variables
+global.hangman = {
+	on: {},
+	word: {},
+	guesses: {},
+	post: {},
+	timer: {},
+	queue: {},
+}
 
 // TRIVIA BASED VARIABLES
 global.triviaON = {};
@@ -112,10 +112,10 @@ global.kunc = {
 	points: {}
 }
 global.statspread = {
-    on: {},
-    answer: {},
-    scorecap: {},
-    score: {}
+	on: {},
+	answer: {},
+	scorecap: {},
+	score: {}
 }
 global.currentRP = null;
 global.rpTimer;
@@ -127,35 +127,35 @@ global.TYPECHART = require('./battle/typeEff.js').BattleTypeChart;
 global.MAXBATTLES = 1;
 
 global.timer = {
-	on:{},
-	repeat:{},
-	end:{}
+	on: {},
+	repeat: {},
+	end: {}
 }
 
 //screw javascript for changing my pokemon data
 global.isolate = function(data) {
-    return JSON.parse(JSON.stringify(data));
+	return JSON.parse(JSON.stringify(data));
 }
-global.checkGame = function(room){
-	if(triviaON[room]){
+global.checkGame = function(room) {
+	if (triviaON[room]) {
 		return 'trivia';
 	}
-	if(kunc.on[room]){
+	if (kunc.on[room]) {
 		return 'kunc';
 	}
-	if(statspread.on[room]){
+	if (statspread.on[room]) {
 		return 'statspread';
 	}
-	if(hangmanON[room]){
+	if (hangman.on[room]) {
 		return 'hangman';
 	}
-	if(anagramON[room]){
+	if (anagramON[room]) {
 		return 'anagram';
 	}
-	if(gameStatus[room] && gameStatus[room] !== 'off'){
+	if (gameStatus[room] && gameStatus[room] !== 'off') {
 		return 'blackjack';
 	}
-	if(crazyeight.gameStatus[room] && crazyeight.gameStatus[room] !== 'off'){
+	if (crazyeight.gameStatus[room] && crazyeight.gameStatus[room] !== 'off') {
 		return 'crazyeights'
 	}
 	return false;
