@@ -254,7 +254,6 @@ exports.Tools = {
         });
         req.on('error', function (e) {
 			callback('Error uploading to Hastebin: ' + e.message);
-			throw e;
 		});
 		req.write(toUpload);
 		req.end();
