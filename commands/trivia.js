@@ -59,7 +59,7 @@ exports.commands = {
 				clearInterval(triviaTimer[room]);
 				return;
 			}
-			Bot.say(config.nick, room, '' + by.slice(1) + ' got the right answer, and has ' + triviaPoints[room][user] + ' point!');
+			Bot.say(config.nick, room, '' + by.slice(1) + ' got the right answer, and has ' + triviaPoints[room][user] + ' point(s)!');
 		}
 	},
 	endtrivia: 'triviaend',

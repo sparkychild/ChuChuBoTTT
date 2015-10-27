@@ -20,9 +20,9 @@ exports.commands = {
     ss: 'statspread',
     statspread: function(arg, by, room, cmd) {
         if (!Bot.canUse('signups', room, by) || room.charAt(0) === ',') return false;
-        if (checkGame(room) && cmd !== 'skipss') return Bot.say(by, room, 'There is already a game going on in this room!');
-        if (cmd === 'skipss' && !statspread.on[room]) return;
-        if (cmd !== 'skipss') {
+        if (checkGame(room) && cmd !== 'skipstatspread') return Bot.say(by, room, 'There is already a game going on in this room!');
+        if (cmd === 'skipstatspread' && !statspread.on[room]) return;
+        if (cmd !== 'skipstatspread') {
             if (!arg) {
                 statspread.score[room] = {};
                 statspread.scorecap[room] = 3;
@@ -41,7 +41,7 @@ exports.commands = {
                 game('statspread', room);
             }
         }
-        if (cmd === 'skipss') {
+        if (cmd === 'skipstatspread') {
             Bot.say(by, room, 'The correct answer(s) were: ' + formatAnswer(statspread.answer[room]) + '.');
         }
         statspread.on[room] = true;
@@ -62,10 +62,10 @@ exports.commands = {
             }
             statspread.score[room][userid]++;
                 if (statspread.score[room][userid] >= statspread.scorecap[room]) {
-                    Bot.say(by, room, by + ' has won the game! Answer(s): __' + formatAnswer(statspread.answer[room]) + '.__');
+                    Bot.say(by, room, by + ' has won the game! Answer(s): __' + formatAnswer(statspread.answer[room]) + '.__ Rewards: ' + Economy.getPayout(statspread.scorecap[room], room) + ' ' + Economy.currency(room));
                     Economy.give(by, Economy.getPayout(statspread.scorecap[room], room), room);
                     delete statspread.on[room];
-                    return Bot.say(config.nick, by, 'Rewards: ' + Economy.getPayout(statspread.scorecap[room], room));
+                    return false;
                 }
             Bot.say(by, room, by + ' has the right answer and now has ' + statspread.score[room][userid] + ' points! Answer(s): __' + formatAnswer(statspread.answer[room]) + '.__');
             var allMons = Object.keys(POKEDEX);

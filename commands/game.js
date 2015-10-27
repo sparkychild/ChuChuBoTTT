@@ -13,6 +13,20 @@ exports.commands = {
             Commands[game].call(this, 'start', by, room);
         }
     },
+    autostart: function(arg, by, room) {
+        if (!Bot.canUse('signups', room, by)) return false;
+        var game = checkGame(room);
+        var time = arg.replace(/[^0-9]/g, '');
+        if (!time || parseInt(time) < 30) return Bot.say(by, room, 'Invalid time/Choose a time above 30 seconds.');
+        if (['blackjack', 'crazyeights', 'ambush'].indexOf(game) > -1) {
+            Bot.say(by, room, 'Starting the game of ' + game + ' in ' + time + ' seconds!')
+            setTimeout(function() {
+                if (checkGame(room) && checkGame(room) === game) {
+                    Commands[game].call(this, 'start', config.nick, room);
+                }
+            }, time * 1000);
+        }
+    },
     end: function(arg, by, room) {
         if (!checkGame(room)) return false;
         var game = checkGame(room);
@@ -37,21 +51,24 @@ exports.commands = {
             Commands[game].call(this, 'leave', by, room);
         }
     },
-    skip: function(arg, by, room){
-        if(!checkGame(room)) return false;
+    skip: function(arg, by, room) {
+        if (!checkGame(room)) return false;
         var game = checkGame(room);
-        if(['kunc', 'statspread'].indexOf(game) > -1){
+        if (['kunc', 'statspread'].indexOf(game) > -1) {
             Commands[game].call(this, '', by, room, 'skip' + game);
         }
     },
-    signups: function(arg, by, room){
+    signups: function(arg, by, room) {
         var game = toId(arg.split(',')[0]);
         arg = arg.split(',').slice(1).join(',').trim();
-        switch (game){
-            case 'bj': case 'blackjack': case 'blowjob':
+        switch (game) {
+            case 'bj':
+            case 'blackjack':
+            case 'blowjob':
                 Commands.blackjack.call(this, 'new', by, room);
                 break;
-            case 'crazyeights': case 'c8':
+            case 'crazyeights':
+            case 'c8':
                 Commands.crazyeights.call(this, 'new', by, room);
                 break;
             case 'trivia':
@@ -102,12 +119,12 @@ exports.commands = {
                 Commands.crazyeights.call(this, 'new', '~', room);
                 break;
             case 5:
-                Commands.kunc.call(this, '5', '~', room);
+                Commands.kunc.call(this, '5', '~', room, 'kunc');
                 break;
-            case 6: 
-                Commands.statspread.call(this, '5', '~', room);
+            case 6:
+                Commands.statspread.call(this, '5', '~', room, 'statspread');
                 break;
-            case 7: 
+            case 7:
                 Commands.ambush.call(this, 'new', '~', room);
                 break;
         }
@@ -115,8 +132,8 @@ exports.commands = {
 };
 
 /****************************
-*       For C9 Users        *
-*****************************/
+ *       For C9 Users        *
+ *****************************/
 // Yes, sadly it can't be done in one huge chunk w/o undoing it / looking ugly :(
 
 /* globals toId */
