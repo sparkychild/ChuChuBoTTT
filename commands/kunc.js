@@ -133,7 +133,7 @@ exports.commands = {
     //kunc game
     skipkunc: 'kunc',
     kunc: function(arg, by, room, cmd) {
-        if (!Bot.canUse('kunc', room, by) || room.charAt(0) === ',') return false;
+        if (!Bot.canUse('signups', room, by) || room.charAt(0) === ',') return false;
         if (cmd === 'skipkunc') {
             if (!kunc.on[room]) return false;
             var tarAnswer = Pokedex[kunc.answer[room]].species;
@@ -222,7 +222,7 @@ exports.commands = {
     },
     endkunc: 'kuncend',
     kuncend: function(arg, by, room) {
-        if (!Bot.canUse('kunc', room, by) || !kunc.on[room]) return false;
+        if (!Bot.canUse('signups', room, by) || !kunc.on[room]) return false;
         delete kunc.on[room];
         var tarAnswer = Pokedex[kunc.answer[room]].species;
         return Bot.say(by, room, 'The game of kunc has ended. The correct answer is: ' + tarAnswer);
@@ -230,7 +230,7 @@ exports.commands = {
     kuncpoints: function(arg, by, room) {
         if (!kunc.on[room]) return false;
         if (room.charAt(',') === 0) return false;
-        if (!Bot.canUse('kunc', room, by)) return false;
+        if (!Bot.canUse('signups', room, by)) return false;
         var text = 'Points so far: '
         for (var i in kunc.points[room]) {
             text += i + ' - ' + kunc.points[room][i] + ' points, '

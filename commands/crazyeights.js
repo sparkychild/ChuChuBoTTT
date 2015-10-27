@@ -13,10 +13,10 @@ exports.commands = {
 		}
 		switch (arg) {
 			case 'new':
-				if (!Bot.canUse('crazyeights', room, by)) return false;
+				if (!Bot.canUse('signups', room, by)) return false;
 				if (crazyeight.gameStatus[room] !== 'off') return Bot.say(by, room, 'A crazyeights game is already going on!');
 				if (checkGame(room)) return Bot.say(by, room, 'There is already a game going on in this room!');
-				Bot.say(by, room, 'A new game of Crazy Eights is starting. Do +crazyeights join to join the game!');
+				Bot.say(by, room, 'A new game of Crazy Eights is starting. Do ' + config.commandcharacter[0] + 'join to join the game!');
 				Bot.say(config.nick, room, 'The goal is to be the first player to get rid of all your cards.  A [ 2] will cause the next player to draw 2 cards and lose their turn.');
 				Bot.say(config.nick, room, 'A [ J] will skip the next player\'s turn and a [♠Q] will make the next player forfeit his/her turn and draw 4 cards. An [ 8] will allow the player to change the suit.');
 				Bot.say(config.nick, room, 'You can play a card with either the same suit or number/letter.  The goal is to get rid of your cards before the other players do so.');
@@ -54,14 +54,14 @@ exports.commands = {
 				delete crazyeight.playerData[room][toId(by)];
 				break;
 			case 'end':
-				if (!Bot.canUse('crazyeights', room, by)) return false;
+				if (!Bot.canUse('signups', room, by)) return false;
 				if (gameStatus === 'off') return false;
 				clearInterval(crazyeight.interval[room]);
 				crazyeight.gameStatus[room] = 'off';
 				Bot.say(by, room, 'The game was forcibly ended.');
 				break;
 			case 'start':
-				if (!Bot.canUse('crazyeights', room, by)) return false;
+				if (!Bot.canUse('signups', room, by)) return false;
 				if (crazyeight.gameStatus[room] !== 'signups') return false;
 				if (crazyeight.playerList[room].length < 2) return Bot.say(by, room, 'There aren\'t enough players ;-;');
 				crazyeight.gameStatus[room] = 'on';

@@ -33,7 +33,7 @@ function formatHangman(word, guesses) {
 exports.commands = {
     hangman: function(arg, by, room) {
         if (room.charAt(',') === 0) return false;
-        if (!Bot.canUse('hangman', room, by)) return false;
+        if (!Bot.canUse('signups', room, by)) return false;
         if (hangman.on[room]) {
             return Bot.say(by, room, 'Repost: ' + formatHangman(hangman.word[room], hangman.guesses[room]));
         }
@@ -41,6 +41,7 @@ exports.commands = {
         //select a word:
         hangman.word[room] = Object.keys(wordBank)[~~(Object.keys(wordBank).length * Math.random())];
         Bot.say(by, room, 'Hosting a game of Hangman. Use ' + config.commandcharacter[0] + 'g to guess.');
+        game('hangman', room);
         //init the variables
         hangman.guesses[room] = [];
         hangman.on[room] = true;
@@ -51,7 +52,7 @@ exports.commands = {
     endhangman: 'hangmanend',
     hangmanend: function(arg, by, room) {
         if (room.charAt(',') === 0) return false;
-        if (!Bot.canUse('hangman', room, by)) return false;
+        if (!Bot.canUse('signups', room, by)) return false;
         if (!hangman.on[room]) return false;
         delete hangman.on[room];
         Bot.say(by, room, 'The game of hangman has been ended. The answer was ' + hangman.word[room] + '.');

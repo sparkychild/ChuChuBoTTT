@@ -34,7 +34,7 @@ exports.commands = {
             delete kunc.on[room];
             ok('Reset kunc game in ' + room);
         }
-        if(statspread.on[room]){
+        if (statspread.on[room]) {
             delete statspread.on[room];
             ok('Reset StatSpread game in ' + room);
         }
@@ -43,10 +43,16 @@ exports.commands = {
             clearInterval(Bot.repeatText[room]);
             ok('Reset repeat in ' + room);
         }
-        if(timer.on[room]){
+        if (timer.on[room]) {
             delete timer.on[room];
             clearTimeout(timer.repeat[room]);
             ok('Reset timer in ' + room);
+        }
+        if (ambush.state[room] && ambush.state[room] !== 'off') {
+            clearTimeout(ambush.timer[room].fire);
+            clearTimeout(ambush.timer[room].nextTurn);
+            delete ambush.state[room];
+            ok('Reset Ambush game in ' + tarRoom);
         }
     },
     clearstatus: function(arg, by, room, cmd) {
@@ -101,17 +107,25 @@ exports.commands = {
                 ok('Reset repeat in ' + tarRoom);
             }
         }
-        for(var tarRoom in timer.on){
+        for (var tarRoom in timer.on) {
             clearTimeout(timer.repeat[tarRoom])
             delete timer.on[tarRoom];
-            ok('Reset tier in ' + tarRoom)
+            ok('Reset timer in ' + tarRoom)
+        }
+        for (var tarRoom in ambush.state) {
+            if (ambush.state[tarRoom] && ambush.state[tarRoom] !== 'off') {
+                clearTimeout(ambush.timer[room].fire);
+                clearTimeout(ambush.timer[room].nextTurn);
+                delete ambush.state[room];
+                ok('Reset Ambush game in ' + tarRoom);
+            }
         }
     },
 };
 
 /****************************
-*       For C9 Users        *
-*****************************/
+ *       For C9 Users        *
+ *****************************/
 // Yes, sadly it can't be done in one huge chunk w/o undoing it / looking ugly :(
 
 /* globals Bot */
@@ -123,7 +137,8 @@ exports.commands = {
 /* globals ok */
 /* globals blackJack */
 /* globals triviaON */
-/* globals hangman */
+/* globals hangmanON */
+/* globals hangmanInterval */
 /* globals triviaTimer */
 /* globals anagramInterval */
 /* globals timer */

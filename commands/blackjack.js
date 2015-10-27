@@ -10,10 +10,10 @@ exports.commands = {
         }
         switch (arg) {
             case 'new':
-                if (!Bot.canUse('blackjack', room, by)) return false;
+                if (!Bot.canUse('signups', room, by)) return false;
                 if (gameStatus[room] !== 'off') return Bot.say(by, room, 'A blackjack game is already going on!');
                 if (checkGame(room)) return Bot.say(by, room, 'There is already a game going on in this room!');
-                Bot.say(by, room, 'A new game of blackjack is starting. do ' + config.commandcharacter[0] + 'bj join to join the game!');
+                Bot.say(by, room, 'A new game of blackjack is starting. do ' + config.commandcharacter[0] + 'join to join the game!');
                 game('blackjack', room);
                 clearInterval(blackJack[room]);
                 gameStatus[room] = 'signup';
@@ -55,7 +55,7 @@ exports.commands = {
                 }
                 break;
             case 'start':
-                if (!Bot.canUse('blackjack', room, by)) return false;
+                if (!Bot.canUse('signups', room, by)) return false;
                 if (gameStatus[room] !== 'signup') return false;
                 if (!playerCount[room] || playerCount[room].length === 0) return Bot.say(by, room, 'No one has joined yet ;-;');
                 gameStatus[room] = 'on';
@@ -187,7 +187,7 @@ exports.commands = {
                 }, 90000);
                 break;
             case 'end':
-                if (!Bot.canUse('blackjack', room, by)) return false;
+                if (!Bot.canUse('signups', room, by)) return false;
                 if (gameStatus[room] === 'off') return false;
                 clearInterval(blackJack[room]);
                 Bot.say(by, room, 'The game of Blackjack was forcibly ended.');

@@ -335,6 +335,7 @@ var connect = function(retry) {
 			// Is this always error or can this be intended...?
 			error('connection closed: ' + sys.inspect(arguments));
 			info('retrying in one minute');
+			Parse.rooms = {}
 
 			setTimeout(function() {
 				connect(true);

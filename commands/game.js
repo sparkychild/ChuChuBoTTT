@@ -9,14 +9,14 @@ exports.commands = {
     start: function(arg, by, room) {
         if (!checkGame(room)) return false;
         var game = checkGame(room);
-        if (['blackjack', 'crazyeights'].indexOf(game) > -1) {
+        if (['blackjack', 'crazyeights', 'ambush'].indexOf(game) > -1) {
             Commands[game].call(this, 'start', by, room);
         }
     },
     end: function(arg, by, room) {
         if (!checkGame(room)) return false;
         var game = checkGame(room);
-        if (['blackjack', 'crazyeights'].indexOf(game) > -1) {
+        if (['blackjack', 'crazyeights', 'ambush'].indexOf(game) > -1) {
             Commands[game].call(this, 'end', by, room);
         }
         if (['anagram', 'trivia', 'hangman', 'kunc', 'statspread'].indexOf(game) > -1) {
@@ -26,14 +26,14 @@ exports.commands = {
     join: function(arg, by, room) {
         if (!checkGame(room)) return;
         var game = checkGame(room);
-        if (['blackjack', 'crazyeights'].indexOf(game) > -1) {
+        if (['blackjack', 'crazyeights', 'ambush'].indexOf(game) > -1) {
             Commands[game].call(this, 'join', by, room);
         }
     },
     leave: function(arg, by, room) {
         if (!checkGame(room)) return false;
         var game = checkGame(room);
-        if (['blackjack', 'crazyeights'].indexOf(game) > -1) {
+        if (['blackjack', 'crazyeights', 'ambush'].indexOf(game) > -1) {
             Commands[game].call(this, 'leave', by, room);
         }
     },
@@ -69,6 +69,9 @@ exports.commands = {
             case 'statspread':
                 Commands.statspread.call(this, arg, by, room, 'statspread');
                 break;
+            case 'ambush':
+                Commands.ambush.call(this, 'new', by, room);
+                break;
         }
     },
     points: function(arg, by, room) {
@@ -79,8 +82,8 @@ exports.commands = {
         }
     },
     randomgame: function(arg, by, room) {
-        if (!Bot.canUse('randomgame', room, by)) return false;
-        var gameCount = 6;
+        if (!Bot.canUse('signups', room, by)) return false;
+        var gameCount = 8;
         var rand = ~~(Math.random() * gameCount);
         switch (rand) {
             case 0:
@@ -101,7 +104,12 @@ exports.commands = {
             case 5:
                 Commands.kunc.call(this, '5', '~', room);
                 break;
-            
+            case 6: 
+                Commands.statspread.call(this, '5', '~', room);
+                break;
+            case 7: 
+                Commands.ambush.call(this, 'new', '~', room);
+                break;
         }
     },
 };

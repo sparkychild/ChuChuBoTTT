@@ -26,6 +26,10 @@ exports.commands = {
 			newRank = newRank.trim();
 		}
 		if (newRank && (tarRanks.indexOf(newRank) === -1 || newRank.length !== 1)) return Bot.say(by, room, 'The format is ' + config.commandcharacter[0] + 'setcom [command], [rank]');
+		if(Commands[command]){
+			Commands.set.call(this, arg, by, room);
+			return;
+		}
 		var search = config.serverid + '|' + toId(config.nick) + '|' + room + '|' + command + '|';
 		var ccommands = fs.readFileSync('data/addcom.txt').toString().split("\n");
 		for (var i = 0; i < ccommands.length; i++) {

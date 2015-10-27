@@ -2,7 +2,7 @@ exports.commands = {
     anagram: 'anagrams',
     anagrams: function(arg, by, room) {
         if (room.charAt(',') === 0) return false;
-        if (!Bot.canUse('anagrams', room, by)) return false;
+        if (!Bot.canUse('signups', room, by)) return false;
         if (anagramON[room]) return false;
         if (checkGame(room)) return Bot.say(by, room, 'There is already a game going on in this room!');
         anagramON[room] = true;
@@ -64,7 +64,7 @@ exports.commands = {
     endanagram: 'endanagrams',
     anagramend: function(arg, by, room) {
         if (room.charAt(',') === 0) return false;
-        if (!Bot.canUse('anagrams', room, by)) return false;
+        if (!Bot.canUse('signups', room, by)) return false;
         clearInterval(anagramInterval[room]);
         if (!anagramON[room]) return false;
         anagramON[room] = false;
@@ -73,7 +73,7 @@ exports.commands = {
     anagrampoints: function(arg, by, room) {
         if (!anagramON[room]) return false;
         if (room.charAt(',') === 0) return false;
-        if (!Bot.canUse('anagrams', room, by)) return false;
+        if (!Bot.canUse('signups', room, by)) return false;
         var text = 'Points so far: ';
         for (var i in anagramPoints[room]) {
             text += i + ' - ' + anagramPoints[room][i] + ' points, ';

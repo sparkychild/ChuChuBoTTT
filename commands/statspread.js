@@ -19,7 +19,7 @@ exports.commands = {
     skipstatspread: 'statspread',
     ss: 'statspread',
     statspread: function(arg, by, room, cmd) {
-        if (!Bot.canUse('statspread', room, by) || room.charAt(0) === ',') return false;
+        if (!Bot.canUse('signups', room, by) || room.charAt(0) === ',') return false;
         if (checkGame(room) && cmd !== 'skipss') return Bot.say(by, room, 'There is already a game going on in this room!');
         if (cmd === 'skipss' && !statspread.on[room]) return;
         if (cmd !== 'skipss') {
@@ -38,6 +38,7 @@ exports.commands = {
                     statspread.scorecap[room] = 3;
                 }
                 Bot.say(by, room, 'Hosting a game of "Stat Spread".  Simply guess which Pokémon has this stat spread. First to ' + statspread.scorecap[room] + ' points wins!');
+                game('statspread', room);
             }
         }
         if (cmd === 'skipss') {
@@ -64,7 +65,7 @@ exports.commands = {
                     Bot.say(by, room, by + ' has won the game! Answer(s): __' + formatAnswer(statspread.answer[room]) + '.__');
                     Economy.give(by, Economy.getPayout(statspread.scorecap[room], room), room);
                     delete statspread.on[room];
-                    return Bot.say(config.nick, room, 'Rewards: ' + Economy.getPayout(statspread.scorecap[room], room));
+                    return Bot.say(config.nick, by, 'Rewards: ' + Economy.getPayout(statspread.scorecap[room], room));
                 }
             Bot.say(by, room, by + ' has the right answer and now has ' + statspread.score[room][userid] + ' points! Answer(s): __' + formatAnswer(statspread.answer[room]) + '.__');
             var allMons = Object.keys(POKEDEX);
@@ -76,14 +77,14 @@ exports.commands = {
         }
     },
     statspreadend: function(arg, by, room) {
-        if (!Bot.canUse('statspread', room, by) || room.charAt(0) === ',' || !statspread.on[room]) return false;
+        if (!Bot.canUse('signups', room, by) || room.charAt(0) === ',' || !statspread.on[room]) return false;
         Bot.say(by, room, 'The Stat Spread game has been ended. The correct answer(s) were: ' + formatAnswer(statspread.answer[room]) + '.');
         delete statspread.on[room];
     },
     statspreadpoints: function(arg, by, room) {
         if (!statspread.on[room]) return false;
         if (room.charAt(',') === 0) return false;
-        if (!Bot.canUse('statspread', room, by)) return false;
+        if (!Bot.canUse('signups', room, by)) return false;
         var text = 'Points so far: '
         for (var i in statspread.score[room]) {
             text += i + ' - ' + statspread.score[room][i] + ' points, '

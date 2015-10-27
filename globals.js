@@ -117,6 +117,13 @@ global.statspread = {
 	scorecap: {},
 	score: {}
 }
+global.ambush = {
+    state: {},
+    data: {},
+    timer: {},
+    round: {},
+    count: {}
+}
 global.currentRP = null;
 global.rpTimer;
 
@@ -157,6 +164,9 @@ global.checkGame = function(room) {
 	}
 	if (crazyeight.gameStatus[room] && crazyeight.gameStatus[room] !== 'off') {
 		return 'crazyeights'
+	}
+	if(ambush.state[room] && ambush.state[room] !== 'off'){
+		return 'ambush';
 	}
 	return false;
 };

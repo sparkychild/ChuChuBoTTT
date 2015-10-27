@@ -15,8 +15,6 @@ exports.commands = {
             say: 1,
             joke: 1,
             meme: 1,
-            crazyeights: 1,
-            blackjack: 1,
             addquote: 1,
             autores: 1,
             quote: 1,
@@ -33,14 +31,10 @@ exports.commands = {
             runtour: 1,
             autoban: 1,
             banword: 1,
-            trivia: 1,
-            hangman: 1,
-            anagrams: 1,
             comlist: 1,
-            kunc: 1,
             givepoints: 1,
-            statspread: 1,
             timer: 1,
+            signups: 1,
         };
         var modOpts = {
             flooding: 1,
@@ -51,6 +45,7 @@ exports.commands = {
 
         var opts = arg.split(',');
         var cmd = toId(opts[0]);
+        if(['blackjack', 'bj', 'c8', 'crazyeights', 'hangman', 'trivia', 'kunc', 'ss', 'statspread', 'anagrams', 'ambush'].indexOf(cmd) > -1) cmd = 'signups';
         if (cmd === 'mod' || cmd === 'm' || cmd === 'modding') {
             if (!opts[1] || !toId(opts[1]) || !(toId(opts[1]) in modOpts)) return Bot.say(by, room, 'Incorrect command: correct syntax is ' + config.commandcharacter[0]+ 'set mod, [' +
                 Object.keys(modOpts).join('/') + '](, [on/off])');
@@ -440,7 +435,7 @@ exports.commands = {
         if (room.charAt(0) === ',') return false;
         if (!arg) return false;
 
-        if (!Bot.hasRank(by, '#') || !Bot.rankFrom(by, '+')) return false;
+        if (!Bot.hasRank(by, '#')) return false;
         if (Bot.repeatON[room]) {
             return Bot.say(by, room, 'There is already a repeat happening in this room.');
         }
@@ -500,7 +495,7 @@ exports.commands = {
         if (!Bot.hasRank(by, '+%@#~&') && room.charAt(0) !== ',') {
             room = ',' + by;
         }
-        if (!arg) {
+        if (!arg || !toId(arg)) {
             arg = by;
         }
 

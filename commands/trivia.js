@@ -1,7 +1,7 @@
 exports.commands = {
 	trivia: function(arg, by, room) {
 		if (room.charAt(',') === 0) return false;
-		if (!Bot.canUse('trivia', room, by)) return false;
+		if (!Bot.canUse('signups', room, by)) return false;
 		if (triviaON[room]) {
 			Bot.say(by, room, 'A trivia game cannot be started, as it is in progress already.');
 			return false;
@@ -64,7 +64,7 @@ exports.commands = {
 	},
 	endtrivia: 'triviaend',
 	triviaend: function(arg, by, room) {
-		if (!Bot.canUse('trivia', room, by)) return false;
+		if (!Bot.canUse('signups', room, by)) return false;
 		clearInterval(triviaTimer[room]);
 		if (!triviaON[room]) return false;
 		Bot.say(by, room, 'The game of trivia has been ended.');
@@ -72,7 +72,7 @@ exports.commands = {
 	},
 	triviapoints: function(arg, by, room) {
 		if (!triviaON[room]) return false;
-		if (!Bot.canUse('trivia', room, by)) return false;
+		if (!Bot.canUse('signups', room, by)) return false;
 		var text = 'Points so far: ';
 		for (var i in triviaPoints[room]) {
 			text += i + ' - ' + triviaPoints[room][i] + ' points, ';
