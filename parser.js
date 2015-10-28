@@ -7,7 +7,6 @@
  *
  * @license MIT license
  */
-//grants DEV access to the bot: the bot itself should be kept on here so it can moderate itself; leave sparkychild here in case you need help.
 
 var pmUser = [toId(config.nick)];
 
