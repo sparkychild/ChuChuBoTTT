@@ -67,6 +67,7 @@ exports.commands = {
                 if (!Bot.canUse('signups', room, by)) return false
                 clearTimer(room);
                 ambush.state[room] = 'off';
+                Bot.say(by, room, 'The game of ambush was forcibly ended.')
                 break;
         }
     },

@@ -489,6 +489,8 @@ exports.commands = {
         }
         Plugins.mailUser(by, room);
     },
+    regtime: 'userdata',
+    age: 'userdata',
     regdate: 'userdata',
     rank: 'userdata',
     userdata: function(arg, by, room, cmd) {
@@ -518,9 +520,13 @@ exports.commands = {
                 Bot.say(by, room, 'ERROR in retrieving data.');
             }
             switch (cmd) {
-                case 'regdate':
+                case 'regdate': case 'age': case 'regtime':
                     if (data.registertime === 0) {
                         return Bot.say(by, room, 'The account ' + arg + ' is not registered.');
+                    }
+                    if(cmd === 'age' || cmd === 'regtime'){
+                        var regdate = (data.registertime * 1000) + (new Date().getTimezoneOffset() * 60 * 1000) - 364000;
+                        return Bot.say(by, room, 'The account ' + arg + ' was registered ' + Tools.getTimeAgo(regdate) + ' ago.');
                     }
                     function isDst(tarDate) {
                         var deezNuts = new Date(tarDate);
@@ -544,7 +550,7 @@ exports.commands = {
                         }
                         return true;
                     }
-                    var regdate = data.registertime * 1000 - (1000 * 60 * 60 * 5) + (new Date().getTimezoneOffset() * 60 * 1000);
+                    regdate = data.registertime * 1000 - (1000 * 60 * 60 * 5) + (new Date().getTimezoneOffset() * 60 * 1000) - 364000;
                     if(isDst(regdate)) regdate = regdate + 3600000;
                     var regDate = (new Date(regdate)).toString().substr(4, 20);
                     Bot.say(by, room, 'The account ' + arg + ' was registered on ' + regDate + ' (EST).');
