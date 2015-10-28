@@ -5,74 +5,74 @@ var http = require('http');
 var url = require('url');
 var deck = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ';
 var card = {
-	'a': '♥A',
-	'b': '♥2',
-	'c': '♥3',
-	'd': '♥4',
-	'e': '♥5',
-	'f': '♥6',
-	'g': '♥7',
-	'h': '♥8',
-	'i': '♥9',
-	'j': '♥10',
-	'k': '♥J',
-	'l': '♥Q',
-	'm': '♥K',
-	'n': '♦A',
-	'o': '♦2',
-	'p': '♦3',
-	'q': '♦4',
-	'r': '♦5',
-	's': '♦6',
-	't': '♦7',
-	'u': '♦8',
-	'v': '♦9',
-	'w': '♦10',
-	'x': '♦J',
-	'y': '♦Q',
-	'z': '♦K',
-	'A': '♣A',
-	'B': '♣2',
-	'C': '♣3',
-	'D': '♣4',
-	'E': '♣5',
-	'F': '♣6',
-	'G': '♣7',
-	'H': '♣8',
-	'I': '♣9',
-	'J': '♣10',
-	'K': '♣J',
-	'L': '♣Q',
-	'M': '♣K',
-	'N': '♠A',
-	'O': '♠2',
-	'P': '♠3',
-	'Q': '♠4',
-	'R': '♠5',
-	'S': '♠6',
-	'T': '♠7',
-	'U': '♠8',
-	'V': '♠9',
-	'W': '♠10',
-	'X': '♠J',
-	'Y': '♠Q',
-	'Z': '♠K',
+    'a': '♥A',
+    'b': '♥2',
+    'c': '♥3',
+    'd': '♥4',
+    'e': '♥5',
+    'f': '♥6',
+    'g': '♥7',
+    'h': '♥8',
+    'i': '♥9',
+    'j': '♥10',
+    'k': '♥J',
+    'l': '♥Q',
+    'm': '♥K',
+    'n': '♦A',
+    'o': '♦2',
+    'p': '♦3',
+    'q': '♦4',
+    'r': '♦5',
+    's': '♦6',
+    't': '♦7',
+    'u': '♦8',
+    'v': '♦9',
+    'w': '♦10',
+    'x': '♦J',
+    'y': '♦Q',
+    'z': '♦K',
+    'A': '♣A',
+    'B': '♣2',
+    'C': '♣3',
+    'D': '♣4',
+    'E': '♣5',
+    'F': '♣6',
+    'G': '♣7',
+    'H': '♣8',
+    'I': '♣9',
+    'J': '♣10',
+    'K': '♣J',
+    'L': '♣Q',
+    'M': '♣K',
+    'N': '♠A',
+    'O': '♠2',
+    'P': '♠3',
+    'Q': '♠4',
+    'R': '♠5',
+    'S': '♠6',
+    'T': '♠7',
+    'U': '♠8',
+    'V': '♠9',
+    'W': '♠10',
+    'X': '♠J',
+    'Y': '♠Q',
+    'Z': '♠K',
 }
 
 var pointValueBJ = {
-	'A': 11,
-	'2': 2,
-	'3': 3,
-	'4': 4,
-	'5': 5,
-	'6': 6,
-	'7': 7,
-	'8': 8,
-	'9': 9,
-	'10': 10,
-	'J': 10,
-	'Q': 10,
-	'K': 10
+    'A': 11,
+    '2': 2,
+    '3': 3,
+    '4': 4,
+    '5': 5,
+    '6': 6,
+    '7': 7,
+    '8': 8,
+    '9': 9,
+    '10': 10,
+    'J': 10,
+    'Q': 10,
+    'K': 10
 };
 //global.Tools
 exports.Tools = {
@@ -88,11 +88,16 @@ exports.Tools = {
             if (minutes) times.unshift(minutes + (minutes === 1 ? ' minute' : ' minutes'));
             if (time >= 60) {
                 time = ~~((time - minutes) / 60);
-                hours = time % 24;
+                var hours = time % 24;
                 if (hours) times.unshift(hours + (hours === 1 ? ' hour' : ' hours'));
                 if (time >= 24) {
-                    days = ~~((time - hours) / 24);
+                    time = ~~((time - hours) / 24);
+                    var days = time % 365;
                     if (days) times.unshift(days + (days === 1 ? ' day' : ' days'));
+                    if (time >= 365) {
+                        var years = ~~((time - days) / 365);
+                        if (days) times.unshift(years + (years === 1 ? ' year' : ' years'));
+                    }
                 }
             }
         }
@@ -219,6 +224,7 @@ exports.Tools = {
         });
     },
     getDocCsv: function(meta, callback) {
+        console.log('getting csv')
         https.get('https://docs.google.com/spreadsheet/pub?key=' + meta.id + '&output=csv', function(res) {
             var data = '';
             res.on('data', function(part) {
@@ -229,75 +235,78 @@ exports.Tools = {
             });
         });
     },
-    uploadToHastebin: function (toUpload, callback) {
-		if (typeof callback !== 'function') return false;
-		var reqOpts = {
-			hostname: 'hastebin.com',
-			method: 'POST',
-			path: '/documents'
-		};
-		
-		var req = http.request(reqOpts, function (res) {
-			res.on('data', function (chunk) {
+    uploadToHastebin: function(toUpload, callback) {
+        if (typeof callback !== 'function') return false;
+        var reqOpts = {
+            hostname: 'hastebin.com',
+            method: 'POST',
+            path: '/documents'
+        };
+
+        var req = http.request(reqOpts, function(res) {
+            res.on('data', function(chunk) {
                 // CloudFlare can go to hell for sending the body in a header request like this
-				try {
+                try {
                     var filename = JSON.parse(chunk).key;
-                } catch (e) {
+                }
+                catch (e) {
                     if (typeof chunk === 'string' && /^[^\<]*\<!DOCTYPE html\>/.test(chunk)) {
                         callback('Cloudflare-related error uploading to Hastebin: ' + e.message);
-                    } else {
+                    }
+                    else {
                         callback('Unknown error uploading to Hastebin: ' + e.message);
                     }
                 }
                 callback('http://hastebin.com/raw/' + filename);
-			});
+            });
         });
-        req.on('error', function (e) {
-			callback('Error uploading to Hastebin: ' + e.message);
-		});
-		req.write(toUpload);
-		req.end();
-	},
+        req.on('error', function(e) {
+            callback('Error uploading to Hastebin: ' + e.message);
+            //throw e;
+        });
+        req.write(toUpload);
+        req.end();
+    },
     parseHandTotal: function(hand) {
-		var aceCount = 0
-		var handTotal = 0;
+        var aceCount = 0
+        var handTotal = 0;
 
-		for (var i = 0; i < hand.length; i++) {
-			handTotal = handTotal + pointValueBJ[hand[i].slice(1)]
-			if (hand[i].slice(1) === 'A') {
-				aceCount++
-			}
-		}
-		if (handTotal > 21) {
-			var difference = ~~((handTotal - 22) / 10) + 1;
-			if (aceCount >= difference) {
-				handTotal = handTotal - 10 * difference;
-			}
-			else {
-				handTotal = handTotal - aceCount * 10;
-			}
-		}
-		return handTotal;
-	},
-	generateDeck: function(packs) {
-		if (!packs || isNaN(packs * 1)) {
-			packs = 1;
-		}
-		else {
-			packs = ~~packs
-		}
-		var tarDeck = ''
-		for (var i = 0; i < packs; i++) {
-			tarDeck += deck;
-		}
-		for (var idx = 0; idx < (tarDeck.length + 2) * (tarDeck.length + 2); idx++) {
-			var randomInt = Math.floor(Math.random() * 52 + 1);
-			tarDeck = tarDeck.slice(1, randomInt) + tarDeck.charAt(0) + tarDeck.slice(randomInt, tarDeck.length);
-		}
-		var returnDeck = [];
-		for (var i = 0; i < tarDeck.length; i++) {
-			returnDeck[returnDeck.length] = card[tarDeck[i]];
-		}
-		return returnDeck;
-	},
+        for (var i = 0; i < hand.length; i++) {
+            handTotal = handTotal + pointValueBJ[hand[i].slice(1)]
+            if (hand[i].slice(1) === 'A') {
+                aceCount++
+            }
+        }
+        if (handTotal > 21) {
+            var difference = ~~((handTotal - 22) / 10) + 1;
+            if (aceCount >= difference) {
+                handTotal = handTotal - 10 * difference;
+            }
+            else {
+                handTotal = handTotal - aceCount * 10;
+            }
+        }
+        return handTotal;
+    },
+    generateDeck: function(packs) {
+        if (!packs || isNaN(packs * 1)) {
+            packs = 1;
+        }
+        else {
+            packs = ~~packs
+        }
+        var tarDeck = ''
+        for (var i = 0; i < packs; i++) {
+            tarDeck += deck;
+        }
+        for (var idx = 0; idx < (tarDeck.length + 2) * (tarDeck.length + 2); idx++) {
+            var randomInt = Math.floor(Math.random() * 52 + 1);
+            tarDeck = tarDeck.slice(1, randomInt) + tarDeck.charAt(0) + tarDeck.slice(randomInt, tarDeck.length);
+        }
+        var returnDeck = [];
+        for (var i = 0; i < tarDeck.length; i++) {
+            returnDeck[returnDeck.length] = card[tarDeck[i]];
+        }
+        return returnDeck;
+    },
 };
