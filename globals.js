@@ -124,6 +124,14 @@ global.ambush = {
     round: {},
     count: {}
 }
+global.bomb = {
+    state: {},
+    data: {},
+    timer: {},
+    count: {},
+    hold: {},
+}
+
 global.currentRP = null;
 global.rpTimer;
 
@@ -167,6 +175,9 @@ global.checkGame = function(room) {
 	}
 	if(ambush.state[room] && ambush.state[room] !== 'off'){
 		return 'ambush';
+	}
+	if(bomb.state[room] && bomb.state[room] !== 'off'){
+		return 'passthebomb'
 	}
 	return false;
 };

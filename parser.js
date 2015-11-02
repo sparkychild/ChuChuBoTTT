@@ -660,7 +660,7 @@ exports.parse = {
 		}
 		this.blacklistRegexes[room] = new RegExp(buffer.join('|'), 'i');
 	},
-	processChatData: function(user, room, msg) {
+		processChatData: function(user, room, msg) {
 		// NOTE: this is still in early stages
 		if (!user || room.charAt(0) === ',') return;
 
@@ -677,11 +677,21 @@ exports.parse = {
 		if (!this.chatData[user][room]) this.chatData[user][room] = {
 			times: [],
 			points: 0,
-			lastAction: 0
+			lastAction: 0,
+			posts: [],
+			lastPost: now
 		};
 		var roomData = userData[room];
 
 		roomData.times.push(now);
+		if(now - roomData.lastPost > 15000){
+			roomData.posts = [];
+		}
+		roomData.lastPost = now;
+		roomData.posts.push(msg);
+		if (roomData.posts.length > 7) {
+			roomData.posts = roomData.posts.slice(roomData.posts.length - 7);
+		}
 		var by = user;
 		user = toId(user);
 		// this deals with punishing rulebreakers, but note that the bot can't think, so it might make mistakes
@@ -716,6 +726,65 @@ exports.parse = {
 					muteMessage = ', Automated response: flooding';
 				}
 			}
+
+			//parse spam patterns for spammers that cannot trigger flooding :(
+			function arrayCount(array, search) {
+				var tarTimes = 0;
+				for (var arrayIndex = 0; arrayIndex < array.length; arrayIndex++) {
+					if (array[arrayIndex] === search) tarTimes++;
+				}
+				return tarTimes;
+			}
+			/*
+			function parseLengthPattern(array) {
+				var tarTimes = 0;
+				for (var arrayIndex = 0; arrayIndex < array.length; arrayIndex++) {
+					if (array[arrayIndex].length <= 4 && !/[ioue]/i.test(array[arrayIndex])) {
+						//ignore faces just in case but not lennies
+						if(array[arrayIndex].indexOf(':') > -1) continue;
+						//ignore common 3 letter phrases..
+						if (array[arrayIndex].length === 3 && (array[arrayIndex][1] === 'a' || ['mhm', 'pls', 'hmm', 'gdi'].indexOf(array[arrayIndex]) > -1)) continue;
+						tarTimes++;
+					}
+				}
+				//should be high enough... seriously if you only talk 4 letter phrases in a room, you're a bad user anyways.
+				return tarTimes >= 5;
+			}
+			*/
+			function spamLetterCount(string) {
+				var foundLetters = [];
+				for (var lindex = 0; lindex < string.length; lindex++) {
+					var tarLetter = string[lindex];
+					if (foundLetters.indexOf(tarLetter) > -1) continue;
+					if ('sdfghjk'.indexOf(tarLetter) > -1) {
+						foundLetters.push(tarLetter);
+					}
+				}
+				return foundLetters.length >= 2;
+			}
+
+			function parseRandomLetterSpam(array) {
+				var tarTimes = 0;
+				for (var arrayIndex = 0; arrayIndex < array.length; arrayIndex++) {
+					var spaceCount = array[arrayIndex].length - array[arrayIndex].replace(/\s/g, '').length;
+					var spamLetter = spamLetterCount(array[arrayIndex]);
+					if (!/[eiou]/i.test(array[arrayIndex]) && spaceCount <= 1 && spamLetter) tarTimes++;
+				}
+				return tarTimes;
+			}
+			if (arrayCount(roomData.posts, msg) >= 4 || parseRandomLetterSpam(roomData.posts) >= 5) {
+				if (useDefault || !('flooding' in modSettings)) {
+					pointVal = 2;
+					if (muteMessage.length) {
+						muteMessage += ', spam pattern (repeated messages/repeated excessively short messages/random letter spam)'
+					}
+					else {
+						muteMessage = ', Automated response: spam pattern (repeated messages/repeated excessively short messages/random letter spam)';
+					}
+				}
+				roomData.posts = [];
+			}
+
 			// moderation for caps (over x% of the letters in a line of y characters are capital)
 			var capsMatch = msg.replace(/[^A-Za-z]/g, '').match(/[A-Z]/g);
 			if ((useDefault || !('caps' in modSettings)) && capsMatch && toId(msg).length > MIN_CAPS_LENGTH && (capsMatch.length >= ~~(toId(msg).length * MIN_CAPS_PROPORTION))) {
@@ -755,9 +824,6 @@ exports.parse = {
 				if (roomData.points > 1) userData.zeroTol++; // getting muted or higher increases your zero tolerance level (warns do not)
 				roomData.lastAction = now;
 				Bot.talk(room, '/' + cmd + ' ' + user + muteMessage);
-				//				if(muteMessage = ', Automated response: flooding'){
-				//					Bot.talk('TextMonitor', '\[ ' + room + ' | ' + user + ' \] ' + user + ' was muted for flooding in ' + room);
-				//				}
 			}
 		}
 	},

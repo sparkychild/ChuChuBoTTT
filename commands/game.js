@@ -9,7 +9,7 @@ exports.commands = {
     start: function(arg, by, room) {
         if (!checkGame(room)) return false;
         var game = checkGame(room);
-        if (['blackjack', 'crazyeights', 'ambush'].indexOf(game) > -1) {
+        if (['blackjack', 'crazyeights', 'ambush', 'passthebomb'].indexOf(game) > -1) {
             Commands[game].call(this, 'start', by, room);
         }
     },
@@ -18,7 +18,7 @@ exports.commands = {
         var game = checkGame(room);
         var time = arg.replace(/[^0-9]/g, '');
         if (!time || parseInt(time) < 30) return Bot.say(by, room, 'Invalid time/Choose a time above 30 seconds.');
-        if (['blackjack', 'crazyeights', 'ambush'].indexOf(game) > -1) {
+        if (['blackjack', 'crazyeights', 'ambush', 'passthebomb'].indexOf(game) > -1) {
             Bot.say(by, room, 'Starting the game of ' + game + ' in ' + time + ' seconds!')
             setTimeout(function() {
                 if (checkGame(room) && checkGame(room) === game) {
@@ -30,7 +30,7 @@ exports.commands = {
     end: function(arg, by, room) {
         if (!checkGame(room)) return false;
         var game = checkGame(room);
-        if (['blackjack', 'crazyeights', 'ambush'].indexOf(game) > -1) {
+        if (['blackjack', 'crazyeights', 'ambush', 'passthebomb'].indexOf(game) > -1) {
             Commands[game].call(this, 'end', by, room);
         }
         if (['anagram', 'trivia', 'hangman', 'kunc', 'statspread'].indexOf(game) > -1) {
@@ -40,15 +40,22 @@ exports.commands = {
     join: function(arg, by, room) {
         if (!checkGame(room)) return;
         var game = checkGame(room);
-        if (['blackjack', 'crazyeights', 'ambush'].indexOf(game) > -1) {
+        if (['blackjack', 'crazyeights', 'ambush', 'passthebomb'].indexOf(game) > -1) {
             Commands[game].call(this, 'join', by, room);
         }
     },
     leave: function(arg, by, room) {
         if (!checkGame(room)) return false;
         var game = checkGame(room);
-        if (['blackjack', 'crazyeights', 'ambush'].indexOf(game) > -1) {
+        if (['blackjack', 'crazyeights', 'ambush', 'passthebomb'].indexOf(game) > -1) {
             Commands[game].call(this, 'leave', by, room);
+        }
+    },
+    players: function(arg, by, room) {
+        if (!checkGame(room)) return false;
+        var game = checkGame(room);
+        if (['blackjack', 'crazyeights', 'ambush', 'passthebomb'].indexOf(game) > -1) {
+            Commands[game].call(this, 'players', by, room);
         }
     },
     skip: function(arg, by, room) {
@@ -83,11 +90,16 @@ exports.commands = {
             case 'kunc':
                 Commands.kunc.call(this, arg, by, room, 'kunc');
                 break;
-            case 'statspread':
+            case 'statspread': case 'ss':
                 Commands.statspread.call(this, arg, by, room, 'statspread');
                 break;
             case 'ambush':
                 Commands.ambush.call(this, 'new', by, room);
+                break;
+            case 'bomb':
+            case 'passthebomb':
+            case 'ptb':
+                Commands.passthebomb.call(this, 'new', by, room);
                 break;
         }
     },
@@ -98,6 +110,7 @@ exports.commands = {
             Commands[game + 'points'].call(this, arg, by, room);
         }
     },
+    randgame: 'randomgame',
     randomgame: function(arg, by, room) {
         if (!Bot.canUse('signups', room, by)) return false;
         var gameCount = 8;
@@ -126,6 +139,9 @@ exports.commands = {
                 break;
             case 7:
                 Commands.ambush.call(this, 'new', '~', room);
+                break;
+            case 8:
+                Commands.passthebomb.call(this, 'new', '~', room);
                 break;
         }
     },

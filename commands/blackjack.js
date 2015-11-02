@@ -54,6 +54,10 @@ exports.commands = {
                     Bot.say(by, ',' + by, 'Aww, next time then!');
                 }
                 break;
+            case 'players':
+                if(!gameStatus[room] || gameStatus[room] === 'off' || !Bot.canUse('signups', room, by)) return false;
+                Bot.say(by, room, 'Players (' + playerCount[room].length + '): ' + playerCount[room].join(', '));
+                break;
             case 'start':
                 if (!Bot.canUse('signups', room, by)) return false;
                 if (gameStatus[room] !== 'signup') return false;

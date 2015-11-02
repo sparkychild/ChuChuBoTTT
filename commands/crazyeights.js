@@ -60,6 +60,10 @@ exports.commands = {
 				crazyeight.gameStatus[room] = 'off';
 				Bot.say(by, room, 'The game was forcibly ended.');
 				break;
+			case 'players':
+				if(!Bot.canUse('signups', room, by) || !crazyeight.gameStatus[room] || crazyeight.gameStatus[room] === 'off') return false;
+				Bot.say(by, room, 'Players (' + crazyeight.playerList[room].length + '): ' + crazyeight.playerList[room].join(', '));
+				break;
 			case 'start':
 				if (!Bot.canUse('signups', room, by)) return false;
 				if (crazyeight.gameStatus[room] !== 'signups') return false;
