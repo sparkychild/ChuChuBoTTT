@@ -40,7 +40,7 @@ global.cmdr = function(text) { // receiving commands
 };
 
 global.dsend = function(text) {
-	if (config.debuglevel > 1 || config.debuglevel !== 6) return;
+	if (config.debuglevel > 1 && config.debuglevel !== 6) return;
 	if (!colors) global.colors = require('colors');
 	console.log('send'.grey + '    ' + text);
 };
@@ -124,6 +124,7 @@ if (!fs.existsSync('./config.js')) {
 }
 
 global.config = require('./config.js');
+
 function loadFunctions() {
 	global.Commands = {};
 	global.Parse = require('./parser.js').parse;
@@ -139,7 +140,8 @@ function loadFunctions() {
 		}
 	}
 }
-if (config.url) {
+
+if (config.url && !config.override) {
 	var serverUrl = config.url;
 	if (serverUrl.indexOf('://') !== -1) {
 		serverUrl = url.parse(serverUrl).host;
@@ -179,6 +181,7 @@ if (config.url) {
 				if (config.server.indexOf('rhcloud') > -1) {
 					config.port = 8000;
 				}
+				//override code bc this is shit
 				// The rooms that should be joined.
 				//autojoin code
 				try {
@@ -205,9 +208,24 @@ if (config.url) {
 
 	req.end();
 }
-else {
+else if (!config.override) {
 	console.log('ERROR: no URL specified!');
 	process.exit(-1)
+}
+
+if (config.override) {
+	config.server = config.override.server;
+	config.port = config.override.port;
+	config.serverid = config.override.serverid;
+	try {
+		config.rooms = JSON.parse(fs.readFileSync('data/newrooms/' + config.nick + '_' + config.serverid + '.json'));;
+	}
+	catch (e) {
+		config.rooms = [];
+		info('Rooms are not loaded.')
+	}
+	global.globalvar = require('./globals.js');
+	loadFunctions();
 }
 
 
