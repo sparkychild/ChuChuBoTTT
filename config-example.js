@@ -77,14 +77,14 @@ exports.avatar = null;
 // When you pm the bot but don't use a command, it replies you this message.
 // Example: "Hi, I'm a bot. Use .guide to view a command guide"
 exports.pmmessage = "Hi, I am only a bot.  Please PM another staff member for assistance. Use " + comChar[0] + "guide to see my commands. Have a nice day! n_n";
-
+/*
 exports.override = {
 	server: "sim.smogon.com",
 	port: 8000,
 	serverid: "showdown"
 }
 
-/*for c9 servers
+for c9 servers
 exports.override = {
 	server: "chuchupsim-pikachildyellow.c9.io",
 	port: 80,
