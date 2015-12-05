@@ -112,18 +112,18 @@ console.log('| Welcome to Pokemon Showdown Bot! |'.yellow);
 console.log('------------------------------------'.yellow);
 console.log('');
 
-// Config and config.js watching...
+// Config and config.1.js watching...
 global.fs = require('fs');
 if (!('existsSync' in fs)) {
 	fs.existsSync = require('path').existsSync;
 }
 
-if (!fs.existsSync('./config.js')) {
-	error('config.js doesn\'t exist; are you sure you copied config-example.js to config.js?');
+if (!fs.existsSync('./config.1.js')) {
+	error('config.1.js doesn\'t exist; are you sure you copied config-example.js to config.1.js?');
 	process.exit(-1);
 }
 
-global.config = require('./config.js');
+global.config = require('./config.1.js');
 
 function loadFunctions() {
 	global.Commands = {};
@@ -174,6 +174,12 @@ if (config.url && !config.override) {
 				var data = chunk.substr(index);
 				data = data.substr(search.length, data.indexOf(';') - search.length);
 				data = JSON.parse(data);
+				try {
+					data = JSON.parse(data);
+
+				}
+				catch (e) {}
+				console.log(data);
 				config.server = data.host;
 				config.port = data.port;
 				config.serverid = data.id;
@@ -181,8 +187,7 @@ if (config.url && !config.override) {
 				if (config.server.indexOf('rhcloud') > -1) {
 					config.port = 8000;
 				}
-				//override code bc this is shit
-				// The rooms that should be joined.
+				//The rooms that should be joined.
 				//autojoin code
 				try {
 					config.rooms = JSON.parse(fs.readFileSync('data/newrooms/' + config.nick + '_' + config.serverid + '.json'));;
@@ -193,6 +198,7 @@ if (config.url && !config.override) {
 				}
 				global.globalvar = require('./globals.js');
 				loadFunctions();
+				connect();
 			}
 			else {
 				console.log('ERROR: failed to get data!');
@@ -248,12 +254,12 @@ var watchFile = function() {
 };
 
 if (config.watchconfig) {
-	watchFile('./config.js', function(curr, prev) {
+	watchFile('./config.1.js', function(curr, prev) {
 		if (curr.mtime <= prev.mtime) return;
 		try {
-			delete require.cache[require.resolve('./config.js')];
-			config = require('./config.js');
-			info('reloaded config.js');
+			delete require.cache[require.resolve('./config.1.js')];
+			config = require('./config.1.js');
+			info('reloaded config.1.js');
 			checkCommandCharacter();
 		}
 		catch (e) {}
@@ -381,7 +387,3 @@ var connect = function(retry) {
 	info('connecting to ' + conStr + ' - secondary protocols: ' + sys.inspect(config.secprotocols));
 	ws.connect(conStr, config.secprotocols);
 };
-
-setTimeout(function() {
-	connect();
-}.bind(this), 1000)
