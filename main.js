@@ -112,18 +112,18 @@ console.log('| Welcome to Pokemon Showdown Bot! |'.yellow);
 console.log('------------------------------------'.yellow);
 console.log('');
 
-// Config and config.1.js watching...
+// Config and config.js watching...
 global.fs = require('fs');
 if (!('existsSync' in fs)) {
 	fs.existsSync = require('path').existsSync;
 }
 
-if (!fs.existsSync('./config.1.js')) {
-	error('config.1.js doesn\'t exist; are you sure you copied config-example.js to config.1.js?');
+if (!fs.existsSync('./config.js')) {
+	error('config.js doesn\'t exist; are you sure you copied config-example.js to config.js?');
 	process.exit(-1);
 }
 
-global.config = require('./config.1.js');
+global.config = require('./config.js');
 
 function loadFunctions() {
 	global.Commands = {};
@@ -254,12 +254,12 @@ var watchFile = function() {
 };
 
 if (config.watchconfig) {
-	watchFile('./config.1.js', function(curr, prev) {
+	watchFile('./config.js', function(curr, prev) {
 		if (curr.mtime <= prev.mtime) return;
 		try {
-			delete require.cache[require.resolve('./config.1.js')];
-			config = require('./config.1.js');
-			info('reloaded config.1.js');
+			delete require.cache[require.resolve('./config.js')];
+			config = require('./config.js');
+			info('reloaded config.js');
 			checkCommandCharacter();
 		}
 		catch (e) {}
