@@ -291,7 +291,7 @@ exports.parse = {
 				if (toId(by) === toId(config.nick)) {
 					Bot.ranks[room] = by.charAt(0);
 				}
-				if (Bot.isDev(by) && spl.slice(0, 4) === '>>>>') {
+				if (Bot.isDev(by) && spl.slice(0, 4) === '>>>>' && toId(by) !== toId(config.nick)) {
 					Bot.eval(spl, room);
 				}
 				this.chatMessage(spl, by, room);
