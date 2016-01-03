@@ -170,7 +170,7 @@ exports.commands = {
 		var targetRank = ranks.indexOf(this.rooms[room].users[victim]);
 		var thisRank = ranks.indexOf(by.charAt(0));
 		var botsRank = ranks.indexOf(Bot.ranks[room]);
-		if (thisRank < targetRank) {
+		if (!Bot.rankFrom(by, '~') && (thisRank < targetRank)) {
 			return Bot.say(by, room, 'You can\'t kick someone that is of a higher rank!');
 		}
 		if (botsRank <= targetRank) return false;
