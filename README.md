@@ -1,4 +1,6 @@
 Pokemon-Showdown-Bot
+
+This repository has been abandonned, and will no longer be updated.  Technical support for for this will no longer be given.  Please refer to https://github.com/sparkychild/FoxieBot/ instead.
 ====================
 
 A chat bot for [Pokémon Showdown][1]. This bot has a number of commands, some helpful and some less so, as well as the capability to mod. It only reacts to basic offences such as flooding/caps/stretching.
